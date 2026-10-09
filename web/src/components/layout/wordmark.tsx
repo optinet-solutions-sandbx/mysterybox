@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { brand } from "@/config/brand";
+import { LogoMark } from "@/components/brand/logo-mark";
 
-/** Foil monogram in a fine gold ring, as on the box. */
+/** Crown-and-mask mark in foil, then the name in inscriptional capitals. */
 export function Wordmark() {
   return (
-    <Link href="/" aria-label={`${brand.name} home`} className="group flex items-center gap-3">
-      <span className="grid size-10 place-items-center rounded-full border border-accent/50 transition-colors group-hover:border-accent">
-        <span className="font-display text-xl leading-none text-foil">{brand.monogram}</span>
+    <Link href="/" aria-label={`${brand.name} home`} className="group flex items-center gap-2.5">
+      <LogoMark className="w-11 transition-transform duration-500 ease-snap group-hover:-translate-y-0.5" />
+      <span className="font-display text-[17px] tracking-[0.14em] whitespace-nowrap text-fg max-sm:hidden">
+        {brand.name}
       </span>
     </Link>
   );

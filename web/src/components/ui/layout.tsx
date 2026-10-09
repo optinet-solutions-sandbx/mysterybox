@@ -17,7 +17,7 @@ export function SectionHeading({ title, className }: { title: ReactNode; classNa
 export function PageHeader({ eyebrow, title, intro }: { eyebrow?: string; title: ReactNode; intro?: ReactNode }) {
   return (
     <header className="relative isolate overflow-hidden border-b border-line pt-16 pb-12 sm:pt-24">
-      <div aria-hidden className="absolute -top-1/2 left-1/4 -z-10 h-[200%] w-[70%] bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--sapphire)_45%,transparent),transparent)]" />
+      <div aria-hidden className="absolute -top-1/2 left-1/4 -z-10 h-[200%] w-[70%] bg-[radial-gradient(closest-side,var(--aurora-b),transparent)]" />
       <Container>
         {eyebrow && <Eyebrow className="mb-4">{eyebrow}</Eyebrow>}
         <h1 className="font-display text-5xl leading-[0.95] sm:text-7xl">{title}</h1>

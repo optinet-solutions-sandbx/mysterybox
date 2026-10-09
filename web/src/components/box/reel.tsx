@@ -81,10 +81,10 @@ export const Reel = forwardRef<
       <div ref={outerRef} className="relative">
         <div
           ref={viewport}
-          className="relative overflow-hidden rounded-[28px] border border-line bg-[radial-gradient(80%_120%_at_50%_50%,#13214a,#070b1c)] py-7"
+          className="relative overflow-hidden rounded-[28px] border border-line bg-[image:var(--reel-bg)] py-7"
         >
-          <div aria-hidden className="pointer-events-none absolute inset-y-0 left-0 z-10 w-1/4 bg-gradient-to-r from-[#070b1c] to-transparent" />
-          <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 z-10 w-1/4 bg-gradient-to-l from-[#070b1c] to-transparent" />
+          <div aria-hidden className="pointer-events-none absolute inset-y-0 left-0 z-10 w-1/4 bg-gradient-to-r from-[var(--reel-edge)] to-transparent" />
+          <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 z-10 w-1/4 bg-gradient-to-l from-[var(--reel-edge)] to-transparent" />
           <div aria-hidden className="pointer-events-none absolute inset-y-3 left-1/2 z-20 w-px -translate-x-1/2 bg-accent shadow-[0_0_24px_2px_var(--gold)]" />
           <div aria-hidden className="pointer-events-none absolute top-0 left-1/2 z-20 size-0 -translate-x-1/2 border-x-8 border-t-[10px] border-x-transparent border-t-accent" />
           <div aria-hidden className="pointer-events-none absolute bottom-0 left-1/2 z-20 size-0 -translate-x-1/2 border-x-8 border-b-[10px] border-x-transparent border-b-accent" />

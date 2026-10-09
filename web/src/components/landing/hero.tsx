@@ -56,15 +56,27 @@ export function Hero({ categories }: { categories: ShowcaseCategory[] }) {
     <section className="relative isolate -mt-16 overflow-hidden pt-16">
       {/* Light: sapphire aurora behind, a cold spotlight onto the box, marble underfoot. */}
       <div aria-hidden className="absolute inset-0 -z-10">
-        <div className="absolute -top-1/3 left-[10%] h-[100vh] w-[90vw] animate-aurora bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--glow)_32%,transparent),transparent)]" />
-        <div className="absolute top-[15%] -right-1/4 h-[90vh] w-[70vw] animate-aurora bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--sapphire)_60%,transparent),transparent)] [animation-delay:-9s]" />
+        <div className="absolute -top-1/3 left-[10%] h-[100vh] w-[90vw] animate-aurora bg-[radial-gradient(closest-side,var(--aurora-a),transparent)]" />
+        <div className="absolute top-[15%] -right-1/4 h-[90vh] w-[70vw] animate-aurora bg-[radial-gradient(closest-side,var(--aurora-b),transparent)] [animation-delay:-9s]" />
         <div className="absolute inset-x-0 bottom-0 h-[45%] bg-marble opacity-40 [mask-image:linear-gradient(to_top,black,transparent)]" />
       </div>
 
       <Container className="grid min-h-[calc(100svh-4rem)] items-center gap-6 py-12 lg:grid-cols-[1.08fr_1fr] lg:py-0">
         <div className="relative z-10">
-          <h1 className="font-display text-[clamp(3.2rem,8.4vw,8.2rem)] leading-[0.92] font-medium tracking-[-0.01em]">
-            <LineReveal onLoad delay={0.15} lines={["More than", "a box."]} lineClassName="text-foil" />
+          <h1 className="font-display font-medium">
+            <LineReveal
+              onLoad
+              delay={0.15}
+              lines={[brand.taglineLines[0]]}
+              className="text-[clamp(1.55rem,3.3vw,3.1rem)] leading-tight text-fg"
+            />
+            <LineReveal
+              onLoad
+              delay={0.32}
+              lines={[brand.taglineLines[1]]}
+              className="mt-1 text-[clamp(3.4rem,7.6vw,7.4rem)] leading-[0.95] tracking-[-0.01em]"
+              lineClassName="text-foil"
+            />
           </h1>
           <motion.div
             initial={reduce ? false : { opacity: 0, y: 16 }}
@@ -108,7 +120,7 @@ export function Hero({ categories }: { categories: ShowcaseCategory[] }) {
                   exit={{ opacity: 0, y: 110, scale: 0.55, transition: { duration: 0.5, ease: [0.55, 0, 0.75, 0.2] } }}
                   transition={{ type: "spring", stiffness: 120, damping: 17, delay: reduce ? 0 : 0.3 }}
                 >
-                  <figure className="overflow-hidden rounded-[18px] bg-surface shadow-[0_30px_80px_-20px_rgb(0_0_0/0.9)] ring-1 ring-accent/30">
+                  <figure className="overflow-hidden rounded-[18px] bg-surface shadow-[0_30px_80px_-20px_var(--shadow-strong)] ring-1 ring-accent/30">
                     <ItemArt item={item} rarity="legendary" showBrand={false} />
                     <figcaption className="border-t border-line px-4 py-3">
                       <p className="truncate font-display text-[11px] tracking-[0.18em] text-accent">{item.brand}</p>

@@ -16,9 +16,14 @@ not decoration.**
 
 - **No real money, accounts or backend.** Everything runs on mock data and a browser-persisted mock
   session. A "Prototype" banner is always visible.
-- **Brand:** the "Royal Blue Luxury" board (2026-10-09). Palette: obsidian, navy, indigo, sapphire,
-  champagne gold, ivory. Monogram **M**, tagline "More than a box.", descriptor "A bolder kind of
-  luxury.". The **trading name is still open** (`brand.name` = "BRAND").
+- **Brand: Grail Noir** (grailnoir.com). Slogan "Life is too short. Go Noir." (a two-tier lockup:
+  setup line, then a foil punchline). Logo: a **crown-and-mask mark**, traced to a vector in
+  `components/brand/logo-mark.tsx`, also used as `app/icon.svg`. Palette from the "Royal Blue
+  Luxury" board: obsidian, navy, indigo, sapphire, champagne gold, ivory.
+- **Light and dark mode.** The `[data-theme]` attribute on `<html>` is set before first paint by
+  `themeBootScript` (`lib/theme.ts`): the saved choice wins, otherwise the system preference.
+  `ThemeToggle` sits in the header. Every surface, glow, shadow, marble and foil stop is a token that
+  changes per mode.
 - **Phase:** skeleton (Phase 0), brand pass and core motion (Phase 1/2) are built. See
   [docs/01-brief.md](docs/01-brief.md) for the roadmap and the open decisions.
 
@@ -59,7 +64,9 @@ lucide-react. Icybox runs on the same Next, Tailwind and Motion stack.
 
 | Path | Role |
 |---|---|
-| `config/brand.ts` | Every brand string: name (placeholder), monogram, tagline, descriptor, box side line, entity, age. |
+| `config/brand.ts` | Every brand string: name, domain, tagline and `taglineLines`, descriptor, box side line, entity, age. |
+| `components/brand/logo-mark.tsx` | `LogoMark` (foil or solid) plus `LOGO_PATH` / `LOGO_VIEWBOX` for inline SVG use (keyhole, coin). |
+| `lib/theme.ts`, `components/layout/theme-toggle.tsx` | Light/dark boot script, storage key, toggle. |
 | `config/economy.ts` | Mock economy: target RTP (90%), sell-back rate (90%), starting balance ($10k), top-ups, odds scale (100,000). |
 | `config/media.ts` | `referenceImage()` / `NEXT_PUBLIC_REFERENCE_IMAGES`, the switch for the third-party photos (see Rules). |
 | `domain/` | **Pure, unit-tested logic.** Types, money, odds (normalize, price, `pickByRoll`, `rollRanges`, rarity, sell-back), provably-fair HMAC rolls, reel strip building. |
@@ -82,9 +89,16 @@ or Open again. **The outcome is decided before anything moves.**
 
 ## Rules
 
-1. **Tokens only.** Style with the semantic utilities in `globals.css` (`bg-surface`, `text-muted`,
-   `border-line`, `text-foil`, `bg-foil`, `btn-foil`, `bg-marble`, `text-rarity-*`, `font-display`).
-   Never use raw hex in components; `Box3D` materials and SVG gradients are the only exception.
+1. **Tokens only, in both modes.** Style with the semantic utilities in `globals.css` (`bg-surface`,
+   `text-muted`, `border-line`, `text-foil`, `bg-foil`, `btn-foil`, `bg-marble`, `text-rarity-*`,
+   `font-display`), plus the mode tokens:
+   - `--plate`, `--card`, `--reel-bg` / `--reel-edge`;
+   - `--shadow-strong`, `--floor-shadow`;
+   - `--aurora-a` / `--aurora-b`, `--dust`;
+   - `--foil-1..5` for SVG gradient stops.
+
+   Never use raw hex in components; `Box3D` materials (the box is an object, the same in both modes)
+   are the exception. Check every visual change in **light and dark**.
 2. **Gold is foil, not paint.** Use `text-foil` / `bg-foil` on type, edges and the primary button.
    `background-clip:text` does **not** reach transformed or absolutely positioned children, so animated
    numbers take `foil` themselves (`<RollingNumber foil>`, `<CountUp foil>`).
@@ -94,18 +108,23 @@ or Open again. **The outcome is decided before anything moves.**
 4. **Brand strings come from `config/brand.ts`. Money is integer cents** (`formatUsd` at the edge).
 5. **Odds are integer weights summing to `economy.oddsScale`.** Author boxes via `defineBox`; the
    catalog tests enforce the sum and the RTP band.
-6. **Honest reel:** fillers are sampled with the real odds, with no engineered near-misses. MISTY shows
+6. **Hydration-safe numbers:** round anything computed with `Math.sin` / `Math.cos` or long decimals
+   that ends up in SSR markup. Node and browsers differ in the last digits (see `gold-dust`,
+   `item-drawings`).
+7. **Honest reel:** fillers are sampled with the real odds, with no engineered near-misses. MISTY shows
    ~33% Grails on its reel against 0.05% odds; we do not. Always offer Skip and an instant
    reduced-motion path.
-7. **Compliance copy** ([docs/07-compliance-ux.md](docs/07-compliance-ux.md)): no "win", "profit",
+8. **Compliance copy** ([docs/07-compliance-ux.md](docs/07-compliance-ux.md)): no "win", "profit",
    "investment" or "guaranteed". No fake live feeds or testimonials. Odds are always reachable from a
    box. Keep the 18+ and responsible-play lines.
-8. **Reference images are internal-only.** `web/public/reference/misty/` holds 52 product cut-outs
-   taken from themistybox.com (a competitor; the copyright belongs to MISTY and/or the brands) at the
-   team's request, with sources in `SOURCES.md`. **Before any public preview or deploy, set
-   `NEXT_PUBLIC_REFERENCE_IMAGES=off` (or delete the folder) and replace them with licensed
-   photography.** Never add more third-party assets without the same treatment.
-9. **Motion** follows [docs/05-motion-spec.md](docs/05-motion-spec.md):
+9. **Third-party product photos are live by the team's choice** (2026-10-09, at their risk).
+   `web/public/reference/misty/` holds 52 cut-outs taken from themistybox.com (a competitor; the
+   copyright belongs to MISTY and/or the brands), with sources in `SOURCES.md`. Replace them with
+   licensed photography before a real launch; `NEXT_PUBLIC_REFERENCE_IMAGES=off` switches the site to
+   the gold-line drawings. Never add more third-party assets without asking. The crown-and-mask logo
+   was supplied by the team (traced from an image captioned "Royal Gypsy"), so confirm the rights
+   before launch.
+10. **Motion** follows [docs/05-motion-spec.md](docs/05-motion-spec.md):
    - Use one ease, `[0.22, 1, 0.36, 1]`, and one "toy" per section.
    - Give every effect a `useReducedMotion` path and pause loops off-screen.
    - Use radial gradients instead of large `blur()` filters.

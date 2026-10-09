@@ -52,7 +52,7 @@ export function Ritual({ item, priceRange }: { item: Item; priceRange: string })
   return (
     <section ref={ref} className={cn("relative", reduce ? "" : "h-[340vh]")} aria-label="How it works">
       <div className={cn("top-0 flex items-center overflow-hidden", reduce ? "py-24" : "sticky h-[100svh]")}>
-        <div aria-hidden className="absolute inset-0 -z-10 bg-[radial-gradient(60%_50%_at_70%_50%,color-mix(in_oklab,var(--sapphire)_45%,transparent),transparent)]" />
+        <div aria-hidden className="absolute inset-0 -z-10 bg-[radial-gradient(60%_50%_at_70%_50%,var(--aurora-b),transparent)]" />
         <div className="mx-auto grid w-full max-w-7xl items-center gap-6 px-4 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
           <div className="relative order-2 flex gap-6 lg:order-1">
             <div aria-hidden className="relative w-px shrink-0 bg-line">
@@ -86,7 +86,7 @@ export function Ritual({ item, priceRange }: { item: Item; priceRange: string })
             </motion.p>
 
             <motion.figure
-              className="absolute top-[2%] left-1/2 w-[min(40%,200px)] -translate-x-1/2 overflow-hidden rounded-[18px] bg-surface shadow-[0_30px_80px_-20px_rgb(0_0_0/0.9)] ring-1 ring-accent/30"
+              className="absolute top-[2%] left-1/2 w-[min(40%,200px)] -translate-x-1/2 overflow-hidden rounded-[18px] bg-surface shadow-[0_30px_80px_-20px_var(--shadow-strong)] ring-1 ring-accent/30"
               style={reduce ? undefined : { y: cardY, scale: cardScale, opacity: cardOpacity }}
             >
               <ItemArt item={item} rarity="legendary" showBrand={false} />

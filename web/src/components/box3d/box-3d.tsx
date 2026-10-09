@@ -13,6 +13,7 @@ import { useEffect, type CSSProperties, type PointerEvent } from "react";
 import { brand } from "@/config/brand";
 import type { BoxMaterial } from "@/domain/types";
 import { GoldDust } from "@/components/fx/gold-dust";
+import { LogoMark } from "@/components/brand/logo-mark";
 import { cn } from "@/lib/cn";
 import "./box-3d.css";
 
@@ -201,7 +202,7 @@ export function Box3D({
       {/* Floor shadow */}
       <motion.div
         aria-hidden
-        className="absolute rounded-[50%] bg-black/70 blur-xl"
+        className="absolute rounded-[50%] bg-[var(--floor-shadow)] blur-xl"
         style={{ width: width * 1.25, height: h * 0.32, top: "64%" }}
         animate={float && !reduce ? { scale: [1, 0.9, 1], opacity: [0.85, 0.6, 0.85] } : {}}
         transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
@@ -255,11 +256,11 @@ export function Box3D({
         </div>
         <div className={cn(s.face, s.front, "grid place-items-center")}>
           <div className="flex flex-col items-center" style={{ marginTop: l * 0.9 }}>
-            <span className={cn(s.mono, m.ink === "foil" ? s.monoFoil : s.monoInk)} style={{ fontSize: h * 0.4 }}>
-              {brand.monogram}
+            <span style={{ width: width * 0.36, color: m.ink === "foil" ? undefined : "#0f1c3f" }}>
+              <LogoMark tone={m.ink === "foil" ? "foil" : "solid"} className="w-full drop-shadow-[0_1px_0_rgb(0_0_0/0.35)]" />
             </span>
-            <span className={s.caption} style={{ fontSize: Math.max(6, h * 0.05), marginTop: h * 0.06 }}>
-              {brand.tagline.replace(/\.$/, "")}
+            <span className={s.caption} style={{ fontSize: Math.max(6, h * 0.055), marginTop: h * 0.07 }}>
+              {brand.name}
             </span>
             <span className={s.rule} style={{ width: width * 0.1, marginTop: h * 0.05 }} />
           </div>

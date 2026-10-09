@@ -9,6 +9,7 @@ import { primaryNav } from "@/config/nav";
 import { formatUsd } from "@/domain/money";
 import { useSession, useSessionHydrated } from "@/store/session";
 import { cn } from "@/lib/cn";
+import { ThemeToggle } from "./theme-toggle";
 import { Wordmark } from "./wordmark";
 
 /** Transparent over the hero, smoked glass once scrolled; slides away while reading down. */
@@ -47,7 +48,8 @@ export function SiteHeader() {
             );
           })}
         </nav>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-1 sm:gap-2">
+          <ThemeToggle />
           <InventoryLink />
           <BalancePill />
           <button

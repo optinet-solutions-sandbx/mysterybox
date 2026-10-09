@@ -1,8 +1,17 @@
 # Design system
 
-The brand follows the **"Royal Blue Luxury" board** (2026-10-09): dark tones, a noble presence, timeless
-prestige. Values on the board: exclusive, surprising, prestigious, timeless. The trading name is
-still open; the board's **M** monogram stands in for it.
+**Grail Noir** (grailnoir.com). Slogan: **"Life is too short. Go Noir."**, set as a two-tier lockup with
+the setup line in the text colour and "Go Noir." large in foil. Logo: the **crown-and-mask mark**
+(`components/brand/logo-mark.tsx`, a traced vector), in foil on dark leather and in navy ink on light
+finishes. The palette follows the "Royal Blue Luxury" board (2026-10-09).
+
+**Two modes:**
+- **Dark** (obsidian, navy and gold) is the signature.
+- **Light** is an ivory gallery: navy text, deeper gold foil (`--foil-1..5` retuned for legibility),
+  softer sapphire light, and blue-grey marble.
+
+The mode follows the system until the visitor uses the header toggle. All differences live in the
+`[data-theme="light"]` token block in `globals.css`.
 
 | Brand decision | Where it plugs in |
 |---|---|

@@ -66,7 +66,7 @@ export function Modal({
             aria-labelledby={labelledBy}
             tabIndex={-1}
             className={cn(
-              "relative w-full max-w-md rounded-[28px] border border-line bg-surface p-8 shadow-[0_40px_120px_-30px_rgb(0_0_0/0.9)] outline-none",
+              "relative w-full max-w-md rounded-[28px] border border-line bg-surface p-8 shadow-[0_40px_120px_-30px_var(--shadow-strong)] outline-none",
               className,
             )}
             initial={{ opacity: 0, y: 24, scale: 0.96 }}

@@ -1,13 +1,7 @@
 import Link from "next/link";
 import { brand } from "@/config/brand";
 import { footerNav } from "@/config/nav";
-
-/** "More than a box." → ["More than", "a box."]: a deliberate two-line lockup. */
-function splitInTwo(text: string) {
-  const words = text.split(" ");
-  const half = Math.ceil(words.length / 2);
-  return [words.slice(0, half).join(" "), words.slice(half).join(" ")];
-}
+import { LogoMark } from "@/components/brand/logo-mark";
 
 export function SiteFooter() {
   return (
@@ -16,13 +10,16 @@ export function SiteFooter() {
       <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-b from-bg via-bg/70 to-bg" />
 
       <div className="mx-auto max-w-7xl px-4 pt-20 sm:px-6 lg:px-8">
-        <p aria-hidden className="font-display text-[14vw] leading-[0.88] text-foil lg:text-[9.5rem]">
-          {splitInTwo(brand.tagline).map((line) => (
-            <span key={line} className="block">
-              {line}
-            </span>
-          ))}
-        </p>
+        <div aria-hidden className="flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
+          <p className="font-display">
+            <span className="block text-[clamp(1.4rem,3.6vw,3rem)] leading-tight text-fg">{brand.taglineLines[0]}</span>
+            <span className="block text-[clamp(3.4rem,11vw,9rem)] leading-[0.92] text-foil">{brand.taglineLines[1]}</span>
+          </p>
+          <div className="flex shrink-0 flex-col items-start gap-3 sm:items-end">
+            <LogoMark className="w-24 sm:w-32" />
+            <span className="font-display text-xl tracking-[0.18em]">{brand.name}</span>
+          </div>
+        </div>
         <div className="mt-16 grid gap-12 lg:grid-cols-[1.1fr_2fr]">
           <p className="max-w-sm text-muted">{brand.description}</p>
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">

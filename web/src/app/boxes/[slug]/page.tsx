@@ -5,6 +5,9 @@ import { BoxStage } from "@/components/box/box-stage";
 import { InsideGrid } from "@/components/box/inside-grid";
 import { OddsTable } from "@/components/box/odds-table";
 
+/** Every slug is prerendered by generateStaticParams, so a blocking navigation is effectively instant. */
+export const instant = false;
+
 export function generateStaticParams() {
   return listBoxes().map((b) => ({ slug: b.slug }));
 }

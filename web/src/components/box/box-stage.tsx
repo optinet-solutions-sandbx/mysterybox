@@ -106,7 +106,7 @@ export function BoxStage({
     <>
       <section className="relative isolate overflow-hidden">
         <div aria-hidden className="absolute inset-0 -z-10">
-          <div className="absolute -top-[10%] left-0 h-[100%] w-[70%] bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--sapphire)_55%,transparent),transparent)]" />
+          <div className="absolute -top-[10%] left-0 h-[100%] w-[70%] bg-[radial-gradient(closest-side,var(--aurora-b),transparent)]" />
           <div className="absolute inset-x-0 bottom-0 h-1/2 bg-marble opacity-30 [mask-image:linear-gradient(to_top,black,transparent)]" />
         </div>
 

@@ -31,6 +31,9 @@ const pages: Record<string, { title: string; summary: string; outline: string[] 
   },
 };
 
+/** Every slug is prerendered by generateStaticParams, so a blocking navigation is effectively instant. */
+export const instant = false;
+
 export function generateStaticParams() {
   return Object.keys(pages).map((slug) => ({ slug }));
 }

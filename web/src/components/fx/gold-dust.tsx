@@ -30,7 +30,7 @@ export function GoldDust({ count = 26, className }: { count?: number; className?
           <span
             key={i}
             style={style}
-            className="absolute animate-rise rounded-full bg-[#f3e2b5] shadow-[0_0_6px_2px_rgb(226_196_127/0.55)]"
+            className="absolute animate-rise rounded-full bg-[var(--dust)] shadow-[0_0_6px_2px_rgb(226_196_127/0.55)]"
           />
         );
       })}

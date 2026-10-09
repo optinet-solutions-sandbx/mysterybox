@@ -20,7 +20,7 @@ export function BoxCard({ box, top }: { box: Box; top: Item }) {
       onMouseLeave={() => setHover(false)}
       onFocus={() => setHover(true)}
       onBlur={() => setHover(false)}
-      className="group relative flex flex-col overflow-hidden rounded-[28px] border border-line bg-[linear-gradient(180deg,#121d45_0%,#0b1330_100%)] transition-[transform,border-color] duration-500 ease-snap hover:-translate-y-1.5 hover:border-accent/60"
+      className="group relative flex flex-col overflow-hidden rounded-[28px] border border-line bg-[image:var(--card)] transition-[transform,border-color] duration-500 ease-snap hover:-translate-y-1.5 hover:border-accent/60"
     >
       {box.badge && (
         <span className="absolute top-5 left-5 z-10 rounded-pill border border-accent/40 bg-bg/50 px-3 py-1 text-xs text-accent backdrop-blur">

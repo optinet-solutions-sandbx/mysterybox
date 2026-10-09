@@ -5,6 +5,7 @@ import { useRef } from "react";
 import { brand } from "@/config/brand";
 import { ButtonLink } from "@/components/ui/button";
 import { GoldDust } from "@/components/fx/gold-dust";
+import { LOGO_PATH } from "@/components/brand/logo-mark";
 
 /** One outline: a r=40 circle at (800, 488) flowing into a flared slot down to y=620. */
 const KEYHOLE = "M782 523.7 A40 40 0 1 1 818 523.7 L840 620 L760 620 Z";
@@ -25,7 +26,7 @@ export function Keyhole() {
 
   const glow = (
     <>
-      <div aria-hidden className="absolute inset-0 bg-[radial-gradient(60%_60%_at_50%_55%,rgb(255_240_205/0.3),color-mix(in_oklab,var(--sapphire)_60%,transparent)_45%,var(--obsidian)_88%)]" />
+      <div aria-hidden className="absolute inset-0 bg-[radial-gradient(60%_60%_at_50%_55%,rgb(255_240_205/0.3),var(--aurora-b)_45%,var(--bg)_88%)]" />
       <GoldDust count={40} className="inset-0" />
     </>
   );
@@ -84,11 +85,9 @@ export function Keyhole() {
             <rect x="40" y="40" width="1520" height="920" fill="none" stroke="url(#kh-foil)" strokeOpacity="0.5" strokeWidth="1.5" mask="url(#kh-mask)" />
             <path d={KEYHOLE} fill="none" stroke="url(#kh-foil)" strokeWidth="3" />
             <ellipse cx="800" cy="535" rx="92" ry="128" fill="none" stroke="url(#kh-foil)" strokeWidth="2" mask="url(#kh-mask)" />
-            <text x="800" y="300" textAnchor="middle" fill="url(#kh-foil)" style={{ font: "500 150px var(--font-display)" }}>
-              {brand.monogram}
-            </text>
-            <text x="800" y="352" textAnchor="middle" fill="#c2a46e" style={{ font: "400 20px var(--font-body)", letterSpacing: "0.4em" }}>
-              {brand.tagline.replace(/\.$/, "").toUpperCase()}
+            <path d={LOGO_PATH} fillRule="evenodd" fill="url(#kh-foil)" transform="translate(670 140) scale(1.656)" />
+            <text x="800" y="356" textAnchor="middle" fill="#c2a46e" style={{ font: "400 20px var(--font-body)", letterSpacing: "0.4em" }}>
+              {brand.tagline.toUpperCase()}
             </text>
           </svg>
         </motion.div>

@@ -9,6 +9,9 @@ export type ArtKey = ItemArtKey;
 
 const f = "fill-[color:var(--art-fill)]";
 
+/** Trig results differ in the last digits between Node and browsers; round so SSR and hydration agree. */
+const r2 = (n: number) => Math.round(n * 100) / 100;
+
 export const drawings: Record<ArtKey, ReactNode> = {
   watch: (
     <>
@@ -22,10 +25,10 @@ export const drawings: Record<ArtKey, ReactNode> = {
         return (
           <line
             key={i}
-            x1={50 + Math.sin(a) * r1}
-            y1={50 - Math.cos(a) * r1}
-            x2={50 + Math.sin(a) * 17.5}
-            y2={50 - Math.cos(a) * 17.5}
+            x1={r2(50 + Math.sin(a) * r1)}
+            y1={r2(50 - Math.cos(a) * r1)}
+            x2={r2(50 + Math.sin(a) * 17.5)}
+            y2={r2(50 - Math.cos(a) * 17.5)}
           />
         );
       })}
@@ -102,7 +105,7 @@ export const drawings: Record<ArtKey, ReactNode> = {
       <ellipse cx="50" cy="52" rx="27" ry="13" />
       {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => {
         const a = (i * Math.PI) / 4;
-        return <circle key={i} cx={50 + Math.cos(a) * 30.5} cy={52 + Math.sin(a) * 16.5} r="1.6" />;
+        return <circle key={i} cx={r2(50 + Math.cos(a) * 30.5)} cy={r2(52 + Math.sin(a) * 16.5)} r="1.6" />;
       })}
     </>
   ),
@@ -211,7 +214,7 @@ export const drawings: Record<ArtKey, ReactNode> = {
       <circle cx="50" cy="50" r="26" />
       {Array.from({ length: 24 }, (_, i) => {
         const a = (i * Math.PI) / 12;
-        return <line key={i} x1={50 + Math.cos(a) * 29} y1={50 + Math.sin(a) * 29} x2={50 + Math.cos(a) * 31} y2={50 + Math.sin(a) * 31} />;
+        return <line key={i} x1={r2(50 + Math.cos(a) * 29)} y1={r2(50 + Math.sin(a) * 29)} x2={r2(50 + Math.cos(a) * 31)} y2={r2(50 + Math.sin(a) * 31)} />;
       })}
     </>
   ),
