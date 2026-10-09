@@ -1,0 +1,46 @@
+import type { Metadata, Viewport } from "next";
+import { Cinzel, Geist_Mono, Jost } from "next/font/google";
+import { brand } from "@/config/brand";
+import { AgeGate } from "@/components/layout/age-gate";
+import { PrototypeBanner } from "@/components/layout/prototype-banner";
+import { SessionHydrator } from "@/components/layout/session-hydrator";
+import { SiteFooter } from "@/components/layout/site-footer";
+import { SiteHeader } from "@/components/layout/site-header";
+import { Cursor } from "@/components/fx/cursor";
+import { SmoothScroll } from "@/components/fx/smooth-scroll";
+import "lenis/dist/lenis.css";
+import "./globals.css";
+
+// Cinzel: inscriptional capitals from the brand board. Jost: geometric text face.
+// Geist Mono only for genuinely technical strings (seed hashes).
+const display = Cinzel({ variable: "--font-display-face", subsets: ["latin"] });
+const body = Jost({ variable: "--font-body", subsets: ["latin"], style: ["normal", "italic"] });
+const numeric = Geist_Mono({ variable: "--font-numeric", subsets: ["latin"] });
+
+export const metadata: Metadata = {
+  title: { default: `${brand.name} — ${brand.tagline}`, template: `%s · ${brand.name}` },
+  description: brand.description,
+  robots: { index: false, follow: false },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0b0b0d",
+};
+
+export default function RootLayout({ children }: LayoutProps<"/">) {
+  return (
+    <html lang="en" className={`${display.variable} ${body.variable} ${numeric.variable} h-full antialiased`}>
+      <body className="flex min-h-full flex-col">
+        <PrototypeBanner />
+        <SiteHeader />
+        <main className="flex-1">{children}</main>
+        <SiteFooter />
+        <AgeGate />
+        <SessionHydrator />
+        <SmoothScroll />
+        <Cursor />
+        <div aria-hidden className="grain" />
+      </body>
+    </html>
+  );
+}

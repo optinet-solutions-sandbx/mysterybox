@@ -1,0 +1,213 @@
+@import "tailwindcss";
+
+/*
+ * Brand tokens — "Royal Blue Luxury" board (2026-10-09). Components use ONLY the semantic
+ * utilities below (bg-surface, text-muted, border-line, bg-accent, text-foil, …), never raw
+ * hex, so the brand can still be tuned here in one place. See docs/04-design-system.md.
+ */
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-sapphire: var(--sapphire);
+  --color-glow: var(--glow);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+
+  --color-rarity-common: var(--rarity-common);
+  --color-rarity-uncommon: var(--rarity-uncommon);
+  --color-rarity-rare: var(--rarity-rare);
+  --color-rarity-epic: var(--rarity-epic);
+  --color-rarity-legendary: var(--rarity-legendary);
+
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display-face), "Trajan Pro", ui-serif, Georgia, serif;
+  --font-mono: var(--font-numeric), ui-monospace, monospace;
+}
+
+@theme {
+  --radius-card: 1.25rem;
+  --radius-pill: 999px;
+  --ease-snap: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-reel: cubic-bezier(0.08, 0.82, 0.17, 1);
+
+  --animate-marquee: marquee var(--marquee-duration, 60s) linear infinite;
+  --animate-rise: rise var(--rise-duration, 6s) ease-in var(--rise-delay, 0s) infinite;
+  --animate-aurora: aurora 18s ease-in-out infinite alternate;
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  @keyframes rise {
+    0% {
+      transform: translate3d(0, 0, 0) scale(0.6);
+      opacity: 0;
+    }
+    15% {
+      opacity: 1;
+    }
+    100% {
+      transform: translate3d(var(--drift, 0px), -220px, 0) scale(1);
+      opacity: 0;
+    }
+  }
+
+  @keyframes aurora {
+    0% {
+      transform: translate3d(-6%, -4%, 0) scale(1);
+    }
+    100% {
+      transform: translate3d(6%, 5%, 0) scale(1.15);
+    }
+  }
+}
+
+:root {
+  color-scheme: dark;
+
+  /* Board palette */
+  --obsidian: #0b0b0d;
+  --navy: #0f1c3f;
+  --indigo: #1a2456;
+  --sapphire: #1e3a8a;
+  --gold: #c2a46e;
+  --ivory: #e8e1d6;
+
+  /* Semantic roles */
+  --bg: var(--obsidian);
+  --surface: var(--navy);
+  --surface-2: var(--indigo);
+  --fg: var(--ivory);
+  --muted: color-mix(in oklab, var(--ivory) 68%, var(--obsidian));
+  --subtle: color-mix(in oklab, var(--ivory) 52%, var(--obsidian));
+  --line: color-mix(in oklab, var(--gold) 24%, transparent);
+  --accent: var(--gold);
+  --on-accent: var(--obsidian);
+  --accent-soft: color-mix(in oklab, var(--gold) 12%, transparent);
+  /* Brighter sapphire for emitted light; the board sapphire is a surface colour. */
+  --glow: color-mix(in oklab, #3d6bff 60%, var(--sapphire));
+  --success: #6fcf9a;
+  --danger: #ff6b7a;
+
+  /* Gold is foil, never flat paint: use these for type, edges and the primary button. */
+  --foil: linear-gradient(115deg, #8a6d3f 0%, #e7d3a3 26%, #c2a46e 44%, #f3e5c0 56%, #a7884d 76%, #d6bd87 100%);
+  --foil-edge: linear-gradient(90deg, transparent, color-mix(in oklab, var(--gold) 70%, transparent), transparent);
+
+  --rarity-common: #8d93a6;
+  --rarity-uncommon: #63c597;
+  --rarity-rare: #5d8dff;
+  --rarity-epic: #a77dff;
+  --rarity-legendary: #e3c47f;
+}
+
+/* ---------- Utilities ---------- */
+
+@utility text-foil {
+  background-image: var(--foil);
+  background-size: 200% 100%;
+  background-position: 0% 50%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility bg-foil {
+  background-image: var(--foil);
+  background-size: 200% 100%;
+}
+
+/* Sapphire-veined marble, generated (no image asset). */
+@utility bg-marble {
+  background-color: var(--obsidian);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1400' height='1000'%3E%3Cfilter id='m' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.0035 0.011' numOctaves='6' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.42 0 0 0 0 0.56 0 0 0 0 1 1 0 0 0 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='table' tableValues='0 0 0 0 0 0.85 0 0 0 0 0'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E");
+  background-size: 1400px 1000px;
+}
+
+/* ---------- Base ---------- */
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  letter-spacing: 0.005em;
+}
+
+::selection {
+  background: var(--gold);
+  color: var(--obsidian);
+}
+
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* Film grain over everything: tactile, not decorative noise. */
+.grain {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+
+/* Foil button: a light sweep crosses the gold on hover. */
+.btn-foil {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background-image: var(--foil);
+  background-size: 200% 100%;
+  transition: background-position 0.8s var(--ease-snap);
+}
+.btn-foil::after {
+  content: "";
+  position: absolute;
+  inset: -20% auto -20% -60%;
+  width: 45%;
+  transform: skewX(-20deg);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.55), transparent);
+  transition: left 0.9s var(--ease-snap);
+  z-index: -1;
+}
+.btn-foil:hover {
+  background-position: 100% 50%;
+}
+.btn-foil:hover::after {
+  left: 130%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
