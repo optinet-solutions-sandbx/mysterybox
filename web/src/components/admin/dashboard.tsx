@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, BarChart3 } from "lucide-react";
 import { formatUsd, formatUsdCompact } from "@/domain/money";
 import { dailyMetrics, inRange, kpis, overviewRow } from "@/domain/analytics";
 import { getBox, getItem } from "@/services/catalog";
+import { playerNumber } from "@/domain/player-insights";
 import { BarChart, LineChart } from "./charts";
 import { useBackofficeData } from "./data";
 import { Panel, PageTitle, RangeControl, SourceBadge, formatCount, formatDateTime, formatDay, formatPct } from "./ui";
@@ -43,6 +44,8 @@ export function AdminDashboard() {
   return (
     <>
       <PageTitle
+        crumbs={[]}
+        icon={BarChart3}
         title="Dashboard"
         intro={
           <>
@@ -144,7 +147,7 @@ export function AdminDashboard() {
                   {top.map(({ p, openings, played, earned }) => (
                     <tr key={p.id}>
                       <td className="px-5 py-3">
-                        <Link href={`/admin/players?player=${p.id}`} className="font-semibold hover:text-accent">
+                        <Link href={`/admin/players/view?id=${playerNumber(p.id)}`} className="font-semibold hover:text-accent">
                           {p.firstName} {p.lastName}
                         </Link>
                         {p.source === "browser" && <SourceBadge />}

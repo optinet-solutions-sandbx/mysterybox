@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useMemo, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { Boxes, ChevronDown } from "lucide-react";
 import { formatUsd } from "@/domain/money";
 import { boxPerformance } from "@/domain/analytics";
 import { getItem, resolveEntries } from "@/services/catalog";
@@ -21,6 +21,7 @@ export function BoxesView() {
   return (
     <>
       <PageTitle
+        icon={Boxes}
         title="Boxes & odds"
         intro={
           <>

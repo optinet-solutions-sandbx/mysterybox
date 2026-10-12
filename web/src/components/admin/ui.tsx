@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import type { ReactNode } from "react";
+import type { LucideIcon } from "lucide-react";
 import { ROLE_LABEL, type AccountStatus, type AppRole } from "@/backend/contract";
 import type { RangePreset } from "@/domain/analytics";
 import { cn } from "@/lib/cn";
@@ -16,14 +18,57 @@ export const formatDay = (day: string) => shortDayFmt.format(new Date(`${day}T00
 export const formatPct = (x: number | null) => (x === null || !Number.isFinite(x) ? "—" : `${(x * 100).toFixed(1)}%`);
 export const formatCount = (n: number) => n.toLocaleString("en-US");
 
-export function PageTitle({ title, intro, actions }: { title: string; intro?: ReactNode; actions?: ReactNode }) {
+export interface Crumb {
+  label: string;
+  href?: string;
+}
+
+/** Breadcrumb + title band, as on every page of the reference back office. */
+export function PageTitle({
+  title,
+  intro,
+  actions,
+  crumbs = [{ label: "Dashboard", href: "/admin" }],
+  icon: Icon,
+}: {
+  title: ReactNode;
+  intro?: ReactNode;
+  actions?: ReactNode;
+  crumbs?: Crumb[];
+  icon?: LucideIcon;
+}) {
   return (
-    <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-      <div className="min-w-0">
-        <h1 className="font-display text-3xl font-semibold sm:text-4xl">{title}</h1>
-        {intro && <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">{intro}</p>}
+    <div className="mb-8 border-b border-line pb-6">
+      <nav aria-label="Breadcrumb" className={cn("mb-2", crumbs.length === 0 && "hidden")}>
+        <ol className="flex flex-wrap items-center gap-1.5 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">
+          {crumbs.map((c) => (
+            <li key={c.label} className="flex items-center gap-1.5">
+              {c.href ? (
+                <Link href={c.href} className="hover:text-fg">
+                  {c.label}
+                </Link>
+              ) : (
+                c.label
+              )}
+              <span aria-hidden>/</span>
+            </li>
+          ))}
+        </ol>
+      </nav>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex min-w-0 items-center gap-4">
+          {Icon && (
+            <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-accent-soft text-accent">
+              <Icon className="size-6" strokeWidth={1.75} />
+            </span>
+          )}
+          <div className="min-w-0">
+            <h1 className="font-display text-3xl font-semibold break-words sm:text-4xl">{title}</h1>
+            {intro && <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">{intro}</p>}
+          </div>
+        </div>
+        {actions}
       </div>
-      {actions}
     </div>
   );
 }

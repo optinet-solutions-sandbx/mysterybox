@@ -328,3 +328,51 @@ describe("odds integrity", () => {
     expect(status).toBe("live");
   });
 });
+
+describe("player management", () => {
+  const statusOf = async (id: string) => (await sql<{ status: string }>(db, "select status from public.profiles where id = $1", [id]))[0].status;
+
+  it("gives every player a unique number from 100000 up, shown in the overview", async () => {
+    const rows = await sql<{ player_number: string }>(db, "select player_number from public.profiles");
+    expect(rows.every((r) => Number(r.player_number) >= 100_000)).toBe(true);
+    expect(new Set(rows.map((r) => r.player_number)).size).toBe(rows.length);
+    const [row] = await as(db, admin, () => sql<{ player_number: string }>(db, "select player_number from public.admin_player_overview where id = $1", [alice]));
+    expect(Number(row.player_number)).toBeGreaterThanOrEqual(100_000);
+  });
+
+  it("derives the status from locks: self-exclusion wins over a CS lock", async () => {
+    const cs = await as(db, admin, () => rpc<string>(db, "admin_lock_player", [alice, "cs", "Chargeback review", "card issuer dispute"]));
+    expect(await statusOf(alice)).toBe("suspended");
+    const sb = await as(db, admin, () => rpc<string>(db, "admin_lock_player", [alice, "sb", "Player request: 6 months", ""]));
+    expect(await statusOf(alice)).toBe("self_excluded");
+    await as(db, admin, () => rpc(db, "admin_unlock_player", [sb]));
+    expect(await statusOf(alice)).toBe("suspended");
+    await as(db, admin, () => rpc(db, "admin_unlock_player", [cs]));
+    expect(await statusOf(alice)).toBe("active");
+
+    expect(await as(db, alice, () => sql(db, "select * from public.player_locks"))).toHaveLength(2);
+    expect(await as(db, bob, () => sql(db, "select * from public.player_locks"))).toHaveLength(0);
+    await expectError(as(db, admin, () => rpc(db, "admin_lock_player", [owner, "cs", "Other", ""])), "forbidden");
+    await expectError(as(db, alice, () => rpc(db, "admin_lock_player", [bob, "cs", "Other", ""])), "forbidden");
+    await expectError(as(db, admin, () => rpc(db, "admin_unlock_player", [cs])), "lock_not_found");
+  });
+
+  it("keeps staff comments and tags out of players' reach", async () => {
+    await as(db, admin, () => rpc(db, "admin_add_comment", [alice, "Called about the pending cashout."]));
+    await as(db, admin, () => rpc(db, "admin_set_tags", [alice, ["VIP", "HighWDRatio"]]));
+    await as(db, admin, () => rpc(db, "admin_set_tags", [alice, ["VIP"]]));
+    const tags = await as(db, admin, () => sql<{ tag: string }>(db, "select tag from public.player_tags where player_id = $1", [alice]));
+    expect(tags.map((t) => t.tag)).toEqual(["VIP"]);
+    expect(await as(db, alice, () => sql(db, "select * from public.player_comments"))).toHaveLength(0);
+    expect(await as(db, alice, () => sql(db, "select * from public.player_tags"))).toHaveLength(0);
+    await expectError(as(db, alice, () => rpc(db, "admin_add_comment", [alice, "hi"])), "forbidden");
+    await expectError(as(db, admin, () => rpc(db, "admin_set_tags", [alice, ["bad tag!"]])), /check constraint/);
+  });
+
+  it("lets a player self-exclude, which stops play until staff lift it", async () => {
+    const carol = await signUp(db, "carol@example.com", { first_name: "Carol" });
+    await as(db, carol, () => rpc(db, "self_exclude", ["Taking a break"]));
+    expect(await statusOf(carol)).toBe("self_excluded");
+    await expectError(as(db, carol, () => rpc(db, "request_deposit", [1_000])), "account_not_active");
+  });
+});

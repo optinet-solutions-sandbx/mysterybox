@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollText } from "lucide-react";
 import { ROLE_LABEL } from "@/backend/contract";
 import { useBackoffice } from "@/store/backoffice";
 import { Panel, PageTitle, formatDateTime } from "./ui";
@@ -13,6 +14,10 @@ const ACTION_LABEL: Record<string, string> = {
   "box.status": "Changed a box's status",
   "shipment.update": "Updated a shipment",
   "testdata.clear": "Cleared test data in this browser",
+  "player.lock": "Locked a player",
+  "player.unlock": "Removed a player lock",
+  "player.comment": "Commented on a player",
+  "player.tags": "Changed a player's tags",
 };
 
 function describe(detail: Record<string, unknown>): string {
@@ -26,7 +31,7 @@ export function AuditView() {
   const audit = useBackoffice((s) => s.audit);
   return (
     <>
-      <PageTitle title="Audit log" intro="Every staff action, newest first. Nobody can edit or delete entries (public.audit_log is insert-only and readable by super admins)." />
+      <PageTitle icon={ScrollText} title="Audit log" intro="Every staff action, newest first. Nobody can edit or delete entries (public.audit_log is insert-only and readable by super admins)." />
       <Panel>
         {audit.length === 0 ? (
           <p className="px-5 py-12 text-center text-sm text-muted">No staff actions yet. Suspending a player or changing a role shows up here.</p>

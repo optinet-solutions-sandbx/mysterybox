@@ -45,6 +45,7 @@ export const BACKEND_ERRORS = [
   "cannot_change_self",
   "last_super_admin",
   "invalid_adjustment",
+  "lock_not_found",
   "not_configured",
   "unknown",
 ] as const;
@@ -292,6 +293,7 @@ export const PERMISSIONS = {
   "backoffice.view": ["admin", "super_admin"],
   "players.view": ["admin", "super_admin"],
   "players.suspend": ["admin", "super_admin"],
+  "players.notes": ["admin", "super_admin"],
   "payments.settle": ["admin", "super_admin"],
   "catalog.manage": ["admin", "super_admin"],
   "staff.manage": ["super_admin"],

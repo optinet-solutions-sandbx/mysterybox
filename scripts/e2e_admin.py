@@ -1,9 +1,10 @@
 """Drive the back office end to end in a real browser (1440 dark, 1440 light, 390 dark).
 
 Flow per viewport: register a player -> quick-open two boxes -> request a $250 withdrawal ->
-/admin refuses the player -> super admin signs in -> dashboard -> players filtered to "This
-browser" -> player card: mark the withdrawal paid, suspend -> boxes & odds -> staff & roles: add an
-admin -> audit log (3 entries) -> the new admin signs in: staff page is locked -> the suspended
+/admin refuses the player -> super admin signs in -> dashboard -> Players menu -> player page
+(every reference section present; mark the cashout paid, tag, comment, CS lock) -> the player's box
+openings -> payments, feed, groups -> boxes & odds -> staff & roles: add an admin -> audit log
+(5 entries) -> the new admin signs in: staff page is locked -> the suspended
 player can't sign in -> super admin clears the test data -> players list is empty.
 
 Usage (server from `cd web && npx next build && npx next start -p 3210`):
@@ -34,6 +35,15 @@ def ctx(b, width, theme):
 
 def vis(pg, sel):
     return pg.locator(sel).filter(visible=True)
+
+def staff_sign_out(pg, width):
+    # Sign out lives in the staff member's menu (desktop) or the collapsed menu (phones).
+    if width >= 1024:
+        vis(pg, "header.sticky button[aria-haspopup='true']").last.click()
+    else:
+        vis(pg, "header.sticky button[aria-label='Open menu']").click()
+    vis(pg, "header.sticky button:has-text('Sign out')").click()
+    pg.wait_for_timeout(800)
 
 def staff_sign_in(pg, email, password):
     pg.goto(BASE + "/admin"); pg.wait_for_timeout(1500)
@@ -78,22 +88,55 @@ with sync_playwright() as p:
         print(tag, "player at /admin:", vis(pg, "p:has-text('signed in as a player')").count() == 1)
         vis(pg, "button:has-text('Sign out')").first.click(); pg.wait_for_timeout(800)
 
-        # 2) super admin: dashboard, players, drawer, boxes, staff, audit
+        # 2) super admin: dashboard -> Players menu -> player page (pay out, tag, comment, CS lock)
         staff_sign_in(pg, *SUPER)
         pg.screenshot(path=f"{OUT}/admin-dashboard-{tag}.png", full_page=True)
         kpis = [t for t in vis(pg, "dl dt").all_inner_texts()][:6]
         print(tag, "kpi labels:", kpis)
+        if width >= 1024:
+            vis(pg, "nav[aria-label='Back office'] button:has-text('Players')").click()
+            vis(pg, "nav[aria-label='Back office'] a:has-text('All players')").click()
+        else:
+            vis(pg, "header.sticky button[aria-label='Open menu']").click()
+            vis(pg, "nav[aria-label='Back office'] a:has-text('All players')").click()
+        pg.wait_for_url("**/admin/players"); pg.wait_for_timeout(800)
         pg.goto(BASE + "/admin/players?filter=browser"); pg.wait_for_timeout(1500)
         rows = vis(pg, "tbody tr")
-        print(tag, "browser players:", rows.count(), "|", rows.first.inner_text().replace("\n", " ")[:160])
+        print(tag, "browser players:", rows.count(), "|", rows.first.inner_text().replace(chr(10), " ")[:160])
         pg.screenshot(path=f"{OUT}/admin-players-{tag}.png", full_page=True)
-        rows.first.click(); pg.wait_for_timeout(800)
-        pg.screenshot(path=f"{OUT}/admin-player-card-{tag}.png")
-        vis(pg, "button:has-text('Mark paid')").click(); pg.wait_for_timeout(300)
-        print(tag, "settle:", vis(pg, "[role=dialog] [role=status]").inner_text())
-        vis(pg, "button:has-text('Suspend player')").click(); pg.wait_for_timeout(300)
-        print(tag, "suspend:", vis(pg, "[role=dialog] [role=status]").inner_text())
-        pg.keyboard.press("Escape"); pg.wait_for_timeout(500)
+        rows.first.click()
+        pg.wait_for_url("**/admin/players/view?id=*"); pg.wait_for_timeout(1000)
+        for section in ["Accounts", "Approx average bonus ratio", "Loyalty points account", "Issued bonuses", "Status", "Player locks", "Tags", "Groups", "Payments", "Comments"]:
+            expect(pg.get_by_role("heading", name=section, exact=True).filter(visible=True)).to_be_visible()
+        print(tag, "player page title:", vis(pg, "h1").first.inner_text().replace(chr(10), " "))
+        pg.screenshot(path=f"{OUT}/admin-player-page-{tag}.png", full_page=True)
+        vis(pg, "button:has-text('Mark paid')").click()
+        expect(pg.get_by_text("Cashout marked as paid.")).to_be_visible()
+        pg.get_by_label("New tag").filter(visible=True).fill("VIP")
+        vis(pg, "form:has(input[aria-label='New tag']) button:has-text('Add')").click()
+        expect(vis(pg, "li:has-text('VIP')").first).to_be_visible()
+        pg.get_by_label("Add a comment for the team").filter(visible=True).fill("QA: called about the cashout.")
+        vis(pg, "button:has-text('Save comment')").click()
+        expect(pg.get_by_text("QA: called about the cashout.")).to_be_visible()
+        vis(pg, "button:has-text('Add CS lock')").click()
+        pg.get_by_label("Comment", exact=True).filter(visible=True).fill("QA lock")
+        vis(pg, "button:has-text('Save lock')").click()
+        expect(pg.get_by_text("Player locked: they can't sign in or play.")).to_be_visible()
+        groups = vis(pg, "a:has-text('Group:')").count()
+        print(tag, "player page: paid, tagged, commented, CS-locked; status", vis(pg, "dd span:has-text('Suspended')").count() == 1, "| groups:", groups)
+        pg.screenshot(path=f"{OUT}/admin-player-page-after-{tag}.png", full_page=True)
+        vis(pg, "a:has-text('View')").first.click()
+        pg.wait_for_url("**/admin/boxes/openings?player=*"); pg.wait_for_timeout(800)
+        print(tag, "openings for player:", vis(pg, "tbody tr").count())
+        pg.goto(BASE + "/admin/payments?status=pending"); pg.wait_for_timeout(1000)
+        print(tag, "pending payments after payout:", vis(pg, "tbody tr").first.inner_text().strip()[:40])
+        pg.goto(BASE + "/admin/payments"); pg.wait_for_timeout(1000)
+        pg.screenshot(path=f"{OUT}/admin-payments-{tag}.png", full_page=True)
+        pg.goto(BASE + "/admin/feed"); pg.wait_for_timeout(1000)
+        print(tag, "feed events:", vis(pg, "main li").count())
+        pg.screenshot(path=f"{OUT}/admin-feed-{tag}.png", full_page=True)
+        pg.goto(BASE + "/admin/players/groups"); pg.wait_for_timeout(1000)
+        pg.screenshot(path=f"{OUT}/admin-groups-{tag}.png", full_page=True)
         pg.goto(BASE + "/admin/players"); pg.wait_for_timeout(1200)
         pg.screenshot(path=f"{OUT}/admin-players-all-{tag}.png")
         pg.goto(BASE + "/admin/boxes"); pg.wait_for_timeout(1200)
@@ -110,18 +153,18 @@ with sync_playwright() as p:
         print(tag, "added admin:", added.split(".")[0])
         pg.screenshot(path=f"{OUT}/admin-staff-{tag}.png", full_page=True)
         pg.goto(BASE + "/admin/audit"); pg.wait_for_timeout(1200)
-        print(tag, "audit rows:", vis(pg, "tbody tr").count())
+        print(tag, "audit rows (expect 5):", vis(pg, "tbody tr").count())
         pg.screenshot(path=f"{OUT}/admin-audit-{tag}.png", full_page=True)
         sw = pg.evaluate("document.documentElement.scrollWidth")
         print(tag, "scrollWidth", sw)
-        vis(pg, "button:has-text('Sign out')").first.click(); pg.wait_for_timeout(800)
+        staff_sign_out(pg, width)
 
         # 3) the new admin: staff page locked
         staff_sign_in(pg, admin_email, admin_password)
         pg.goto(BASE + "/admin/staff"); pg.wait_for_timeout(1000)
         print(tag, "admin sees lock:", vis(pg, "h1:has-text('Super admin only')").count() == 1)
         pg.screenshot(path=f"{OUT}/admin-locked-{tag}.png")
-        vis(pg, "button:has-text('Sign out')").first.click(); pg.wait_for_timeout(800)
+        staff_sign_out(pg, width)
 
         # 4) suspended player can't sign in
         pg.goto(BASE + "/sign-in"); pg.wait_for_timeout(1200)
@@ -140,7 +183,7 @@ with sync_playwright() as p:
         print(tag, "players after clear:", vis(pg, "tbody tr").first.inner_text().strip())
         pg.goto(BASE + "/admin/audit"); pg.wait_for_timeout(800)
         print(tag, "audit after clear:", vis(pg, "tbody tr").count(), "row(s)")
-        vis(pg, "button:has-text('Sign out')").first.click(); pg.wait_for_timeout(500)
+        staff_sign_out(pg, width)
         c.close()
     b.close()
 print("ERRORS:", errors[:15])

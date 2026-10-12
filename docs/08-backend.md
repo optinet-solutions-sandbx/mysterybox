@@ -13,6 +13,7 @@ project. The UI still runs on the browser mock, so nothing calls Supabase yet.
 | `supabase/migrations/20261012120000_core_schema.sql` | Enums and tables: accounts, wallet ledger, catalog and odds, play, fulfilment, audit, settings. |
 | `supabase/migrations/20261012120100_auth_roles_rls.sql` | The three roles, the sign-up trigger, row-level security and column grants. |
 | `supabase/migrations/20261012120200_wallet_and_play.sql` | Player RPCs: player card, deposit and withdrawal placeholders, `open_box`, sell back, shipping, seeds, `verify_roll`. |
+| `supabase/migrations/20261013120000_player_management.sql` | Player numbers, staff comments, tags, CS/SB player locks (status follows the locks), self-exclusion. See [09](09-backoffice-reference.md). |
 | `supabase/migrations/20261012120300_backoffice.sql` | Back-office views and RPCs (KPIs, daily metrics, players, box performance) and audited staff actions. |
 | `supabase/seed.sql` | The catalog, **generated** from `web/src/data` so ids, prices, weights and draw order match the site. |
 | `supabase/snippets/bootstrap_super_admin.sql` | Makes the first super admin. |
@@ -113,6 +114,10 @@ The rules the front end already follows hold in the database too:
 | Staff list / change a role | `staff-actions.setRole` | `listStaff` / `setRole` | `GET /rest/v1/admin_staff` / `rpc/admin_set_role` | super admin |
 | Add a staff member | `staff-actions.addStaff` | — | **TODO:** Edge Function using `auth.admin.inviteUserByEmail` (service role), then `admin_set_role` | super admin |
 | Adjust a balance | — | `adjustBalance` | `rpc/admin_adjust_balance` | super admin |
+| Lock / unlock a player (CS staff lock, SB self-exclusion) | `staff-actions.lockPlayer` / `unlockPlayer` | — | `rpc/admin_lock_player` / `rpc/admin_unlock_player`; read `GET /rest/v1/player_locks` | admin+ |
+| Comment on a player | `staff-actions.addComment` | — | `rpc/admin_add_comment`; read `GET /rest/v1/player_comments` | admin+ |
+| Tag a player (manual tags) | `staff-actions.setPlayerTags` | — | `rpc/admin_set_tags`; read `GET /rest/v1/player_tags` | admin+ |
+| Self-exclude | — | — | `rpc/self_exclude` | player |
 | Audit log | `useBackoffice.audit` | `listAuditLog` | `GET /rest/v1/audit_log` | super admin |
 
 **Errors.** The SQL functions raise a stable code as the message, and the adapter maps it to

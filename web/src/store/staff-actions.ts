@@ -2,7 +2,7 @@
 
 import { can, type AccountStatus, type AppRole } from "@/backend/contract";
 import { useAuth, type Account } from "./auth";
-import { useBackoffice } from "./backoffice";
+import { useBackoffice, type PlayerLock } from "./backoffice";
 import { useLedgers } from "./ledgers";
 
 /**
@@ -23,14 +23,10 @@ function audit(by: Account, action: string, targetType: string, targetId: string
   useBackoffice.getState().log({ actorId: by.id, actorRole: by.role, action, targetType, targetId, detail: { by: by.email, ...detail } });
 }
 
-/** Suspend / reactivate a player. Browser accounts carry `email`; generated demo players don't. */
-export function setPlayerStatus(
-  player: { id: string; email?: string; name: string },
-  status: AccountStatus,
-  from: AccountStatus,
-): StaffActionResult {
-  const by = actor();
-  if (!by || !can(by.role, "players.suspend")) return { ok: false, error: "forbidden" };
+type PlayerRef = { id: string; email?: string; name: string };
+
+/** Writes a status after the same checks as admin_set_player_status. */
+function applyStatus(by: Account, player: PlayerRef, status: AccountStatus): StaffActionResult {
   if (player.email) {
     const target = useAuth.getState().accounts[player.email];
     if (!target) return { ok: false, error: "not_found" };
@@ -40,7 +36,66 @@ export function setPlayerStatus(
   } else {
     useBackoffice.getState().setDemoStatus(player.id, status);
   }
-  audit(by, "player.status", "profile", player.id, { player: player.name, from, to: status });
+  return { ok: true };
+}
+
+/** Suspend / reactivate a player. Browser accounts carry `email`; generated demo players don't. */
+export function setPlayerStatus(player: PlayerRef, status: AccountStatus, from: AccountStatus): StaffActionResult {
+  const by = actor();
+  if (!by || !can(by.role, "players.suspend")) return { ok: false, error: "forbidden" };
+  const res = applyStatus(by, player, status);
+  if (res.ok) audit(by, "player.status", "profile", player.id, { player: player.name, from, to: status });
+  return res;
+}
+
+/** Status that follows from the active locks: self-exclusion wins, then a staff lock. */
+function statusFromLocks(locks: PlayerLock[]): AccountStatus {
+  const active = locks.filter((l) => !l.removedAt);
+  return active.some((l) => l.type === "sb") ? "self_excluded" : active.some((l) => l.type === "cs") ? "suspended" : "active";
+}
+
+/** Adds a CS (staff) lock or an SB (self-exclusion) lock; the account status follows. */
+export function lockPlayer(player: PlayerRef, type: PlayerLock["type"], reason: string, comment: string): StaffActionResult {
+  const by = actor();
+  if (!by || !can(by.role, "players.suspend")) return { ok: false, error: "forbidden" };
+  const existing = useBackoffice.getState().locks[player.id] ?? [];
+  const next = statusFromLocks([...existing, { id: "new", type, reason, comment, createdAt: "", by: by.email }]);
+  const res = applyStatus(by, player, next);
+  if (!res.ok) return res;
+  const lock = useBackoffice.getState().addLock(player.id, { type, reason, comment, by: by.email });
+  audit(by, "player.lock", "profile", player.id, { player: player.name, lock: type.toUpperCase(), reason, comment, lock_id: lock.id });
+  return { ok: true };
+}
+
+export function unlockPlayer(player: PlayerRef, lockId: string): StaffActionResult {
+  const by = actor();
+  if (!by || !can(by.role, "players.suspend")) return { ok: false, error: "forbidden" };
+  const locks = useBackoffice.getState().locks[player.id] ?? [];
+  const lock = locks.find((l) => l.id === lockId && !l.removedAt);
+  if (!lock) return { ok: false, error: "not_found" };
+  const res = applyStatus(by, player, statusFromLocks(locks.filter((l) => l.id !== lockId)));
+  if (!res.ok) return res;
+  useBackoffice.getState().removeLock(player.id, lockId, by.email);
+  audit(by, "player.unlock", "profile", player.id, { player: player.name, lock: lock.type.toUpperCase(), reason: lock.reason });
+  return { ok: true };
+}
+
+/** Staff notes on the player card. */
+export function addComment(player: PlayerRef, text: string): StaffActionResult {
+  const by = actor();
+  if (!by || !can(by.role, "players.notes")) return { ok: false, error: "forbidden" };
+  useBackoffice.getState().addComment(player.id, by.email, text.trim());
+  audit(by, "player.comment", "profile", player.id, { player: player.name });
+  return { ok: true };
+}
+
+/** Manual tags (the system adds its own automatically; see domain/player-insights.ts). */
+export function setPlayerTags(player: PlayerRef, tags: string[]): StaffActionResult {
+  const by = actor();
+  if (!by || !can(by.role, "players.notes")) return { ok: false, error: "forbidden" };
+  const before = useBackoffice.getState().tags[player.id] ?? [];
+  useBackoffice.getState().setTags(player.id, tags);
+  audit(by, "player.tags", "profile", player.id, { player: player.name, from: before.join(", ") || "none", to: tags.join(", ") || "none" });
   return { ok: true };
 }
 

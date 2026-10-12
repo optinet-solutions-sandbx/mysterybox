@@ -2,13 +2,14 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
-import { ChevronDown, ChevronUp, Search } from "lucide-react";
+import Link from "next/link";
+import { ChevronDown, ChevronUp, Search, Users, X } from "lucide-react";
 import type { PlayerOverviewRow } from "@/backend/contract";
 import { formatUsd } from "@/domain/money";
 import { overviewRow, type PlayerRecord } from "@/domain/analytics";
+import { SEGMENTS, playerNumber } from "@/domain/player-insights";
 import { cn } from "@/lib/cn";
-import { useBackofficeData } from "./data";
-import { PlayerDrawer } from "./player-drawer";
+import { useBackofficeData, useNow } from "./data";
 import { PageTitle, SourceBadge, StatusBadge, formatCount, formatDate } from "./ui";
 
 const FILTERS = [
@@ -16,14 +17,15 @@ const FILTERS = [
   { id: "played", label: "Played" },
   { id: "never", label: "Never played" },
   { id: "pending", label: "Withdrawal pending" },
-  { id: "suspended", label: "Suspended" },
+  { id: "locked", label: "Locked" },
   { id: "browser", label: "This browser" },
 ] as const;
 type FilterId = (typeof FILTERS)[number]["id"];
 
-type SortKey = "name" | "registeredAt" | "lastPlayedAt" | "openings" | "playedCents" | "earnedCents" | "houseNetCents" | "balanceCents";
+type SortKey = "number" | "name" | "registeredAt" | "lastPlayedAt" | "openings" | "playedCents" | "earnedCents" | "houseNetCents" | "balanceCents";
 
 const COLUMNS: { key: SortKey; label: string; align?: "right" }[] = [
+  { key: "number", label: "ID" },
   { key: "name", label: "Player" },
   { key: "registeredAt", label: "Registered" },
   { key: "lastPlayedAt", label: "Last played" },
@@ -44,7 +46,7 @@ function matches(filter: FilterId, p: PlayerRecord, row: PlayerOverviewRow) {
       return row.openings === 0;
     case "pending":
       return p.money.some((m) => m.type === "withdrawal" && m.status === "pending");
-    case "suspended":
+    case "locked":
       return p.status !== "active";
     case "browser":
       return p.source === "browser";
@@ -63,7 +65,8 @@ export function PlayersView() {
   const [page, setPage] = useState(0);
 
   const filter = (FILTERS.find((f) => f.id === params.get("filter"))?.id ?? "all") as FilterId;
-  const selectedId = params.get("player");
+  const group = SEGMENTS.find((g) => g.id === params.get("group")) ?? null;
+  const now = useNow();
 
   const setParam = (key: string, value: string | null) => {
     const next = new URLSearchParams(params.toString());
@@ -78,24 +81,29 @@ export function PlayersView() {
     const list = players
       .map((p) => ({ p, row: overviewRow(p) }))
       .filter(({ p, row }) => matches(filter, p, row))
+      .filter(({ p }) => !group || group.test(p, now))
       .filter(({ p }) => !q || `${p.firstName} ${p.lastName} ${p.email}`.toLowerCase().includes(q));
     const value = ({ row }: { row: PlayerOverviewRow }) =>
-      sort.key === "name" ? `${row.lastName} ${row.firstName}`.toLowerCase() : (row[sort.key] ?? "");
+      sort.key === "number"
+        ? playerNumber(row.id)
+        : sort.key === "name"
+          ? `${row.lastName} ${row.firstName}`.toLowerCase()
+          : (row[sort.key] ?? "");
     return list.sort((a, b) => {
       const [x, y] = [value(a), value(b)];
       const cmp = x < y ? -1 : x > y ? 1 : 0;
       return sort.desc ? -cmp : cmp;
     });
-  }, [players, filter, query, sort]);
+  }, [players, filter, group, now, query, sort]);
 
   const pages = Math.max(1, Math.ceil(rows.length / PAGE));
   const current = Math.min(page, pages - 1);
   const visible = rows.slice(current * PAGE, current * PAGE + PAGE);
-  const selected = players.find((p) => p.id === selectedId) ?? null;
 
   return (
     <>
       <PageTitle
+        icon={Users}
         title="Players"
         intro="Everyone who has registered: when they joined, whether and when they played, how much they played and earned, and what they hold now. Select a player for their card."
       />
@@ -133,6 +141,14 @@ export function PlayersView() {
             </button>
           ))}
         </div>
+        {group && (
+          <span className="inline-flex items-center gap-2 rounded-pill bg-fg px-3 py-1.5 text-sm font-semibold text-bg">
+            Group: {group.label}
+            <button type="button" aria-label="Remove group filter" onClick={() => setParam("group", null)}>
+              <X className="size-3.5" />
+            </button>
+          </span>
+        )}
         <p className="text-sm text-muted sm:ml-auto" aria-live="polite">
           {formatCount(rows.length)} {rows.length === 1 ? "player" : "players"}
         </p>
@@ -162,15 +178,18 @@ export function PlayersView() {
           </thead>
           <tbody className="divide-y divide-line">
             {visible.map(({ p, row }) => (
-              <tr key={p.id} className="cursor-pointer transition-colors hover:bg-accent-soft" onClick={() => setParam("player", p.id)}>
+              <tr key={p.id} className="cursor-pointer transition-colors hover:bg-accent-soft" onClick={() => router.push(`/admin/players/view?id=${playerNumber(p.id)}`)}>
+                <td className="px-4 py-3 tabular">
+                  <Link href={`/admin/players/view?id=${playerNumber(p.id)}`} onClick={(e) => e.stopPropagation()} className="font-semibold text-accent hover:underline">
+                    {playerNumber(p.id)}
+                  </Link>
+                </td>
                 <td className="px-4 py-3">
-                  <button type="button" onClick={(e) => { e.stopPropagation(); setParam("player", p.id); }} className="text-left">
-                    <span className="font-semibold">
-                      {p.firstName} {p.lastName}
-                    </span>
-                    {p.source === "browser" && <SourceBadge />}
-                    <span className="block text-xs text-muted">{p.email}</span>
-                  </button>
+                  <span className="font-semibold">
+                    {p.firstName} {p.lastName}
+                  </span>
+                  {p.source === "browser" && <SourceBadge />}
+                  <span className="block text-xs text-muted">{p.email}</span>
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap tabular">{formatDate(row.registeredAt)}</td>
                 <td className="px-4 py-3 whitespace-nowrap tabular">{row.lastPlayedAt ? formatDate(row.lastPlayedAt) : <span className="text-subtle">Never</span>}</td>
@@ -213,7 +232,6 @@ export function PlayersView() {
         </nav>
       )}
 
-      <PlayerDrawer player={selected} onClose={() => setParam("player", null)} />
     </>
   );
 }

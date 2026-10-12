@@ -22,6 +22,11 @@ export function useToday(): string | null {
   return useSyncExternalStore(noSubscribe, () => new Date().toISOString().slice(0, 10), () => null);
 }
 
+/** "Now" for rule-based groups and tags: fixed per minute so renders stay stable. Client-only (0 on the server). */
+export function useNow(): number {
+  return useSyncExternalStore(noSubscribe, () => Math.floor(Date.now() / 60_000) * 60_000, () => 0);
+}
+
 /** The period picked in the back office, shared by every page. */
 export const useRangePreset = create<{ preset: RangePreset; setPreset(p: RangePreset): void }>()((set) => ({
   preset: "30d",

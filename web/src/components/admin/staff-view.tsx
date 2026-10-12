@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Check, Minus } from "lucide-react";
+import { Check, Minus, ShieldCheck } from "lucide-react";
 import { PERMISSIONS, ROLE_LABEL, type AppRole, type Permission } from "@/backend/contract";
 import { isValidEmail } from "@/domain/auth";
 import { randomHex } from "@/domain/fair";
@@ -17,7 +17,8 @@ const PERMISSION_LABEL: Record<Permission, string> = {
   play: "Open boxes, deposit and withdraw",
   "backoffice.view": "See the back office dashboard",
   "players.view": "See every player's card and activity",
-  "players.suspend": "Suspend and reactivate players",
+  "players.suspend": "Lock, suspend and reactivate players",
+  "players.notes": "Comment on and tag players",
   "payments.settle": "Pay out or cancel withdrawals",
   "catalog.manage": "Manage boxes, items and odds",
   "staff.manage": "Add staff and change roles",
@@ -52,6 +53,7 @@ export function StaffView() {
   return (
     <>
       <PageTitle
+        icon={ShieldCheck}
         title="Staff & roles"
         intro="Three roles. Players are customers. Admins run the day to day. Super admins also manage staff, balances, settings and the audit log. The database enforces the same rules."
       />
