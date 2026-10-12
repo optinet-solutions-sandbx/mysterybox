@@ -1,5 +1,5 @@
 import { economy } from "@/config/economy";
-import type { Cents, Rarity } from "./types";
+import { RARITIES, type Cents, type Rarity } from "./types";
 
 /**
  * Scales arbitrary positive weights to integers that sum exactly to `scale`
@@ -71,4 +71,15 @@ export function rarityFor(value: Cents, boxPrice: Cents): Rarity {
   if (multiple >= 1.5) return "rare";
   if (multiple >= 0.5) return "uncommon";
   return "common";
+}
+
+/** Total probability of landing each rarity tier (sums to 1). */
+export function oddsByRarity(
+  entries: { rarity: Rarity; weight: number }[],
+  scale: number = economy.oddsScale,
+): Record<Rarity, number> {
+  // Sum integer weights first, divide once: avoids float drift (0.7 + 0.2 ≠ 0.9).
+  const weights = Object.fromEntries(RARITIES.map((r) => [r, 0])) as Record<Rarity, number>;
+  for (const e of entries) weights[e.rarity] += e.weight;
+  return Object.fromEntries(RARITIES.map((r) => [r, weights[r] / scale])) as Record<Rarity, number>;
 }

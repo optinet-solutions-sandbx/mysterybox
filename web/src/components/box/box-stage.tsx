@@ -5,13 +5,15 @@ import { useCallback, useRef, useState } from "react";
 import { useReducedMotion } from "motion/react";
 import { Zap } from "lucide-react";
 import type { Box, ResolvedEntry } from "@/domain/types";
-import { formatProbability, formatUsd } from "@/domain/money";
+import { formatDisplayedOdds, formatUsd } from "@/domain/money";
 import { buildReel } from "@/domain/reel";
+import { useAuthHydrated, useCurrentUser } from "@/store/auth";
 import { useSession, useSessionHydrated } from "@/store/session";
-import { Box3D } from "@/components/box3d/box-3d";
+import { BOX_WIDTH, Box3D } from "@/components/box3d/box-3d";
 import { scrollToElement } from "@/components/fx/smooth-scroll";
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
+import { OddsAtAGlance } from "./odds-at-a-glance";
 import { Reel, type ReelSpin } from "./reel";
 import { RevealOverlay } from "./reveal-overlay";
 
@@ -39,6 +41,8 @@ export function BoxStage({
 }) {
   const reduce = useReducedMotion();
   const hydrated = useSessionHydrated();
+  const authHydrated = useAuthHydrated();
+  const user = useCurrentUser();
   const balance = useSession((s) => s.balance);
   const seeds = useSession((s) => s.seeds);
   const openBox = useSession((s) => s.openBox);
@@ -114,7 +118,7 @@ export function BoxStage({
           <div className="relative h-[400px] sm:h-[480px] lg:h-[560px]" data-cursor data-cursor-label="Tilt">
             <div className="absolute top-[66%] left-1/2 -translate-x-1/2 -translate-y-1/2 scale-[0.7] sm:scale-90 lg:scale-100">
               <Box3D
-                width={340}
+                width={BOX_WIDTH.stage}
                 material={box.material}
                 open={phase === "spinning" || phase === "revealed" ? 1 : 0}
                 shake={phase === "drawing"}
@@ -136,14 +140,20 @@ export function BoxStage({
 
             <dl className="mt-8 grid max-w-lg grid-cols-3 border-y border-line">
               <Stat label="Price" value={formatUsd(box.price)} />
-              <Stat label="Top piece" value={formatUsd(stats.topValue)} hint={formatProbability(stats.topProbability)} />
+              <Stat label="Top piece" value={formatUsd(stats.topValue)} hint={formatDisplayedOdds(stats.topProbability)} />
               <Stat label="Average return" value={`${(stats.rtp * 100).toFixed(1)}%`} />
             </dl>
 
             <div className="mt-8 flex flex-wrap items-center gap-4">
-              <Button size="lg" onClick={handleOpen} disabled={!hydrated || !seeds || busy} className="min-w-60">
-                {busy ? "Opening…" : `Open for ${formatUsd(box.price)}`}
-              </Button>
+              {authHydrated && !user ? (
+                <ButtonLink size="lg" href={`/sign-in?next=${encodeURIComponent(`/boxes/${box.slug}`)}`} className="min-w-60">
+                  Sign in to open
+                </ButtonLink>
+              ) : (
+                <Button size="lg" onClick={handleOpen} disabled={!hydrated || !authHydrated || !seeds || busy} className="min-w-60">
+                  {busy ? "Opening…" : `Open for ${formatUsd(box.price)}`}
+                </Button>
+              )}
               <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-muted select-none hover:text-fg">
                 <input type="checkbox" className="peer sr-only" checked={quick} onChange={(e) => setQuick(e.target.checked)} />
                 <span className="grid size-6 place-items-center rounded-full border border-line peer-checked:border-transparent peer-checked:bg-foil peer-checked:text-on-accent peer-focus-visible:outline-2 peer-focus-visible:outline-accent">
@@ -151,7 +161,12 @@ export function BoxStage({
                 </span>
                 Quick open
               </label>
-              {hydrated && !canAfford && phase === "idle" && (
+              {authHydrated && !user && (
+                <Link href={`/register?next=${encodeURIComponent(`/boxes/${box.slug}`)}`} className="text-sm font-semibold text-accent underline-offset-4 hover:underline">
+                  New here? Create an account
+                </Link>
+              )}
+              {user && hydrated && !canAfford && phase === "idle" && (
                 <Link href="/wallet" className="text-sm text-accent underline-offset-4 hover:underline">
                   Add demo funds
                 </Link>
@@ -166,6 +181,10 @@ export function BoxStage({
                 </Link>
               )}
             </p>
+
+            <div className="mt-2 max-w-lg">
+              <OddsAtAGlance entries={entries} />
+            </div>
           </div>
         </div>
 
@@ -208,8 +227,8 @@ export function BoxStage({
 function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
     <div className="py-4 pr-4 [&:not(:first-child)]:border-l [&:not(:first-child)]:border-line [&:not(:first-child)]:pl-4">
-      <dt className="text-xs text-subtle">{label}</dt>
-      <dd className="mt-1 font-display text-xl text-foil tabular">{value}</dd>
+      <dt className="text-xs font-semibold text-muted">{label}</dt>
+      <dd className="mt-1 font-display text-xl font-semibold text-foil tabular sm:text-2xl">{value}</dd>
       {hint && <dd className="text-xs text-muted">{hint}</dd>}
     </div>
   );

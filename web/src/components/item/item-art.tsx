@@ -5,6 +5,22 @@ import { LOGO_SRC } from "@/components/brand/logo-mark";
 import { cn } from "@/lib/cn";
 import { drawings, type ArtKey } from "./item-drawings";
 
+/**
+ * Size a photo so every piece covers about the same area of its tile (≈36%), whatever its
+ * proportions: a thin bracelet gets the full width, a tall watch the full height, a bag sits
+ * between. Percent strings are rounded so server and client render identical markup.
+ */
+function fitToArea(aspect: number) {
+  const AREA = 3600;
+  const MAX_W = 84;
+  const MAX_H = 74;
+  let w = Math.sqrt(AREA * aspect);
+  let h = Math.sqrt(AREA / aspect);
+  if (w > MAX_W) [w, h] = [MAX_W, MAX_W / aspect];
+  if (h > MAX_H) [w, h] = [MAX_H * aspect, MAX_H];
+  return { width: `${w.toFixed(1)}%`, height: `${h.toFixed(1)}%` };
+}
+
 const byCategory: Record<Category, ArtKey> = {
   bags: "bag-top",
   watches: "watch",
@@ -54,7 +70,9 @@ export function ItemArt({
         }}
       />
       {item.image ? (
-        <Image src={item.image} alt={item.name} fill sizes={sizes} priority={priority} className="object-contain p-[10%]" />
+        <div className="relative" style={item.imageAspect ? fitToArea(item.imageAspect) : { width: "80%", height: "80%" }}>
+          <Image src={item.image} alt={item.name} fill sizes={sizes} priority={priority} className="object-contain drop-shadow-[0_10px_18px_rgb(0_0_0/0.35)]" />
+        </div>
       ) : (
         <svg viewBox="0 0 100 100" className="w-[64%] overflow-visible drop-shadow-[0_8px_24px_rgb(0_0_0/0.5)]" aria-label={item.name} role="img">
           <defs>

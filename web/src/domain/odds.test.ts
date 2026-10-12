@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   expectedValue,
   normalizeWeights,
+  oddsByRarity,
   pickByRoll,
   priceForRtp,
   rarityFor,
@@ -106,5 +107,21 @@ describe("rarityFor", () => {
     expect(rarityFor(1_500, 1_000)).toBe("rare");
     expect(rarityFor(5_000, 1_000)).toBe("epic");
     expect(rarityFor(25_000, 1_000)).toBe("legendary");
+  });
+});
+
+describe("oddsByRarity", () => {
+  it("sums each tier and the tiers sum to 1", () => {
+    const byTier = oddsByRarity(
+      [
+        { rarity: "common", weight: 70 },
+        { rarity: "common", weight: 20 },
+        { rarity: "rare", weight: 9 },
+        { rarity: "legendary", weight: 1 },
+      ],
+      100,
+    );
+    expect(byTier).toEqual({ common: 0.9, uncommon: 0, rare: 0.09, epic: 0, legendary: 0.01 });
+    expect(Object.values(byTier).reduce((a, b) => a + b, 0)).toBeCloseTo(1);
   });
 });

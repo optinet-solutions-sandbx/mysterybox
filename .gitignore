@@ -7,3 +7,6 @@ __pycache__/
 # Vercel
 web/.vercel
 .vercel
+
+# Local review screenshots (not shipped)
+review/

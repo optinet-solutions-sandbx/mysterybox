@@ -5,7 +5,9 @@ import type { InventoryItem, InventoryStatus } from "@/domain/types";
 import { formatUsd } from "@/domain/money";
 import { rarityFor, sellBackValue } from "@/domain/odds";
 import { getBox, getItem } from "@/services/catalog";
+import { useAuthHydrated, useCurrentUser } from "@/store/auth";
 import { useSession, useSessionHydrated } from "@/store/session";
+import { AuthPrompt } from "@/components/auth/auth-prompt";
 import { ItemArt } from "@/components/item/item-art";
 import { RarityTag } from "@/components/item/rarity-tag";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -29,12 +31,15 @@ const statusLabel: Record<InventoryStatus, string> = {
 
 export function InventoryView() {
   const hydrated = useSessionHydrated();
+  const authHydrated = useAuthHydrated();
+  const user = useCurrentUser();
   const inventory = useSession((s) => s.inventory);
   const sellBack = useSession((s) => s.sellBack);
   const [tab, setTab] = useState<Tab>("held");
   const [message, setMessage] = useState<string | null>(null);
 
-  if (!hydrated) return <div className="h-64 animate-pulse rounded-card bg-surface" />;
+  if (!hydrated || !authHydrated) return <div className="h-64 animate-pulse rounded-card bg-surface" />;
+  if (!user) return <AuthPrompt title="Sign in to see your pieces" body="Everything you open lands here, ready to keep, ship home or sell back." />;
 
   const held = inventory.filter((i) => i.status === "held");
   const heldValue = held.reduce((sum, i) => sum + getItem(i.itemId).value, 0);

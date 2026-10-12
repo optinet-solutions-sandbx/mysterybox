@@ -1,23 +1,16 @@
 import type { Metadata } from "next";
-import { User } from "lucide-react";
-import { ComingSoon } from "@/components/common/coming-soon";
+import { AccountView } from "@/components/account/account-view";
+import { Container, PageHeader } from "@/components/ui/layout";
 
 export const metadata: Metadata = { title: "Account" };
 
 export default function AccountPage() {
   return (
-    <ComingSoon
-      eyebrow="Settings"
-      title="Account"
-      intro="Profile, verification, limits and shipping details."
-      icon={User}
-      planned={[
-        "Sign up / sign in (email + social), with date of birth and state captured at sign-up.",
-        "Identity verification (KYC) levels gating withdrawals and high-value shipping.",
-        "Shipping addresses (US only at launch).",
-        "Responsible-play tools: deposit limits, loss limits, cool-off and self-exclusion.",
-        "Communication preferences.",
-      ]}
-    />
+    <>
+      <PageHeader eyebrow="Your account" title="Account" intro="Your details, how we contact you, and what’s coming once accounts are real." />
+      <Container className="py-10">
+        <AccountView />
+      </Container>
+    </>
   );
 }

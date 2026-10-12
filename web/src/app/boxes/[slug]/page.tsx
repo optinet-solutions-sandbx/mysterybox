@@ -4,6 +4,7 @@ import { boxStats, categoryLabels, getBox, listBoxes, resolveEntries } from "@/s
 import { BoxStage } from "@/components/box/box-stage";
 import { InsideGrid } from "@/components/box/inside-grid";
 import { OddsTable } from "@/components/box/odds-table";
+import { HowItWorksStrip } from "@/components/box/how-it-works-strip";
 
 /** Every slug is prerendered by generateStaticParams, so a blocking navigation is effectively instant. */
 export const instant = false;
@@ -33,8 +34,10 @@ export default async function BoxPage({ params }: PageProps<"/boxes/[slug]">) {
         stats={{ rtp: stats.rtp, topName: stats.top.item.name, topValue: stats.top.item.value, topProbability: stats.top.probability }}
       />
 
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <h2 className="font-display text-3xl sm:text-4xl">What’s inside</h2>
+      <HowItWorksStrip />
+
+      <section id="inside" className="mx-auto max-w-7xl scroll-mt-24 px-4 py-14 sm:px-6 lg:px-8">
+        <h2 className="font-display text-3xl font-semibold sm:text-4xl">What’s inside</h2>
         <p className="mt-3 max-w-2xl text-muted">
           Every piece this box can contain, with its listed value and the exact chance of getting it.
         </p>
@@ -43,8 +46,8 @@ export default async function BoxPage({ params }: PageProps<"/boxes/[slug]">) {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
-        <h2 className="font-display text-2xl">Odds and roll ranges</h2>
+      <section id="odds" className="mx-auto max-w-7xl scroll-mt-24 px-4 pb-10 sm:px-6 lg:px-8">
+        <h2 className="font-display text-3xl font-semibold sm:text-4xl">Odds</h2>
         <div className="mt-6">
           <OddsTable entries={entries} />
         </div>

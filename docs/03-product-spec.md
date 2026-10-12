@@ -9,7 +9,9 @@ behavior via `ComingSoon`. **Planned** = no route yet.
 |---|---|---|
 | `/` | Landing: hero (load sequence + looping 3D box), vault strip, pinned ritual, tier shelf, odds proof, modes, FAQ, keyhole finale | Built |
 | `/boxes` | Catalog of 3D box cards (lid lifts on hover), category filter and price sort with animated re-flow | Built |
-| `/boxes/[slug]` | Box stage (3D box + stats + Open), **shake → lid → drum reel (Skip) → full-screen reveal**, "What's inside" grid with odds pills, full odds table | Built |
+| `/boxes/[slug]` | Box stage (3D box + stats + Open + odds-at-a-glance bar), **shake → lid → drum reel (Skip) → full-screen reveal**, "How it works" strip, "What's inside" grid with odds pills, odds table with **displayed and back-office odds**. Signed out, Open becomes "Sign in to open" | Built |
+| `/register` | MISTY-style "Create your account": email, first/last name, country code + phone, password (live rules), 18+/terms (required), marketing opt-in (unchecked), then a 6-digit email code (shown on screen in the prototype) | Built (mock) |
+| `/sign-in` | Email + password, "Forgot password?" note, unverified accounts go to the code step; returns to `?next=` | Built (mock) |
 | `/inventory` | Held / Shipping / Sold tabs; sell back, sell all, request shipping, cancel while pending | Built |
 | `/wallet` | Demo balance, quick top-ups, activity log, reset session | Built |
 | `/provably-fair` | Explainer, active seeds, client-seed edit, rotate and reveal, verifier | Built |
@@ -19,7 +21,7 @@ behavior via `ComingSoon`. **Planned** = no route yet.
 | `/rewards` | Daily free box by level | Stub |
 | `/leaderboard` | Daily, weekly and monthly races | Stub |
 | `/affiliates` | Referral code and earnings | Stub |
-| `/account` | Profile, verification, addresses, play limits | Stub |
+| `/account` | Profile (name, verified email, phone), marketing switch, balance and pieces, sign out; KYC, addresses and play limits listed as coming | Built (mock) |
 | `/legal/[slug]` | terms, privacy, odds-disclosure, responsible-play, shipping (placeholder outlines) | Built (placeholder) |
 | Global | Prototype banner, sticky header with live balance and inventory count, age gate, footer with responsible-play line, smooth scroll, gold cursor | Built |
 

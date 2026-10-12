@@ -1,8 +1,10 @@
 """Drive the mock-up's core loop in a real browser (1440x900 and 390x844) and record evidence.
 
-Flow: home -> age gate -> catalog filter -> box page -> open (full spin) -> reveal -> sell back
--> quick open -> keep -> inventory (ship + cancel when shippable) -> wallet top-up
--> provably fair rotate + verify nonce 0 -> stubs -> 404.
+Flow: home -> age gate -> catalog filter -> box page signed out ("Sign in to open") -> sign-in ->
+register (validation errors, then details + phone + password) -> email code -> back on the box ->
+open (full spin) -> reveal -> sell back -> quick open -> keep -> inventory (ship + cancel when
+shippable) -> wallet top-up -> provably fair rotate + verify nonce 0 -> sign out / wrong password /
+sign in -> stubs -> 404.
 
 Usage (server from `cd web && npx next build && npx next start -p 3210`):
     python scripts/e2e_flow.py [base_url] [out_dir]
@@ -23,6 +25,11 @@ OUT.mkdir(parents=True, exist_ok=True)
 
 errors: list[str] = []
 log: list[str] = []
+
+
+def label(page, text: str, exact: bool = False):
+    # get_by_label also matches inputs on hidden (Activity-kept) routes, e.g. /sign-in's Email.
+    return page.get_by_label(text, exact=exact).filter(visible=True)
 
 
 def step(msg: str) -> None:
@@ -48,7 +55,8 @@ with sync_playwright() as p:
         page.wait_for_timeout(1800)
         page.screenshot(path=str(OUT / f"{vp_name}-02-home.png"))
         page.screenshot(path=str(OUT / f"{vp_name}-03-home-full.png"), full_page=True)
-        step(f"{vp_name}: age gate confirmed, balance pill = {page.get_by_label('Wallet').inner_text()!r}")
+        expect(page.locator("header a[href='/register']:visible")).to_have_text("Join")
+        step(f"{vp_name}: age gate confirmed, header shows Sign in + Join while signed out")
 
         if vp_name == "mobile":
             page.get_by_role("button", name="Open menu").click()
@@ -69,6 +77,36 @@ with sync_playwright() as p:
         page.get_by_role("button", name="All", exact=True).click()
 
         page.goto(BASE + "/boxes/first-edition")
+        gate = page.get_by_role("link", name="Sign in to open")
+        expect(gate).to_be_visible(timeout=10_000)
+        page.screenshot(path=str(OUT / f"{vp_name}-06a-box-signed-out.png"))
+        gate.click()
+        page.wait_for_url("**/sign-in?next=%2Fboxes%2Ffirst-edition")
+        page.get_by_role("link", name="Create an account").click()
+        page.wait_for_url("**/register?next=%2Fboxes%2Ffirst-edition")
+        page.get_by_role("button", name="Continue with email").click()
+        expect(page.locator("[aria-invalid='true']:visible")).to_have_count(6)
+        page.screenshot(path=str(OUT / f"{vp_name}-06b-register-errors.png"), full_page=True)
+        email = f"e2e.{vp_name}@example.com"
+        label(page, "Email", exact=True).fill(email)
+        label(page, "First name").fill("Avery")
+        label(page, "Last name").fill("Laurent")
+        label(page, "Phone number").press_sequentially("2125550147")
+        expect(label(page, "Phone number")).to_have_value("(212) 555-0147")
+        label(page, "Password", exact=True).fill("noir2026")
+        page.get_by_label(re.compile("or older")).filter(visible=True).check()
+        page.get_by_role("button", name="Continue with email").click()
+        expect(page.get_by_role("heading", name="Check your email")).to_be_visible()
+        label(page, "6-digit code").fill("000000")
+        page.get_by_role("button", name="Verify and continue").click()
+        # main: Next's route announcer is also role=alert.
+        wrong_code = page.locator("main [role=alert]:visible").inner_text()
+        page.get_by_role("button", name="Fill it in").click()
+        page.screenshot(path=str(OUT / f"{vp_name}-06c-verify.png"))
+        page.get_by_role("button", name="Verify and continue").click()
+        page.wait_for_url("**/boxes/first-edition")
+        step(f"{vp_name}: registered {email} (6 field errors on empty submit; wrong code -> {wrong_code!r}); back on the box")
+
         open_btn = page.get_by_role("button", name=re.compile(r"^Open for"))
         expect(open_btn).to_be_enabled(timeout=10_000)
         page.screenshot(path=str(OUT / f"{vp_name}-06-box.png"))
@@ -100,7 +138,7 @@ with sync_playwright() as p:
         expect(reveal).to_be_hidden()
         step(f"{vp_name}: quick open -> kept {kept!r}")
         page.screenshot(path=str(OUT / f"{vp_name}-09-after-keep.png"))
-        page.locator("table").scroll_into_view_if_needed()
+        page.locator("#odds").scroll_into_view_if_needed()
         page.screenshot(path=str(OUT / f"{vp_name}-10-odds.png"))
 
         page.goto(BASE + "/inventory")
@@ -143,6 +181,23 @@ with sync_playwright() as p:
         page.screenshot(path=str(OUT / f"{vp_name}-13-fair.png"), full_page=True)
         verified_item = page.locator("dt:text('Item') + dd").inner_text()
         step(f"{vp_name}: verifier nonce 0 on revealed seed -> {verified_item!r} (first opening was {item_name!r})")
+
+        page.goto(BASE + "/account")
+        expect(page.get_by_role("heading", name="Avery Laurent")).to_be_visible(timeout=10_000)
+        page.screenshot(path=str(OUT / f"{vp_name}-14-account.png"), full_page=True)
+        page.get_by_role("button", name="Sign out").click()
+        page.wait_for_url(BASE + "/")
+        page.goto(BASE + "/inventory")
+        expect(page.get_by_role("heading", name="Sign in to see your pieces")).to_be_visible(timeout=10_000)
+        page.goto(BASE + "/sign-in")
+        label(page, "Email", exact=True).fill(email)
+        label(page, "Password", exact=True).fill("wrong-pass-1")
+        page.get_by_role("button", name="Sign in", exact=True).click()
+        expect(page.locator("main [role=alert]:visible")).to_contain_text("don’t match")
+        label(page, "Password", exact=True).fill("noir2026")
+        page.get_by_role("button", name="Sign in", exact=True).click()
+        page.wait_for_url("**/account")
+        step(f"{vp_name}: signed out (inventory asks to sign in), wrong password rejected, signed back in")
 
         page.goto(BASE + "/battles")
         page.goto(BASE + "/legal/terms")

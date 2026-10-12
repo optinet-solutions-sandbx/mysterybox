@@ -11,7 +11,9 @@ have to be pulled later. Counsel signs off before any public launch.
 | "Prototype, demo credits only" banner on every page | `PrototypeBanner` |
 | Age confirmation on entry (18+ placeholder; 21+ may be required by state or counsel) | `AgeGate`, `brand.minimumAge` |
 | Responsible-play line with a US helpline in the footer | `SiteFooter` ("1-800-GAMBLER") |
-| Full odds disclosure one scroll from every Open button: item, value, probability, roll range | `OddsTable` on `/boxes/[slug]` |
+| Full odds disclosure one scroll from every Open button: item, value, probability, roll range | `OddsAtAGlance` under the button, `OddsTable` on `/boxes/[slug]` |
+| Displayed odds and back-office odds shown side by side, both derived from the same weights (never a separate "display" number) | `OddsTable` ("Operator view" column) |
+| Account needed to open; 18+ and terms accepted at registration; marketing opt-in unchecked by default | `/register`, `BoxStage` "Sign in to open" |
 | Return-to-player shown and defined, with "most openings return less than the price" | Box page stats and footnote, FAQ |
 | Verifiable draws (seed commitment before opening) | `/provably-fair`, the seed line under the opener |
 | Sell-back rate stated wherever sell-back is offered | Reveal dialog, inventory, FAQ |

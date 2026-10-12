@@ -7,7 +7,9 @@ import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "motion/
 import { Menu, Package, Plus, X } from "lucide-react";
 import { primaryNav } from "@/config/nav";
 import { formatUsd } from "@/domain/money";
+import { useAuthHydrated, useCurrentUser, type Account } from "@/store/auth";
 import { useSession, useSessionHydrated } from "@/store/session";
+import { buttonClasses } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { ThemeToggle } from "./theme-toggle";
 import { Wordmark } from "./wordmark";
@@ -19,6 +21,8 @@ export function SiteHeader() {
   const [solid, setSolid] = useState(false);
   const [hidden, setHidden] = useState(false);
   const { scrollY } = useScroll();
+  const authHydrated = useAuthHydrated();
+  const user = useCurrentUser();
 
   useMotionValueEvent(scrollY, "change", (y) => {
     const prev = scrollY.getPrevious() ?? 0;
@@ -41,7 +45,7 @@ export function SiteHeader() {
           {primaryNav.map((item) => {
             const active = pathname.startsWith(item.href);
             return (
-              <Link key={item.href} href={item.href} className={cn("relative py-2 text-[15px] transition-colors", active ? "text-fg" : "text-muted hover:text-fg")}>
+              <Link key={item.href} href={item.href} className={cn("relative py-2 text-[15px] font-medium transition-colors", active ? "text-fg" : "text-muted hover:text-fg")}>
                 {item.label}
                 {active && <motion.span layoutId="nav-underline" className="absolute inset-x-0 -bottom-0.5 h-px bg-accent" />}
               </Link>
@@ -50,8 +54,24 @@ export function SiteHeader() {
         </nav>
         <div className="ml-auto flex items-center gap-1 sm:gap-2">
           <ThemeToggle />
-          <InventoryLink />
-          <BalancePill />
+          {!authHydrated ? (
+            <span aria-hidden className="w-24" />
+          ) : user ? (
+            <>
+              <InventoryLink />
+              <BalancePill />
+              <AccountLink user={user} />
+            </>
+          ) : (
+            <>
+              <Link href="/sign-in" className={cn(buttonClasses({ variant: "secondary", size: "sm" }), "px-3.5 sm:px-4")}>
+                Sign in
+              </Link>
+              <Link href="/register" className={cn(buttonClasses({ size: "sm" }), "px-3.5 sm:px-4")}>
+                Join
+              </Link>
+            </>
+          )}
           <button
             type="button"
             className="grid size-10 place-items-center rounded-full text-fg hover:bg-surface lg:hidden"
@@ -75,9 +95,21 @@ export function SiteHeader() {
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           >
             <div className="grid gap-1 px-4 pt-2 pb-6">
-              {[...primaryNav, { href: "/inventory", label: "Inventory" }, { href: "/wallet", label: "Wallet" }].map((item, i) => (
+              {[
+                ...primaryNav,
+                ...(user
+                  ? [
+                      { href: "/inventory", label: "Inventory" },
+                      { href: "/wallet", label: "Wallet" },
+                      { href: "/account", label: "Account" },
+                    ]
+                  : [
+                      { href: "/sign-in", label: "Sign in" },
+                      { href: "/register", label: "Create account" },
+                    ]),
+              ].map((item, i) => (
                 <motion.div key={item.href} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }}>
-                  <Link href={item.href} onClick={() => setMenuOpen(false)} className="block py-2.5 font-display text-3xl">
+                  <Link href={item.href} onClick={() => setMenuOpen(false)} className="block py-2.5 font-display text-3xl font-semibold">
                     {item.label}
                   </Link>
                 </motion.div>
@@ -99,7 +131,7 @@ function BalancePill() {
       className="flex h-10 items-center gap-2 rounded-pill border border-line bg-surface/60 pr-1 pl-4 backdrop-blur transition-colors hover:border-accent/70"
       aria-label="Wallet"
     >
-      <span className={cn("text-sm font-medium tabular", !hydrated && "animate-pulse text-subtle")}>
+      <span className={cn("text-sm font-semibold tabular", !hydrated && "animate-pulse text-subtle")}>
         {hydrated ? formatUsd(balance) : "$—"}
       </span>
       <span className="grid size-8 place-items-center rounded-full bg-foil text-on-accent">
@@ -124,6 +156,19 @@ function InventoryLink() {
           {held}
         </span>
       )}
+    </Link>
+  );
+}
+
+function AccountLink({ user }: { user: Account }) {
+  const initials = `${user.firstName[0] ?? ""}${user.lastName[0] ?? ""}`.toUpperCase();
+  return (
+    <Link
+      href="/account"
+      className="hidden size-10 place-items-center rounded-full border border-line bg-surface/60 font-display text-sm font-bold text-accent transition-colors hover:border-accent/70 sm:grid"
+      aria-label={`Account: ${user.firstName} ${user.lastName}`}
+    >
+      {initials}
     </Link>
   );
 }

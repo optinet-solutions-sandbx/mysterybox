@@ -31,3 +31,18 @@ export function formatProbability(p: number): string {
   const digits = pct >= 10 ? 1 : pct >= 1 ? 2 : pct >= 0.01 ? 3 : 4;
   return `${pct.toFixed(digits).replace(/\.?0+$/, "")}%`;
 }
+
+/**
+ * Displayed odds (what players see on cards and the box page): rounded to 2 decimals and never
+ * shown as 0%; anything under 0.01% reads "<0.01%".
+ */
+export function formatDisplayedOdds(p: number): string {
+  const pct = p * 100;
+  if (pct > 0 && pct < 0.01) return "<0.01%";
+  return `${Number(pct.toFixed(2))}%`;
+}
+
+/** Back-office odds: the exact configured probability, always 3 decimals (e.g. "0.040%"). */
+export function formatExactOdds(p: number): string {
+  return `${(p * 100).toFixed(3)}%`;
+}

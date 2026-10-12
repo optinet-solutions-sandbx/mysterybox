@@ -1,4 +1,5 @@
 import { referenceImage } from "@/config/media";
+import { imageAspect } from "./image-meta";
 import type { Item } from "@/domain/types";
 
 /**
@@ -80,5 +81,5 @@ const catalog: Item[] = [
 ];
 
 export const items: Item[] = catalog.map((item) =>
-  item.category === "credit" ? item : { ...item, image: referenceImage(item.id) },
+  item.category === "credit" ? item : { ...item, image: referenceImage(item.id), imageAspect: imageAspect[item.id] },
 );

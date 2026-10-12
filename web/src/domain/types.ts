@@ -52,6 +52,8 @@ export interface Item {
   value: Cents;
   /** Licensed cut-out product photo. Without it the UI renders the `art` drawing. */
   image?: string;
+  /** Width/height of the trimmed photo; used to give every piece the same visual size. */
+  imageAspect?: number;
   art?: ItemArtKey;
 }
 

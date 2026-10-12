@@ -126,8 +126,9 @@
   --surface: var(--navy);
   --surface-2: var(--indigo);
   --fg: var(--ivory);
-  --muted: color-mix(in oklab, var(--ivory) 68%, var(--obsidian));
-  --subtle: color-mix(in oklab, var(--ivory) 52%, var(--obsidian));
+  /* Readability pass (2026-10-12): secondary text lifted so small copy holds up on navy cards. */
+  --muted: color-mix(in oklab, var(--ivory) 80%, var(--obsidian));
+  --subtle: color-mix(in oklab, var(--ivory) 64%, var(--obsidian));
   --line: color-mix(in oklab, var(--gold) 24%, transparent);
   --accent: var(--gold);
   --on-accent: var(--obsidian);
@@ -180,8 +181,8 @@
   --surface: #fffdf8;
   --surface-2: #ece5d9;
   --fg: var(--navy);
-  --muted: color-mix(in oklab, var(--navy) 72%, #f6f2ea);
-  --subtle: color-mix(in oklab, var(--navy) 56%, #f6f2ea);
+  --muted: color-mix(in oklab, var(--navy) 82%, #f6f2ea);
+  --subtle: color-mix(in oklab, var(--navy) 68%, #f6f2ea);
   --line: color-mix(in oklab, var(--navy) 14%, transparent);
   --accent: #8b6b36;
   --on-accent: var(--obsidian);
@@ -249,7 +250,22 @@ body {
   background: var(--bg);
   color: var(--fg);
   font-family: var(--font-sans);
+  /* Jost is variable: a touch above regular so body copy doesn't thin out on dark surfaces. */
+  font-weight: 450;
   letter-spacing: 0.005em;
+}
+
+/* Layered so a utility (e.g. the hero's font-medium) still wins. */
+@layer base {
+  h1,
+  h2,
+  h3 {
+    font-weight: 600;
+  }
+  b,
+  strong {
+    font-weight: 600;
+  }
 }
 
 ::selection {

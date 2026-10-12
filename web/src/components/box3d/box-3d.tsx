@@ -112,6 +112,9 @@ function useNum(value: Num, spring = true) {
   return spring ? smoothed : source;
 }
 
+/** One box size per context, so every box in a row (catalog, shelf) and every hero box match. */
+export const BOX_WIDTH = { tile: 240, stage: 340 } as const;
+
 export interface Box3DProps {
   material?: BoxMaterial;
   /** Box width in px; height and depth follow the board's proportions. */

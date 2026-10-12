@@ -21,15 +21,16 @@ web/src
 │  ├─ page.tsx          landing
 │  ├─ boxes/            catalog + [slug] (generateStaticParams → fully prerendered)
 │  ├─ inventory/ wallet/ provably-fair/ how-it-works/
-│  ├─ battles/ deals/ rewards/ leaderboard/ affiliates/ account/   (ComingSoon stubs)
+│  ├─ register/ sign-in/ account/   mock accounts (client forms, static shells)
+│  ├─ battles/ deals/ rewards/ leaderboard/ affiliates/   (ComingSoon stubs)
 │  └─ legal/[slug]/     placeholder outlines
-├─ components/{ui,layout,landing,box,item,account,common}
+├─ components/{ui,layout,landing,box,item,account,auth,common}
 ├─ config/              brand.ts, economy.ts, nav.ts
 ├─ data/                items.ts, boxes.ts (mock catalog)
 ├─ domain/              types, money, odds, fair, reel (+ *.test.ts)
 ├─ lib/                 cn, theme
 ├─ services/            catalog.ts, play.ts (+ catalog.test.ts): the backend seam
-└─ store/               session.ts (mock wallet, inventory, seeds)
+└─ store/               session.ts (mock wallet, inventory, seeds), auth.ts (mock accounts)
 ```
 
 ## Data model (`domain/types.ts`)
@@ -51,6 +52,10 @@ Components never read `data/` directly. They go through:
 - `services/play.ts`: `drawFromBox(box, seeds) → { entry, draw }`.
 - `store/session.ts` actions: `openBox`, `sellBack`, `requestShipping`, `cancelShipping`, `deposit`,
   `setClientSeed`, `rotateSeeds`, `ensureSeeds`, `confirmAge`, `reset`.
+
+- `store/auth.ts` actions: `register`, `verify`, `resendCode`, `signIn`, `signOut`, `setMarketing`.
+  The mock keeps one shared session for every account in the browser; a real backend scopes balance,
+  inventory and seeds per user, sends the code by email and never returns it to the page.
 
 **To connect a real platform:** keep these signatures and move the bodies to API calls. Catalog reads
 become `'use cache'` async functions with `cacheLife`, and pages await them. `openBox` calls the

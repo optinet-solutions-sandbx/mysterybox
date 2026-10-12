@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import type { Item } from "@/domain/types";
 import { formatUsd } from "@/domain/money";
 import { brand } from "@/config/brand";
-import { Box3D } from "@/components/box3d/box-3d";
+import { BOX_WIDTH, Box3D } from "@/components/box3d/box-3d";
 import { ItemArt } from "@/components/item/item-art";
 import { LineReveal } from "@/components/fx/line-reveal";
 import { ButtonLink } from "@/components/ui/button";
@@ -98,7 +98,7 @@ export function Hero({ categories }: { categories: ShowcaseCategory[] }) {
         <div className="relative animate-drop-in [animation-delay:0.35s]">
           <div className="relative mx-auto h-[360px] w-full max-w-[560px] sm:h-[500px] lg:h-[600px]" data-cursor data-cursor-label="Tilt">
             <div className="absolute top-[64%] left-1/2 -translate-x-1/2 -translate-y-1/2 scale-[0.56] sm:scale-90 lg:scale-100 lg:top-[60%]">
-              <Box3D width={340} open={open ? 1 : 0} tilt float />
+              <Box3D width={BOX_WIDTH.stage} open={open ? 1 : 0} tilt float />
             </div>
 
             <AnimatePresence mode="popLayout">

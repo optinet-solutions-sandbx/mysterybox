@@ -6,7 +6,7 @@ type Variant = "primary" | "secondary" | "ghost";
 type Size = "sm" | "md" | "lg";
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-pill font-medium whitespace-nowrap transition-[transform,background-color,border-color,color,opacity] duration-300 ease-snap active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40";
+  "inline-flex items-center justify-center gap-2 rounded-pill font-semibold whitespace-nowrap transition-[transform,background-color,border-color,color,opacity] duration-300 ease-snap active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40";
 
 const variants: Record<Variant, string> = {
   /** Gold foil with a light sweep on hover (see .btn-foil). */

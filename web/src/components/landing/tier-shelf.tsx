@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { BoxMaterial } from "@/domain/types";
 import { formatUsd } from "@/domain/money";
-import { Box3D } from "@/components/box3d/box-3d";
+import { BOX_WIDTH, Box3D } from "@/components/box3d/box-3d";
 import { RollingNumber } from "@/components/fx/rolling-number";
 import { cn } from "@/lib/cn";
 
@@ -90,7 +90,7 @@ export function TierShelf({ boxes }: { boxes: ShelfBox[] }) {
               style={{ zIndex: 10 - Math.abs(offset), pointerEvents: far ? "none" : "auto" }}
               tabIndex={far ? -1 : 0}
             >
-              <Box3D width={230} material={box.material} open={offset === 0 ? 0.28 : 0} viewY={offset === 0 ? -30 : -30 + offset * 6} />
+              <Box3D width={BOX_WIDTH.tile} material={box.material} open={offset === 0 ? 0.28 : 0} viewY={offset === 0 ? -30 : -30 + offset * 6} />
             </motion.button>
           );
         })}

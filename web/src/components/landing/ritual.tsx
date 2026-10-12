@@ -5,7 +5,7 @@ import { useRef, useState } from "react";
 import type { Item } from "@/domain/types";
 import { formatUsd } from "@/domain/money";
 import { economy } from "@/config/economy";
-import { Box3D } from "@/components/box3d/box-3d";
+import { BOX_WIDTH, Box3D } from "@/components/box3d/box-3d";
 import { ItemArt } from "@/components/item/item-art";
 import { cn } from "@/lib/cn";
 
@@ -75,7 +75,7 @@ export function Ritual({ item, priceRange }: { item: Item; priceRange: string })
 
           <div className="relative order-1 h-[46svh] min-h-[320px] lg:order-2 lg:h-[640px]">
             <div className="absolute top-[60%] left-1/2 -translate-x-1/2 -translate-y-1/2 scale-[0.62] sm:scale-85 lg:scale-110">
-              <Box3D width={340} material="navy" open={reduce ? 1 : open} viewX={reduce ? -18 : viewX} viewY={reduce ? -30 : viewY} />
+              <Box3D width={BOX_WIDTH.stage} material="navy" open={reduce ? 1 : open} viewX={reduce ? -18 : viewX} viewY={reduce ? -30 : viewY} />
             </div>
 
             <motion.p

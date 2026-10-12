@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
 import type { ResolvedEntry } from "@/domain/types";
-import { formatProbability, formatUsd } from "@/domain/money";
+import { formatDisplayedOdds, formatUsd } from "@/domain/money";
 import { economy } from "@/config/economy";
 import { CountUp } from "@/components/fx/count-up";
 import { ItemArt } from "@/components/item/item-art";
@@ -91,7 +91,7 @@ export function OddsProof({
                 </div>
                 <div className="text-right">
                   <p className="font-display text-sm text-foil tabular">{formatUsd(r.item.value)}</p>
-                  <p className="text-xs text-subtle tabular">{formatProbability(r.probability)}</p>
+                  <p className="text-xs text-subtle tabular">{formatDisplayedOdds(r.probability)}</p>
                 </div>
               </li>
             ))}

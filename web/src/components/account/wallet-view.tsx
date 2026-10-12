@@ -2,18 +2,23 @@
 
 import { economy } from "@/config/economy";
 import { formatUsd } from "@/domain/money";
+import { useAuthHydrated, useCurrentUser } from "@/store/auth";
 import { useSession, useSessionHydrated } from "@/store/session";
+import { AuthPrompt } from "@/components/auth/auth-prompt";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 
 export function WalletView() {
   const hydrated = useSessionHydrated();
+  const authHydrated = useAuthHydrated();
+  const user = useCurrentUser();
   const balance = useSession((s) => s.balance);
   const transactions = useSession((s) => s.transactions);
   const deposit = useSession((s) => s.deposit);
   const reset = useSession((s) => s.reset);
 
-  if (!hydrated) return <div className="h-64 animate-pulse rounded-card bg-surface" />;
+  if (!hydrated || !authHydrated) return <div className="h-64 animate-pulse rounded-card bg-surface" />;
+  if (!user) return <AuthPrompt title="Sign in to see your wallet" body="Your demo balance and every top-up, open and sell-back are kept with your account." />;
 
   return (
     <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
