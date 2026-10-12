@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { preload } from "react-dom";
 import { boxStats, categoryLabels, getBox, listBoxes, resolveEntries } from "@/services/catalog";
 import { BoxStage } from "@/components/box/box-stage";
 import { InsideGrid } from "@/components/box/inside-grid";
@@ -19,7 +18,6 @@ export async function generateMetadata({ params }: PageProps<"/boxes/[slug]">): 
 }
 
 export default async function BoxPage({ params }: PageProps<"/boxes/[slug]">) {
-  preload("/textures/marble-dark.webp", { as: "image", fetchPriority: "high" });
   const box = getBox((await params).slug);
   if (!box) notFound();
 
