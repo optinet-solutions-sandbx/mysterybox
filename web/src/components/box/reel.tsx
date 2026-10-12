@@ -75,7 +75,8 @@ export const Reel = forwardRef<
       if (skip) controlsRef.current?.complete();
     }, [skip]);
 
-    const tiles = spin?.tiles ?? [...preview, ...preview, ...preview];
+    const repeats = Math.max(1, Math.ceil(1600 / (preview.length * STEP)));
+    const tiles = spin?.tiles ?? Array.from({ length: repeats }, () => preview).flat();
 
     return (
       <div ref={outerRef} className="relative">

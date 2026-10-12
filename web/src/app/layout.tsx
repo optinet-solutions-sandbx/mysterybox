@@ -41,6 +41,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
+        <link rel="preload" as="image" href="/textures/marble-dark.webp" fetchPriority="high" />
       </head>
       <body className="flex min-h-full flex-col">
         <PrototypeBanner />

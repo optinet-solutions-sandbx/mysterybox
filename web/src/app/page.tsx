@@ -8,6 +8,7 @@ import { OddsProof } from "@/components/landing/odds-proof";
 import { Ritual } from "@/components/landing/ritual";
 import { TierShelf, type ShelfBox } from "@/components/landing/tier-shelf";
 import { VaultMarquee } from "@/components/landing/vault-marquee";
+import { Deferred } from "@/components/fx/deferred";
 
 const showcase = [
   { id: "bags", label: "Bags", items: topItemsIn("bags") },
@@ -35,20 +36,29 @@ export default function HomePage() {
     <>
       <Hero categories={showcase} />
       <VaultMarquee items={listShowcaseItems(24)} />
-      <Ritual
-        item={getItem("hermes-kelly-28")}
-        priceRange={`${formatUsd(byPrice[0].price)} – ${formatUsd(byPrice[byPrice.length - 1].price)}`}
-      />
-      <TierShelf boxes={shelf} />
-      <OddsProof
-        boxName={proofBox.name}
-        boxSlug={proofBox.slug}
-        entries={resolveEntries(proofBox)}
-        rtp={boxStats(proofBox).rtp}
-      />
+      {/* Heavy scenes mount as you approach them; placeholders reserve their height. */}
+      <Deferred placeholderClassName="h-[340vh]">
+        <Ritual
+          item={getItem("hermes-kelly-28")}
+          priceRange={`${formatUsd(byPrice[0].price)} – ${formatUsd(byPrice[byPrice.length - 1].price)}`}
+        />
+      </Deferred>
+      <Deferred placeholderClassName="h-[1190px]">
+        <TierShelf boxes={shelf} />
+      </Deferred>
+      <Deferred placeholderClassName="h-[1195px] lg:h-[710px]">
+        <OddsProof
+          boxName={proofBox.name}
+          boxSlug={proofBox.slug}
+          entries={resolveEntries(proofBox)}
+          rtp={boxStats(proofBox).rtp}
+        />
+      </Deferred>
       <Modes />
       <Faq limit={4} />
-      <Keyhole />
+      <Deferred placeholderClassName="h-[300vh]">
+        <Keyhole />
+      </Deferred>
     </>
   );
 }
