@@ -49,6 +49,10 @@ export function SignInForm() {
     const res = await signIn(email, password);
     setBusy(false);
     if (res.ok) return router.push(next);
+    if (res.error === "suspended") {
+      setError("This account is suspended. Contact support to find out more.");
+      return;
+    }
     if (res.error === "unverified") {
       if (formRef.current) scrollToElement(formRef.current, -120);
       return setStep("verify");

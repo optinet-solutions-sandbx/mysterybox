@@ -14,10 +14,16 @@ never copy their copy, layout compositions, palettes or fonts. On 2026-10-09 the
 first skeleton "a normal AI-generated website". **Motion and craft are the point of this project,
 not decoration.**
 
-- **No real money, accounts or backend.** Everything runs on mock data and a browser-persisted mock
-  session. A "Prototype" banner is always visible. Registration and sign-in are a **front-end mock**
-  of MISTY's flow (details + phone, then a one-time email code, plus a password): accounts live in
-  this browser only, and the code is shown on screen because no email is sent.
+- **No real money yet; the UI runs on a browser mock.** A "Prototype" banner is always visible.
+  Registration and sign-in are a **front-end mock** of MISTY's flow (details + phone, then a
+  one-time email code, plus a password): accounts live in this browser only, and the code is shown
+  on screen because no email is sent.
+- **Three roles:** `player`, `admin`, `super_admin`. Players sign up on the site; staff use the
+  **back office at `/admin`** (dashboard, players, boxes & odds, staff & roles, audit log). Demo
+  staff logins are listed on the `/admin` sign-in. Each account has its own wallet.
+- **Backend draft (2026-10-12): Supabase.** `supabase/` holds the schema, RLS and RPCs; the
+  front end's contract is `web/src/backend/contract.ts`; `supabase-api.ts` is a placeholder adapter
+  (not wired to the UI). See [docs/08-backend.md](docs/08-backend.md).
 - **Brand: Grail Noir** (grailnoir.com). Slogan "Life is too short. Go Noir." (a two-tier lockup:
   setup line, then a foil punchline). Logo: the **gold crown-and-mask** artwork supplied 2026-10-12,
   extracted onto transparency in `public/brand/` (mark + lockup), used through
@@ -47,6 +53,8 @@ npx vitest run         # unit tests (domain + catalog integrity)
 npx tsc --noEmit       # typecheck (run `npx next typegen` first if a new route's PageProps errors)
 npx eslint             # lint (React Compiler rules: no mutation during render, no setState in effect bodies)
 npx next build         # production build; every route must prerender
+npx vitest run src/backend   # Supabase migrations + RLS + RPCs in PGlite (no Docker needed)
+WRITE_SEED=1 npx vitest run src/backend/catalog-seed.test.ts   # regenerate supabase/seed.sql after editing data/
 ```
 
 ## Stack
@@ -85,7 +93,12 @@ lucide-react. Icybox runs on the same Next, Tailwind and Motion stack.
 | `components/box/` | `BoxStage` (core loop: shake → lid opens → drum `Reel` → `RevealOverlay`; "Sign in to open" when signed out), `OddsAtAGlance` (rarity bar under the Open button), `HowItWorksStrip`, `BoxCard`, `BoxCatalog`, `InsideGrid`, `OddsTable` (displayed **and** back-office odds; cards below `lg`). |
 | `components/item/` | `ItemArt` (photo if `item.image`, else the gold-line drawing from `item-drawings.tsx`), `RarityTag`. |
 | `components/layout/` | Header (transparent, then glass; hides on scroll down), footer, prototype banner, age gate, `SessionHydrator`. |
-| `app/` | Routes. `/register`, `/sign-in` and `/account` are built (mock). Battles, deals, rewards, leaderboard and affiliates are `ComingSoon` stubs listing planned behavior. |
+| `store/ledgers.ts`, `components/layout/session-hydrator.tsx` | One wallet per account: `useSession` is the signed-in account's working copy, swapped on sign-in/out and mirrored into `useLedgers` (`grailnoir-ledgers`). The hydrator guards against Strict Mode's double effect (a stale run must not subscribe). |
+| `store/backoffice.ts`, `store/staff-actions.ts` | Demo-player status overrides and the audit log; staff actions (`setPlayerStatus`, `setRole`, `addStaff`, `settleWithdrawal`) with the **same rules as the SQL functions**. |
+| `domain/analytics.ts`, `data/demo-players.ts` | Back-office numbers (`overviewRow`, `kpis`, `dailyMetrics`, `boxPerformance`) with the SQL's definitions; 240 deterministic demo players per UTC day, drawn with the real odds. |
+| `components/admin/`, `app/admin/` | Back office: `AdminShell` (staff gate, nav, lock icons for super-admin pages), dashboard (KPI band, SVG charts), players table + player-card drawer, boxes & odds, staff & roles, audit log. Client-gated, so `app/admin` sets `instant = false`. |
+| `backend/` | `contract.ts` (methods, shapes, error codes, `PERMISSIONS` + `can()`), `supabase-api.ts` (placeholder adapter), `catalog-sql.ts` (generates `supabase/seed.sql`), `test-db.ts` + `schema.test.ts` (PGlite). |
+| `app/` | Routes. `/register`, `/sign-in`, `/account` and `/admin/*` are built (mock). Battles, deals, rewards, leaderboard and affiliates are `ComingSoon` stubs listing planned behavior. |
 
 **Core loop:** `BoxStage.handleOpen` → `session.openBox` charges the balance and reserves the nonce
 synchronously → `drawFromBox` (HMAC roll → `pickByRoll`), while the box shakes for at least 800 ms →
@@ -142,6 +155,12 @@ or Open again. **The outcome is decided before anything moves.**
    - Give every effect a `useReducedMotion` path and pause loops off-screen.
    - Use radial gradients instead of large `blur()` filters.
    - Never put opacity, filter or overflow on a `preserve-3d` container (it flattens `Box3D`).
+11. **Roles and money rules live in three places that must agree:** the SQL functions
+   (`supabase/migrations`), `PERMISSIONS` in `backend/contract.ts`, and `store/staff-actions.ts`.
+   Change all three together and extend `schema.test.ts`. Never read a role from user metadata;
+   sign-up always creates a player. Clients never write ledger tables directly.
+12. **`supabase/seed.sql` is generated** from `web/src/data`; regenerate it (command above) whenever
+   items, boxes, prices or weights change, or `catalog-seed.test.ts` fails.
 
 ## Performance rules (phones were at 40 s of main-thread blocking before these)
 
@@ -177,10 +196,15 @@ Lighthouse on the live site, mobile home: 25 → 84 (blocking 39,970 ms → 260 
    at several progress points, shelf, keyhole) and the open sequence (shake, spin, reveal), and view
    them. Text-only checks missed every visual bug so far (unstyled 3D box, invisible foil numbers,
    tile seams).
-4. Report results per flow with evidence, and say plainly what was not tested.
+4. **Back office:** with the same server, `python scripts/e2e_admin.py http://localhost:3210 <out_dir>`
+   registers a player, opens boxes, requests a withdrawal, then signs in as super admin (pays it
+   out, suspends the player, checks the audit log) and as admin (staff page locked), at 1440 (both
+   themes) and 390.
+5. Report results per flow with evidence, and say plainly what was not tested (e.g. nothing runs
+   against a live Supabase project yet).
 
 ## Docs
 
 [docs/README.md](docs/README.md) is the index: brief and roadmap, research digest, product spec,
-design system, motion spec, architecture, compliance UX, and the icybox and MISTY reference
-teardowns.
+design system, motion spec, architecture, compliance UX, backend (schema, roles, endpoint
+contract, open questions), and the icybox and MISTY reference teardowns.

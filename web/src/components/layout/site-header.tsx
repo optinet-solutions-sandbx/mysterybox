@@ -58,6 +58,11 @@ export function SiteHeader() {
             <span aria-hidden className="w-24" />
           ) : user ? (
             <>
+              {user.role !== "player" && (
+                <Link href="/admin" className={cn(buttonClasses({ variant: "secondary", size: "sm" }), "hidden md:inline-flex")}>
+                  Back office
+                </Link>
+              )}
               <InventoryLink />
               <BalancePill />
               <AccountLink user={user} />
@@ -102,6 +107,7 @@ export function SiteHeader() {
                       { href: "/inventory", label: "Inventory" },
                       { href: "/wallet", label: "Wallet" },
                       { href: "/account", label: "Account" },
+                      ...(user.role !== "player" ? [{ href: "/admin", label: "Back office" }] : []),
                     ]
                   : [
                       { href: "/sign-in", label: "Sign in" },

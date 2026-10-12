@@ -145,7 +145,11 @@ export function BoxStage({
             </dl>
 
             <div className="mt-8 flex flex-wrap items-center gap-4">
-              {authHydrated && !user ? (
+              {user && user.role !== "player" ? (
+                <ButtonLink size="lg" href="/admin" variant="secondary" className="min-w-60">
+                  Staff account: open the back office
+                </ButtonLink>
+              ) : authHydrated && !user ? (
                 <ButtonLink size="lg" href={`/sign-in?next=${encodeURIComponent(`/boxes/${box.slug}`)}`} className="min-w-60">
                   Sign in to open
                 </ButtonLink>

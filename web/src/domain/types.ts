@@ -111,6 +111,7 @@ export interface InventoryItem {
 
 export type TransactionType =
   | "deposit"
+  | "withdrawal"
   | "box_open"
   | "sell_back"
   | "shipping_request"
@@ -123,4 +124,6 @@ export interface Transaction {
   amount: Cents;
   at: string;
   label: string;
+  /** Deposits and withdrawals can wait on the payment provider; absent means completed. */
+  status?: "pending" | "completed" | "cancelled";
 }

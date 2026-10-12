@@ -15,12 +15,16 @@ import { drawFromBox, type Seeds } from "@/services/play";
  * wallet / inventory / fairness APIs; components only talk to these actions.
  */
 
+export type WithdrawalOutcome = { ok: true } | { ok: false; reason: "insufficient_funds" | "below_minimum" };
+
 export type OpenOutcome =
   | { ok: true; inventoryItem: InventoryItem; entry: ResolvedEntry }
   | { ok: false; reason: "insufficient_funds" | "not_ready" };
 
 interface SessionState {
   balance: Cents;
+  /** Reserved by pending withdrawals (moved out of balance until settled). */
+  held: Cents;
   inventory: InventoryItem[];
   transactions: Transaction[];
   seeds: Seeds | null;
@@ -29,6 +33,9 @@ interface SessionState {
   ageConfirmed: boolean;
 
   deposit(amount: Cents): void;
+  /** Placeholder for payouts: reserves the amount as a pending withdrawal until the back office settles it. */
+  requestWithdrawal(amount: Cents): WithdrawalOutcome;
+  cancelWithdrawal(id: string): void;
   openBox(box: Box): Promise<OpenOutcome>;
   sellBack(uids: string[]): Cents;
   requestShipping(uid: string): void;
@@ -58,6 +65,7 @@ async function freshSeeds(clientSeed?: string): Promise<Seeds> {
 
 const initial = {
   balance: economy.startingBalance,
+  held: 0,
   inventory: [] as InventoryItem[],
   transactions: [] as Transaction[],
   seeds: null as Seeds | null,
@@ -74,6 +82,31 @@ export const useSession = create<SessionState>()(
         set((s) => ({
           balance: s.balance + amount,
           transactions: [tx("deposit", amount, "Demo top-up"), ...s.transactions].slice(0, MAX_TRANSACTIONS),
+        }));
+      },
+
+      requestWithdrawal(amount) {
+        const { balance } = get();
+        if (amount < economy.minWithdrawal) return { ok: false, reason: "below_minimum" };
+        if (amount > balance) return { ok: false, reason: "insufficient_funds" };
+        set((s) => ({
+          balance: s.balance - amount,
+          held: s.held + amount,
+          transactions: [{ ...tx("withdrawal", -amount, "Withdrawal requested"), status: "pending" as const }, ...s.transactions].slice(
+            0,
+            MAX_TRANSACTIONS,
+          ),
+        }));
+        return { ok: true };
+      },
+
+      cancelWithdrawal(id) {
+        const t = get().transactions.find((x) => x.id === id && x.type === "withdrawal" && x.status === "pending");
+        if (!t) return;
+        set((s) => ({
+          balance: s.balance - t.amount,
+          held: s.held + t.amount,
+          transactions: s.transactions.map((x) => (x.id === id ? { ...x, status: "cancelled" as const, label: "Withdrawal cancelled" } : x)),
         }));
       },
 
@@ -171,12 +204,14 @@ export const useSession = create<SessionState>()(
     }),
     {
       name: "mock-session",
-      version: 1,
+      version: 2,
       storage: createJSONStorage(() => localStorage),
       // Rehydrated explicitly by <SessionHydrator /> so server and first client render match.
       skipHydration: true,
-      partialize: ({ balance, inventory, transactions, seeds, revealedSeeds, ageConfirmed }) => ({
+      migrate: (persisted) => ({ held: 0, ...(persisted as object) }),
+      partialize: ({ balance, held, inventory, transactions, seeds, revealedSeeds, ageConfirmed }) => ({
         balance,
+        held,
         inventory,
         transactions,
         seeds,
@@ -186,6 +221,18 @@ export const useSession = create<SessionState>()(
     },
   ),
 );
+
+/** The per-account part of the session (everything but the device's age confirmation). */
+export type SessionSnapshot = Pick<SessionState, "balance" | "held" | "inventory" | "transactions" | "seeds" | "revealedSeeds">;
+
+export function snapshotOf(s: SessionSnapshot): SessionSnapshot {
+  return { balance: s.balance, held: s.held, inventory: s.inventory, transactions: s.transactions, seeds: s.seeds, revealedSeeds: s.revealedSeeds };
+}
+
+/** A new account's wallet: the demo starting balance and nothing else. */
+export function freshSnapshot(): SessionSnapshot {
+  return { balance: initial.balance, held: 0, inventory: [], transactions: [], seeds: null, revealedSeeds: [] };
+}
 
 /** False on the server and until localStorage has been read; gate balance/inventory UI on it. */
 export function useSessionHydrated(): boolean {

@@ -13,4 +13,6 @@ export const economy = {
   topUpAmounts: [10_000, 50_000, 250_000, 1_000_000],
   /** Odds resolution: the weights of every box sum to this. 100_000 = 0.001% precision. */
   oddsScale: 100_000,
+  /** Smallest withdrawal, in cents (mirrors settings.min_withdrawal_cents in Supabase). */
+  minWithdrawal: 2_000,
 } as const;

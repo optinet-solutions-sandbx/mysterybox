@@ -6,6 +6,7 @@ import { PrototypeBanner } from "@/components/layout/prototype-banner";
 import { SessionHydrator } from "@/components/layout/session-hydrator";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { SiteOnly } from "@/components/layout/site-only";
 import { Cursor } from "@/components/fx/cursor";
 import { SmoothScroll } from "@/components/fx/smooth-scroll";
 import { themeBootScript } from "@/lib/theme";
@@ -44,13 +45,17 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="flex min-h-full flex-col">
         <PrototypeBanner />
-        <SiteHeader />
+        <SiteOnly>
+          <SiteHeader />
+        </SiteOnly>
         <main className="flex-1">{children}</main>
-        <SiteFooter />
-        <AgeGate />
+        <SiteOnly>
+          <SiteFooter />
+          <AgeGate />
+          <SmoothScroll />
+          <Cursor />
+        </SiteOnly>
         <SessionHydrator />
-        <SmoothScroll />
-        <Cursor />
         <div aria-hidden className="grain" />
       </body>
     </html>

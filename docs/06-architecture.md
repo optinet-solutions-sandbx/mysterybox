@@ -22,15 +22,20 @@ web/src
 │  ├─ boxes/            catalog + [slug] (generateStaticParams → fully prerendered)
 │  ├─ inventory/ wallet/ provably-fair/ how-it-works/
 │  ├─ register/ sign-in/ account/   mock accounts (client forms, static shells)
+│  ├─ admin/            back office (staff-gated in the browser; instant = false)
 │  ├─ battles/ deals/ rewards/ leaderboard/ affiliates/   (ComingSoon stubs)
 │  └─ legal/[slug]/     placeholder outlines
-├─ components/{ui,layout,landing,box,item,account,auth,common}
+├─ backend/             contract.ts, supabase-api.ts (placeholder), seed generator, PGlite schema tests
+├─ components/{ui,layout,landing,box,item,account,auth,admin,common}
 ├─ config/              brand.ts, economy.ts, nav.ts
 ├─ data/                items.ts, boxes.ts (mock catalog)
 ├─ domain/              types, money, odds, fair, reel (+ *.test.ts)
 ├─ lib/                 cn, theme
 ├─ services/            catalog.ts, play.ts (+ catalog.test.ts): the backend seam
-└─ store/               session.ts (mock wallet, inventory, seeds), auth.ts (mock accounts)
+└─ store/               session.ts (signed-in wallet), ledgers.ts (every account's wallet), auth.ts (accounts + roles),
+                        backoffice.ts (audit, demo statuses), staff-actions.ts (role rules)
+
+supabase/               migrations (schema, RLS, RPCs), seed.sql (generated), config.toml (see 08-backend.md)
 ```
 
 ## Data model (`domain/types.ts`)

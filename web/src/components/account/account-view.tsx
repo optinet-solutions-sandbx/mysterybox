@@ -9,7 +9,8 @@ import { formatUsd } from "@/domain/money";
 import { useAuth, useAuthHydrated, useCurrentUser } from "@/store/auth";
 import { useSession, useSessionHydrated } from "@/store/session";
 import { AuthPrompt } from "@/components/auth/auth-prompt";
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { ROLE_LABEL } from "@/backend/contract";
 import { cn } from "@/lib/cn";
 
 const comingSoon = [
@@ -47,7 +48,9 @@ export function AccountView() {
             <h2 className="truncate font-display text-3xl font-semibold">
               {user.firstName} {user.lastName}
             </h2>
-            <p className="mt-1 text-sm text-muted">Member since {since}</p>
+            <p className="mt-1 text-sm text-muted">
+              {user.role === "player" ? "Member" : ROLE_LABEL[user.role]} since {since}
+            </p>
           </div>
         </div>
 
@@ -116,6 +119,11 @@ export function AccountView() {
               Provably fair
             </Link>
           </div>
+          {user.role !== "player" && (
+            <ButtonLink href="/admin" className="mt-6 w-full">
+              Open the back office
+            </ButtonLink>
+          )}
           <Button
             variant="secondary"
             className="mt-6 w-full"

@@ -22,6 +22,11 @@ behavior via `ComingSoon`. **Planned** = no route yet.
 | `/leaderboard` | Daily, weekly and monthly races | Stub |
 | `/affiliates` | Referral code and earnings | Stub |
 | `/account` | Profile (name, verified email, phone), marketing switch, balance and pieces, sign out; KYC, addresses and play limits listed as coming | Built (mock) |
+| `/wallet` withdrawals | Request a withdrawal (min $20): held as pending until staff pay it out or the player cancels | Built (placeholder) |
+| `/admin` | Back office (admin, super admin): KPI band (new players, players who played, boxes opened, played, earned, house net and hold), sign-ups vs first plays and played vs earned per day, top players, latest openings, pending-withdrawal callout; 7/30/90 days or all time | Built (mock) |
+| `/admin/players` | Every player: registered, last played, opened, played, earned, house net, balance, status; search, filters, sort; player card drawer with activity, suspend/reactivate, pay out or cancel withdrawals | Built (mock) |
+| `/admin/boxes` | Configured vs actual return per box, with the displayed/back-office odds table | Built (mock) |
+| `/admin/staff`, `/admin/audit` | Super admin only: role matrix, staff list and role changes, add staff, promote a player; audit log | Built (mock) |
 | `/legal/[slug]` | terms, privacy, odds-disclosure, responsible-play, shipping (placeholder outlines) | Built (placeholder) |
 | Global | Prototype banner, sticky header with live balance and inventory count, age gate, footer with responsible-play line, smooth scroll, gold cursor | Built |
 
