@@ -13,6 +13,7 @@ interface BackofficeState {
   audit: AuditEntry[];
   setDemoStatus(playerId: string, status: AccountStatus): void;
   log(entry: Omit<AuditEntry, "id" | "createdAt">): void;
+  clear(): void;
 }
 
 export const useBackoffice = create<BackofficeState>()(
@@ -22,6 +23,9 @@ export const useBackoffice = create<BackofficeState>()(
       audit: [],
       setDemoStatus(playerId, status) {
         set((s) => ({ demoStatus: { ...s.demoStatus, [playerId]: status } }));
+      },
+      clear() {
+        set({ demoStatus: {}, audit: [] });
       },
       log(entry) {
         set((s) => ({

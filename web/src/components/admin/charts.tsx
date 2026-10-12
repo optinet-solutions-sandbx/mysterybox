@@ -24,9 +24,17 @@ interface ChartProps<T extends { label: string }> {
   footer?: (row: T) => ReactNode;
   height?: number;
   title: string;
+  /** Whole-number data (counts): keeps the axis ticks on whole numbers. */
+  integer?: boolean;
+  /** Smallest axis maximum, so an empty or tiny series doesn't scale to fractions. */
+  floor?: number;
 }
 
-function niceMax(v: number): number {
+function niceMax(v: number, integer = false): number {
+  if (integer) {
+    const m = niceMax(Math.max(v, 2));
+    return m % 2 === 0 ? m : Math.ceil(m / 2) * 2;
+  }
   if (v <= 0) return 1;
   const pow = 10 ** Math.floor(Math.log10(v));
   const step = [1, 2, 2.5, 5, 10].find((s) => s * pow >= v)!;
@@ -133,8 +141,8 @@ function Frame<T extends { label: string }>({
 
 /** Grouped bars per day. */
 export function BarChart<T extends { label: string }>(props: ChartProps<T>) {
-  const { data, series, height = 220 } = props;
-  const max = niceMax(Math.max(0, ...data.flatMap((d) => series.map((s) => Number(d[s.key])))));
+  const { data, series, height = 220, integer } = props;
+  const max = niceMax(Math.max(0, ...data.flatMap((d) => series.map((s) => Number(d[s.key])))), integer);
   const gap = 0.24;
   const w = (1 - gap) / series.length;
   return (
@@ -151,8 +159,8 @@ export function BarChart<T extends { label: string }>(props: ChartProps<T>) {
 
 /** One line per series, with a soft area under the first. */
 export function LineChart<T extends { label: string }>(props: ChartProps<T>) {
-  const { data, series, height = 220 } = props;
-  const max = niceMax(Math.max(0, ...data.flatMap((d) => series.map((s) => Number(d[s.key])))));
+  const { data, series, height = 220, floor = 0 } = props;
+  const max = niceMax(Math.max(floor, ...data.flatMap((d) => series.map((s) => Number(d[s.key])))));
   const y = (v: number) => 100 - (v / max) * 100;
   return (
     <Frame {...props} height={height} max={max}>

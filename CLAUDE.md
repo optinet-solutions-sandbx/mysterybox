@@ -19,8 +19,12 @@ not decoration.**
   one-time email code, plus a password): accounts live in this browser only, and the code is shown
   on screen because no email is sent.
 - **Three roles:** `player`, `admin`, `super_admin`. Players sign up on the site; staff use the
-  **back office at `/admin`** (dashboard, players, boxes & odds, staff & roles, audit log). Demo
-  staff logins are listed on the `/admin` sign-in. Each account has its own wallet.
+  **back office at `/admin`** (dashboard, players, boxes & odds, staff & roles, audit log). The
+  team's super admins (Alex, Meny, Ivan, Chris, John: `<name>@grailnoir.com`) are seeded from
+  `config/staff.ts`, **hashes only; never put a password in the repo (it is public)**. Super admins
+  add admins from Staff & roles. Each account has its own wallet. Data is per browser until Supabase
+  is wired, and the back office says so. Sample players are off unless `NEXT_PUBLIC_DEMO_PLAYERS=on`;
+  "Clear test data" (Staff & roles) wipes this browser's players for a fresh run.
 - **Backend draft (2026-10-12): Supabase.** `supabase/` holds the schema, RLS and RPCs; the
   front end's contract is `web/src/backend/contract.ts`; `supabase-api.ts` is a placeholder adapter
   (not wired to the UI). See [docs/08-backend.md](docs/08-backend.md).
@@ -196,10 +200,12 @@ Lighthouse on the live site, mobile home: 25 → 84 (blocking 39,970 ms → 260 
    at several progress points, shelf, keyhole) and the open sequence (shake, spin, reveal), and view
    them. Text-only checks missed every visual bug so far (unstyled 3D box, invisible foil numbers,
    tile seams).
-4. **Back office:** with the same server, `python scripts/e2e_admin.py http://localhost:3210 <out_dir>`
-   registers a player, opens boxes, requests a withdrawal, then signs in as super admin (pays it
-   out, suspends the player, checks the audit log) and as admin (staff page locked), at 1440 (both
-   themes) and 390.
+4. **Back office:** with the same server,
+   `E2E_SUPERADMIN_EMAIL=… E2E_SUPERADMIN_PASSWORD=… python scripts/e2e_admin.py http://localhost:3210 <out_dir>`
+   (a team super admin; ask the user for a password) registers a player, opens boxes, requests a
+   withdrawal, then as super admin pays it out, suspends the player, adds an admin and checks the
+   audit log; the new admin finds Staff & roles locked; the suspended player can't sign in; the
+   super admin clears the test data. Runs at 1440 (both themes) and 390.
 5. Report results per flow with evidence, and say plainly what was not tested (e.g. nothing runs
    against a live Supabase project yet).
 

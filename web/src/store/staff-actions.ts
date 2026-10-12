@@ -78,3 +78,18 @@ export function settleWithdrawal(email: string, transactionId: string, outcome: 
   audit(by, "transaction.settle", "transaction", transactionId, { account: email, outcome });
   return { ok: true };
 }
+
+/** Super admin only: wipes every player account in this browser and its activity, plus the audit
+ * log, so testing starts fresh. Staff accounts stay. Logged as the first entry of the new log. */
+export function clearTestData(): StaffActionResult & { removed?: number } {
+  const by = actor();
+  if (!by || !can(by.role, "settings.edit")) return { ok: false, error: "forbidden" };
+  const players = Object.values(useAuth.getState().accounts)
+    .filter((a) => a.role === "player")
+    .map((a) => a.email);
+  useAuth.getState().removeAccounts(players);
+  useLedgers.getState().remove(players);
+  useBackoffice.getState().clear();
+  audit(by, "testdata.clear", "browser", "local", { players_removed: players.length });
+  return { ok: true, removed: players.length };
+}

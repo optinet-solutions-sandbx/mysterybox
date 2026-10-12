@@ -1,15 +1,18 @@
 """Drive the back office end to end in a real browser (1440 dark, 1440 light, 390 dark).
 
 Flow per viewport: register a player -> quick-open two boxes -> request a $250 withdrawal ->
-/admin refuses the player -> super admin signs in (demo login) -> dashboard -> players filtered to
-"This browser" -> player card: mark the withdrawal paid, suspend -> boxes & odds -> staff & roles ->
-audit log (2 entries) -> admin signs in: staff page is locked -> the suspended player can't sign in.
+/admin refuses the player -> super admin signs in -> dashboard -> players filtered to "This
+browser" -> player card: mark the withdrawal paid, suspend -> boxes & odds -> staff & roles: add an
+admin -> audit log (3 entries) -> the new admin signs in: staff page is locked -> the suspended
+player can't sign in -> super admin clears the test data -> players list is empty.
 
 Usage (server from `cd web && npx next build && npx next start -p 3210`):
-    python scripts/e2e_admin.py [base_url] [out_dir]
+    E2E_SUPERADMIN_EMAIL=… E2E_SUPERADMIN_PASSWORD=… python scripts/e2e_admin.py [base_url] [out_dir]
+The super admin must be one of the team accounts in web/src/config/staff.ts (passwords are not in
+the repo).
 Screenshots land in out_dir (default: a temp folder, never the repo).
 """
-import sys, re, tempfile
+import os, sys, re, tempfile
 from pathlib import Path
 from playwright.sync_api import sync_playwright, expect
 
@@ -17,6 +20,7 @@ BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:3210"
 OUT = Path(sys.argv[2]) if len(sys.argv) > 2 else Path(tempfile.gettempdir()) / "admin-e2e"
 OUT.mkdir(parents=True, exist_ok=True)
 errors = []
+SUPER = (os.environ["E2E_SUPERADMIN_EMAIL"], os.environ["E2E_SUPERADMIN_PASSWORD"])
 
 def ctx(b, width, theme):
     c = b.new_context(viewport={"width": width, "height": 900 if width > 500 else 844})
@@ -31,9 +35,10 @@ def ctx(b, width, theme):
 def vis(pg, sel):
     return pg.locator(sel).filter(visible=True)
 
-def staff_sign_in(pg, which):
+def staff_sign_in(pg, email, password):
     pg.goto(BASE + "/admin"); pg.wait_for_timeout(1500)
-    vis(pg, f"li:has-text('{which}') button:has-text('Use this login')").first.click()
+    pg.get_by_label("Work email").filter(visible=True).fill(email)
+    vis(pg, "input[autocomplete=current-password]").fill(password)
     vis(pg, "button:has-text('Sign in to the back office')").click()
     expect(pg.get_by_role("heading", name="Dashboard")).to_be_visible()
     pg.wait_for_timeout(800)
@@ -74,7 +79,7 @@ with sync_playwright() as p:
         vis(pg, "button:has-text('Sign out')").first.click(); pg.wait_for_timeout(800)
 
         # 2) super admin: dashboard, players, drawer, boxes, staff, audit
-        staff_sign_in(pg, "Super admin")
+        staff_sign_in(pg, *SUPER)
         pg.screenshot(path=f"{OUT}/admin-dashboard-{tag}.png", full_page=True)
         kpis = [t for t in vis(pg, "dl dt").all_inner_texts()][:6]
         print(tag, "kpi labels:", kpis)
@@ -95,6 +100,14 @@ with sync_playwright() as p:
         vis(pg, "button:has-text('Odds')").first.click(); pg.wait_for_timeout(500)
         pg.screenshot(path=f"{OUT}/admin-boxes-{tag}.png", full_page=True)
         pg.goto(BASE + "/admin/staff"); pg.wait_for_timeout(1200)
+        admin_email = f"qa.admin.{width}.{theme}@grailnoir.com"
+        pg.get_by_label("First name").filter(visible=True).fill("Quinn")
+        pg.get_by_label("Last name").filter(visible=True).fill("Admin")
+        pg.get_by_label("Work email").filter(visible=True).fill(admin_email)
+        vis(pg, "button:has-text('Add staff member')").click(); pg.wait_for_timeout(500)
+        added = vis(pg, "main [role=status]").first.inner_text()
+        admin_password = added.rsplit("Temporary password: ", 1)[1].strip()
+        print(tag, "added admin:", added.split(".")[0])
         pg.screenshot(path=f"{OUT}/admin-staff-{tag}.png", full_page=True)
         pg.goto(BASE + "/admin/audit"); pg.wait_for_timeout(1200)
         print(tag, "audit rows:", vis(pg, "tbody tr").count())
@@ -103,8 +116,8 @@ with sync_playwright() as p:
         print(tag, "scrollWidth", sw)
         vis(pg, "button:has-text('Sign out')").first.click(); pg.wait_for_timeout(800)
 
-        # 3) admin: staff page locked
-        staff_sign_in(pg, "Admin")
+        # 3) the new admin: staff page locked
+        staff_sign_in(pg, admin_email, admin_password)
         pg.goto(BASE + "/admin/staff"); pg.wait_for_timeout(1000)
         print(tag, "admin sees lock:", vis(pg, "h1:has-text('Super admin only')").count() == 1)
         pg.screenshot(path=f"{OUT}/admin-locked-{tag}.png")
@@ -116,6 +129,18 @@ with sync_playwright() as p:
         vis(pg, "input[autocomplete=current-password]").fill("noir2026")
         pg.get_by_role("button", name="Sign in", exact=True).click(); pg.wait_for_timeout(600)
         print(tag, "suspended sign-in:", vis(pg, "main [role=alert]").inner_text())
+
+        # 5) super admin clears the test data: the back office starts fresh
+        staff_sign_in(pg, *SUPER)
+        pg.goto(BASE + "/admin/staff"); pg.wait_for_timeout(1000)
+        vis(pg, "button:has-text('Clear test data')").click()
+        vis(pg, "button:has-text('Delete test data')").click(); pg.wait_for_timeout(400)
+        print(tag, "clear:", vis(pg, "main [role=status]").first.inner_text())
+        pg.goto(BASE + "/admin/players"); pg.wait_for_timeout(1000)
+        print(tag, "players after clear:", vis(pg, "tbody tr").first.inner_text().strip())
+        pg.goto(BASE + "/admin/audit"); pg.wait_for_timeout(800)
+        print(tag, "audit after clear:", vis(pg, "tbody tr").count(), "row(s)")
+        vis(pg, "button:has-text('Sign out')").first.click(); pg.wait_for_timeout(500)
         c.close()
     b.close()
 print("ERRORS:", errors[:15])

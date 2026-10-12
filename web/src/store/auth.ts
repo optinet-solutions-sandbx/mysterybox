@@ -4,6 +4,7 @@ import { useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import type { AccountStatus, AppRole } from "@/backend/contract";
+import { TEAM_STAFF } from "@/config/staff";
 import { randomHex, sha256Hex } from "@/domain/fair";
 import { digitsOnly, type RegistrationInput } from "@/domain/auth";
 
@@ -12,8 +13,8 @@ import { digitsOnly, type RegistrationInput } from "@/domain/auth";
  * with a password, as requested. Passwords are salted + hashed even here; production does all of
  * this server-side (Supabase Auth), emails the code and never exposes it to the page.
  *
- * Roles follow the backend (public.app_role): every sign-up is a player; staff are the two demo
- * accounts below or players a super admin promotes (store/staff-actions.ts enforces the rules).
+ * Roles follow the backend (public.app_role): every sign-up is a player; staff are the team
+ * accounts in config/staff.ts or people a super admin adds (store/staff-actions.ts enforces the rules).
  */
 
 export interface Account {
@@ -38,12 +39,6 @@ interface Pending {
   code: string;
 }
 
-/** Prototype staff logins, shown on the back-office sign-in. Demo only: real staff use Supabase Auth. */
-export const DEMO_STAFF = [
-  { email: "admin@grailnoir.com", password: "admin2026", firstName: "Jordan", lastName: "Blake", role: "admin" },
-  { email: "superadmin@grailnoir.com", password: "super2026", firstName: "Sam", lastName: "Okafor", role: "super_admin" },
-] as const satisfies readonly { email: string; password: string; firstName: string; lastName: string; role: AppRole }[];
-
 interface AuthState {
   accounts: Record<string, Account>;
   currentEmail: string | null;
@@ -54,8 +49,10 @@ interface AuthState {
   signIn(email: string, password: string): Promise<{ ok: true } | { ok: false; error: "invalid" | "unverified" | "suspended" }>;
   signOut(): void;
   setMarketing(value: boolean): void;
-  /** Adds the demo staff accounts if this browser doesn't have them yet. */
-  ensureStaff(): Promise<void>;
+  /** Adds the team's staff accounts (config/staff.ts) if this browser doesn't have them yet. */
+  ensureStaff(): void;
+  /** Deletes accounts (used by "Clear test data"). */
+  removeAccounts(emails: string[]): void;
   /** Low-level writes; permission checks and audit live in store/staff-actions.ts. */
   patchAccount(email: string, patch: Partial<Pick<Account, "role" | "status">>): void;
   addAccount(input: { email: string; firstName: string; lastName: string; password: string; role: AppRole }): Promise<boolean>;
@@ -166,11 +163,34 @@ export const useAuth = create<AuthState>()(
         set((s) => ({ accounts: { ...s.accounts, [email]: { ...s.accounts[email], marketing: value } } }));
       },
 
-      async ensureStaff() {
-        const missing = DEMO_STAFF.filter((s) => !get().accounts[s.email]);
+      ensureStaff() {
+        const missing = TEAM_STAFF.filter((s) => !get().accounts[s.email]);
         if (!missing.length) return;
-        const created = await Promise.all(missing.map((s) => newAccount({ ...s, verified: true })));
+        const created: Account[] = missing.map((s) => ({
+          id: crypto.randomUUID(),
+          email: s.email,
+          firstName: s.firstName,
+          lastName: s.lastName,
+          dial: "+1",
+          phone: "",
+          passwordHash: s.passwordHash,
+          salt: s.salt,
+          marketing: false,
+          verified: true,
+          createdAt: new Date().toISOString(),
+          role: s.role,
+          status: "active",
+        }));
         set((s) => ({ accounts: { ...s.accounts, ...Object.fromEntries(created.map((a) => [a.email, a])) } }));
+      },
+
+      removeAccounts(emails) {
+        const drop = new Set(emails);
+        set((s) => ({
+          accounts: Object.fromEntries(Object.entries(s.accounts).filter(([email]) => !drop.has(email))),
+          currentEmail: s.currentEmail && drop.has(s.currentEmail) ? null : s.currentEmail,
+          pending: s.pending && drop.has(s.pending.email) ? null : s.pending,
+        }));
       },
 
       patchAccount(email, patch) {

@@ -19,7 +19,8 @@ project. The UI still runs on the browser mock, so nothing calls Supabase yet.
 | `web/src/backend/contract.ts` | The contract in TypeScript: every interaction, its request and response shapes, error codes, and the permission matrix. |
 | `web/src/backend/supabase-api.ts` | **Placeholder** adapter implementing the contract with supabase-js. Not wired to the UI and not run against a live project. |
 | `web/src/backend/schema.test.ts` | 20 tests that run the migrations and seed in PGlite (Postgres 17) as anon, player, admin and super admin. |
-| `web/.env.example` | `NEXT_PUBLIC_BACKEND`, Supabase URL and keys, `SUPABASE_SERVICE_ROLE_KEY` (server only). |
+| `web/.env.example` | `NEXT_PUBLIC_BACKEND`, Supabase URL and keys, `SUPABASE_SERVICE_ROLE_KEY` (server only), `NEXT_PUBLIC_DEMO_PLAYERS`. |
+| `web/src/config/staff.ts` | The team's super admins for the **mock** (salted hashes only). With Supabase they become auth users promoted by `bootstrap_super_admin.sql` / `admin_set_role`. |
 
 ### What the tests prove
 

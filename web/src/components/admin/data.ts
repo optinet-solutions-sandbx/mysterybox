@@ -14,6 +14,9 @@ import { freshSnapshot, type SessionSnapshot } from "@/store/session";
 
 const noSubscribe = () => () => {};
 
+/** Sample players for demos. Off by default so testing starts from real accounts only. */
+export const DEMO_PLAYERS_ENABLED = process.env.NEXT_PUBLIC_DEMO_PLAYERS === "on";
+
 /** Today's UTC date, client-only (null during SSR). The demo data is anchored to it. */
 export function useToday(): string | null {
   return useSyncExternalStore(noSubscribe, () => new Date().toISOString().slice(0, 10), () => null);
@@ -76,7 +79,7 @@ export function useBackofficeData() {
   const demoStatus = useBackoffice((s) => s.demoStatus);
   const preset = useRangePreset((s) => s.preset);
 
-  const demo = useMemo(() => (today ? buildDemoPlayers({ today }) : []), [today]);
+  const demo = useMemo(() => (today && DEMO_PLAYERS_ENABLED ? buildDemoPlayers({ today }) : []), [today]);
 
   const players = useMemo(() => {
     const browser = Object.values(accounts)

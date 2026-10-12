@@ -8,7 +8,7 @@ import { randomHex } from "@/domain/fair";
 import { Field } from "@/components/auth/fields";
 import { Button } from "@/components/ui/button";
 import { useAuth, useCurrentUser } from "@/store/auth";
-import { addStaff, setRole, type StaffActionResult } from "@/store/staff-actions";
+import { addStaff, clearTestData, setRole, type StaffActionResult } from "@/store/staff-actions";
 import { Panel, PageTitle, RoleBadge, StatusBadge, formatDate } from "./ui";
 
 const ROLES: AppRole[] = ["player", "admin", "super_admin"];
@@ -134,9 +134,49 @@ export function StaffView() {
               </ul>
             )}
           </Panel>
+          <ClearTestData players={players.length} onDone={setMessage} />
         </div>
       </div>
     </>
+  );
+}
+
+/** Wipes this browser's player accounts and activity so a test run starts fresh (staff stay). */
+function ClearTestData({ players, onDone }: { players: number; onDone: (m: { tone: "ok" | "error"; text: string }) => void }) {
+  const [confirming, setConfirming] = useState(false);
+  return (
+    <Panel title="Test data in this browser">
+      <div className="grid gap-3 p-5 text-sm">
+        <p className="leading-relaxed text-muted">
+          Start a test run fresh: deletes every player account in this browser with its wallet, pieces and history, and empties
+          the audit log. Staff accounts stay.
+        </p>
+        {confirming ? (
+          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-danger/50 p-3">
+            <span className="font-semibold">
+              Delete {players} player {players === 1 ? "account" : "accounts"}?
+            </span>
+            <Button
+              size="sm"
+              onClick={() => {
+                const res = clearTestData();
+                setConfirming(false);
+                onDone(res.ok ? { tone: "ok", text: `Cleared ${res.removed ?? 0} player accounts. The back office starts fresh.` } : { tone: "error", text: ERRORS[res.error] });
+              }}
+            >
+              Delete test data
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => setConfirming(false)}>
+              Keep it
+            </Button>
+          </div>
+        ) : (
+          <Button variant="secondary" size="sm" className="justify-self-start" onClick={() => setConfirming(true)}>
+            Clear test data
+          </Button>
+        )}
+      </div>
+    </Panel>
   );
 }
 

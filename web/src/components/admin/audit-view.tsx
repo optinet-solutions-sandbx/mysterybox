@@ -12,6 +12,7 @@ const ACTION_LABEL: Record<string, string> = {
   "wallet.adjust": "Adjusted a balance",
   "box.status": "Changed a box's status",
   "shipment.update": "Updated a shipment",
+  "testdata.clear": "Cleared test data in this browser",
 };
 
 function describe(detail: Record<string, unknown>): string {

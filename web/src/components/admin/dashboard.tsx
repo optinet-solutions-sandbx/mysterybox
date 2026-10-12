@@ -46,8 +46,10 @@ export function AdminDashboard() {
         title="Dashboard"
         intro={
           <>
-            Sign-ups, play and money for {formatDay(range.from)} – {formatDay(range.to)}, UTC. Includes {formatCount(players.length - browserCount)}{" "}
-            generated demo players and {formatCount(browserCount)} {browserCount === 1 ? "account" : "accounts"} registered in this browser.
+            Sign-ups, play and money for {formatDay(range.from)} – {formatDay(range.to)}, UTC.{" "}
+            {players.length > browserCount
+              ? `Includes ${formatCount(players.length - browserCount)} sample players and ${formatCount(browserCount)} ${browserCount === 1 ? "account" : "accounts"} registered in this browser.`
+              : `${formatCount(browserCount)} ${browserCount === 1 ? "player account" : "player accounts"} registered in this browser.`}
           </>
         }
         actions={<RangeControl />}
@@ -61,6 +63,11 @@ export function AdminDashboard() {
         <Kpi label="Earned by players" value={formatUsdCompact(k.earnedCents)} note={`Sold back ${formatUsdCompact(k.soldBackCents)}`} />
         <Kpi label="House net" value={formatUsdCompact(k.houseNetCents)} note={`Hold ${formatPct(k.playedCents ? k.houseNetCents / k.playedCents : null)}`} />
       </dl>
+
+      <p className="mt-4 rounded-2xl border border-dashed border-line px-5 py-3 text-sm leading-relaxed text-muted">
+        <span className="font-semibold text-fg">Prototype:</span> the back office reads accounts created in this browser. Players
+        registered on another phone or computer appear there, not here, until the shared Supabase database is connected.
+      </p>
 
       {pending.length > 0 && (
         <Link
@@ -84,6 +91,7 @@ export function AdminDashboard() {
                 { key: "firstTimePlayers", label: "Played for the first time", tone: "fill-accent bg-accent" },
               ]}
               format={(n) => formatCount(Math.round(n))}
+              integer
             />
           </div>
         </Panel>
@@ -97,6 +105,7 @@ export function AdminDashboard() {
                 { key: "earnedCents", label: "Earned by players", tone: "fill-glow stroke-glow bg-glow" },
               ]}
               format={(n) => formatUsdCompact(n)}
+              floor={10_000}
               footer={(d) => (
                 <p className="flex justify-between gap-3">
                   <span className="text-muted">House net</span>
@@ -152,6 +161,7 @@ export function AdminDashboard() {
           )}
         </Panel>
         <Panel title="Latest openings">
+          {recent.length === 0 && <p className="px-5 py-10 text-center text-sm text-muted">No boxes opened yet. Register a player on the site and open one.</p>}
           <ul className="divide-y divide-line">
             {recent.map(({ p, o }) => (
               <li key={`${p.id}-${o.at}`} className="flex items-center justify-between gap-4 px-5 py-3 text-sm">

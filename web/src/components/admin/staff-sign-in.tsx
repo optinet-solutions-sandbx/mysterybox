@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
-import { ROLE_LABEL } from "@/backend/contract";
 import { LogoMark } from "@/components/brand/logo-mark";
 import { Field, PasswordField } from "@/components/auth/fields";
 import { Button } from "@/components/ui/button";
-import { DEMO_STAFF, useAuth, type Account } from "@/store/auth";
+import { useAuth, type Account } from "@/store/auth";
 
 /** Back-office sign-in. Players who reach /admin are told it needs a staff account. */
 export function StaffSignIn({ signedInPlayer }: { signedInPlayer: Account | null }) {
@@ -89,34 +88,9 @@ export function StaffSignIn({ signedInPlayer }: { signedInPlayer: Account | null
           </form>
         )}
 
-        <div className="mt-6 rounded-2xl border border-dashed border-accent/50 bg-accent-soft p-5">
-          <p className="text-sm font-semibold">Prototype staff logins</p>
-          <ul className="mt-3 grid gap-3">
-            {DEMO_STAFF.map((s) => (
-              <li key={s.email} className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                <span className="min-w-0">
-                  <span className="font-semibold">{ROLE_LABEL[s.role]}</span>
-                  <span className="block truncate text-muted tabular">
-                    {s.email} · {s.password}
-                  </span>
-                </span>
-                {!signedInPlayer && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEmail(s.email);
-                      setPassword(s.password);
-                      setError(null);
-                    }}
-                    className="font-semibold text-accent underline-offset-4 hover:underline"
-                  >
-                    Use this login
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
+        <p className="mt-6 text-sm leading-relaxed text-muted">
+          Staff accounts are issued by a super admin. If you need access, ask one of the team.
+        </p>
       </div>
     </div>
   );

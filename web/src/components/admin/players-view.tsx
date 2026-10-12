@@ -187,7 +187,9 @@ export function PlayersView() {
             {visible.length === 0 && (
               <tr>
                 <td colSpan={COLUMNS.length + 1} className="px-4 py-12 text-center text-muted">
-                  No players match. Clear the search or pick another filter.
+                  {players.length === 0
+                    ? "No players yet. Register an account on the site and it shows up here."
+                    : "No players match. Clear the search or pick another filter."}
                 </td>
               </tr>
             )}

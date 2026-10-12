@@ -13,6 +13,7 @@ import type { SessionSnapshot } from "./session";
 interface LedgersState {
   byEmail: Record<string, SessionSnapshot>;
   save(email: string, snapshot: SessionSnapshot): void;
+  remove(emails: string[]): void;
   /** Back office: settle a pending withdrawal on an account that isn't signed in. */
   settleWithdrawal(email: string, transactionId: string, outcome: "completed" | "cancelled"): boolean;
 }
@@ -23,6 +24,10 @@ export const useLedgers = create<LedgersState>()(
       byEmail: {},
       save(email, snapshot) {
         set((s) => ({ byEmail: { ...s.byEmail, [email]: snapshot } }));
+      },
+      remove(emails) {
+        const drop = new Set(emails);
+        set((s) => ({ byEmail: Object.fromEntries(Object.entries(s.byEmail).filter(([email]) => !drop.has(email))) }));
       },
       settleWithdrawal(email, transactionId, outcome) {
         const snap = get().byEmail[email];

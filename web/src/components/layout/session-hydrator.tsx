@@ -24,7 +24,7 @@ export function SessionHydrator() {
       useBackoffice.persist.rehydrate(),
     ]).then(() => {
       if (cancelled) return;
-      void useAuth.getState().ensureStaff();
+      useAuth.getState().ensureStaff();
       let current = useAuth.getState().currentEmail;
 
       // The persisted session is always the signed-in account's latest copy (it is swapped on every
