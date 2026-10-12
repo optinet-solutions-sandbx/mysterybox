@@ -28,7 +28,7 @@ export function OddsTable({ entries }: { entries: ResolvedEntry[] }) {
             <tr key={r.item.id} className="bg-surface">
               <td className="px-4 py-3">
                 <div className="flex items-center gap-3">
-                  <ItemArt item={r.item} rarity={r.rarity} showBrand={false} className="size-11 shrink-0 rounded-xl" />
+                  <ItemArt item={r.item} rarity={r.rarity} showBrand={false} sizes="44px" className="size-11 shrink-0 rounded-xl" />
                   <div className="min-w-0">
                     <p className="text-xs text-muted">{r.item.brand}</p>
                     <p className="truncate font-medium">{r.item.name}</p>

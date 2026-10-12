@@ -37,7 +37,7 @@ export function BoxCard({ box, top }: { box: Box; top: Item }) {
         <h3 className="font-display text-2xl">{box.name}</h3>
         <p className="mt-1.5 line-clamp-2 text-sm text-muted">{box.tagline}</p>
         <div className="mt-5 flex items-center gap-3 border-t border-line pt-4">
-          <ItemArt item={top} rarity="legendary" showBrand={false} className="size-11 shrink-0 rounded-[10px]" />
+          <ItemArt item={top} rarity="legendary" showBrand={false} sizes="44px" className="size-11 shrink-0 rounded-[10px]" />
           <p className="min-w-0 flex-1 text-xs text-subtle">
             Top piece
             <span className="block truncate text-sm text-fg">

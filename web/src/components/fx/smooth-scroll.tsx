@@ -29,7 +29,7 @@ export function SmoothScroll() {
 
   useEffect(() => {
     if (reduce) return;
-    const lenis = new Lenis({ lerp: 0.09, smoothWheel: true, autoRaf: true });
+    const lenis = new Lenis({ lerp: 0.14, smoothWheel: true, autoRaf: true });
     instance = lenis;
     return () => {
       lenis.destroy();

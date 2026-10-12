@@ -73,7 +73,7 @@ export function OddsProof({
           <ul className="mt-6 grid gap-4">
             {rows.map((r, i) => (
               <li key={r.item.id} className="grid grid-cols-[48px_1fr_auto] items-center gap-4">
-                <ItemArt item={r.item} rarity={r.rarity} showBrand={false} className="size-12 rounded-[10px]" />
+                <ItemArt item={r.item} rarity={r.rarity} showBrand={false} sizes="48px" className="size-12 rounded-[10px]" />
                 <div className="min-w-0">
                   <p className="truncate text-sm">
                     <span className="text-muted">{r.item.brand}</span> {r.item.name}

@@ -89,7 +89,7 @@ export function Ritual({ item, priceRange }: { item: Item; priceRange: string })
               className="absolute top-[2%] left-1/2 w-[min(40%,200px)] -translate-x-1/2 overflow-hidden rounded-[18px] bg-surface shadow-[0_30px_80px_-20px_var(--shadow-strong)] ring-1 ring-accent/30"
               style={reduce ? undefined : { y: cardY, scale: cardScale, opacity: cardOpacity }}
             >
-              <ItemArt item={item} rarity="legendary" showBrand={false} />
+              <ItemArt item={item} rarity="legendary" showBrand={false} sizes="200px" />
               <figcaption className="border-t border-line px-3 py-2.5">
                 <p className="truncate text-xs text-muted">{item.brand} {item.name}</p>
                 <p className="font-display text-base text-foil tabular">{formatUsd(item.value)}</p>

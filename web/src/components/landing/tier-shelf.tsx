@@ -71,6 +71,7 @@ export function TierShelf({ boxes }: { boxes: ShelfBox[] }) {
           if (offset > boxes.length / 2) offset -= boxes.length;
           if (offset < -boxes.length / 2) offset += boxes.length;
           const far = Math.abs(offset) > 2;
+          if (far) return null;
           return (
             <motion.button
               key={box.slug}

@@ -78,11 +78,7 @@ export function Hero({ categories }: { categories: ShowcaseCategory[] }) {
               lineClassName="text-foil"
             />
           </h1>
-          <motion.div
-            initial={reduce ? false : { opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 0.75, ease: [0.22, 1, 0.36, 1] }}
-          >
+          <div className="animate-fade-up [animation-delay:0.75s]">
             <p className="mt-7 text-2xl font-light text-fg italic">{brand.descriptor}</p>
             <p className="mt-4 max-w-md text-lg leading-relaxed text-muted">{brand.description}</p>
             <div className="mt-9 flex flex-wrap items-center gap-4">
@@ -96,15 +92,10 @@ export function Hero({ categories }: { categories: ShowcaseCategory[] }) {
             <p className="mt-8 text-sm text-subtle">
               Every box lists its odds. {brand.minimumAge}+ only.
             </p>
-          </motion.div>
+          </div>
         </div>
 
-        <motion.div
-          className="relative"
-          initial={reduce ? false : { opacity: 0, y: -40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.4, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
-        >
+        <div className="relative animate-drop-in [animation-delay:0.35s]">
           <div className="relative mx-auto h-[360px] w-full max-w-[560px] sm:h-[500px] lg:h-[600px]" data-cursor data-cursor-label="Tilt">
             <div className="absolute top-[64%] left-1/2 -translate-x-1/2 -translate-y-1/2 scale-[0.56] sm:scale-90 lg:scale-100 lg:top-[60%]">
               <Box3D width={340} open={open ? 1 : 0} tilt float />
@@ -121,7 +112,7 @@ export function Hero({ categories }: { categories: ShowcaseCategory[] }) {
                   transition={{ type: "spring", stiffness: 120, damping: 17, delay: reduce ? 0 : 0.3 }}
                 >
                   <figure className="overflow-hidden rounded-[18px] bg-surface shadow-[0_30px_80px_-20px_var(--shadow-strong)] ring-1 ring-accent/30">
-                    <ItemArt item={item} rarity="legendary" showBrand={false} />
+                    <ItemArt item={item} rarity="legendary" showBrand={false} sizes="220px" />
                     <figcaption className="border-t border-line px-4 py-3">
                       <p className="truncate font-display text-[11px] tracking-[0.18em] text-accent">{item.brand}</p>
                       <p className="mt-0.5 truncate text-sm text-fg">{item.name}</p>
@@ -158,7 +149,7 @@ export function Hero({ categories }: { categories: ShowcaseCategory[] }) {
               );
             })}
           </div>
-        </motion.div>
+        </div>
       </Container>
     </section>
   );

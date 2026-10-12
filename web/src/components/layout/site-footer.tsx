@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { brand } from "@/config/brand";
 import { footerNav } from "@/config/nav";
-import { LogoMark } from "@/components/brand/logo-mark";
+import Image from "next/image";
+import { LOCKUP_SIZE, LOGO_LOCKUP_SRC } from "@/components/brand/logo-mark";
 
 export function SiteFooter() {
   return (
@@ -15,10 +16,14 @@ export function SiteFooter() {
             <span className="block text-[clamp(1.4rem,3.6vw,3rem)] leading-tight text-fg">{brand.taglineLines[0]}</span>
             <span className="block text-[clamp(3.4rem,11vw,9rem)] leading-[0.92] text-foil">{brand.taglineLines[1]}</span>
           </p>
-          <div className="flex shrink-0 flex-col items-start gap-3 sm:items-end">
-            <LogoMark className="w-24 sm:w-32" />
-            <span className="font-display text-xl tracking-[0.18em]">{brand.name}</span>
-          </div>
+          <Image
+            src={LOGO_LOCKUP_SRC}
+            width={LOCKUP_SIZE.width}
+            height={LOCKUP_SIZE.height}
+            sizes="(min-width: 640px) 240px, 176px"
+            alt={brand.name}
+            className="h-auto w-44 shrink-0 sm:w-60"
+          />
         </div>
         <div className="mt-16 grid gap-12 lg:grid-cols-[1.1fr_2fr]">
           <p className="max-w-sm text-muted">{brand.description}</p>

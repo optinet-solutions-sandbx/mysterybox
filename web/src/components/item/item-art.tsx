@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { useId, type CSSProperties } from "react";
 import type { Category, Item, Rarity } from "@/domain/types";
-import { LOGO_PATH } from "@/components/brand/logo-mark";
+import { LOGO_SRC } from "@/components/brand/logo-mark";
 import { cn } from "@/lib/cn";
 import { drawings, type ArtKey } from "./item-drawings";
 
@@ -24,11 +24,16 @@ export function ItemArt({
   rarity,
   className,
   showBrand = true,
+  sizes = "(min-width: 1024px) 240px, 45vw",
+  priority = false,
 }: {
   item: Item;
   rarity?: Rarity;
   className?: string;
   showBrand?: boolean;
+  /** Rendered width hint so the optimiser serves a right-sized file. */
+  sizes?: string;
+  priority?: boolean;
 }) {
   const id = useId();
   const tone = rarity ? `var(--rarity-${rarity})` : "var(--glow)";
@@ -49,7 +54,7 @@ export function ItemArt({
         }}
       />
       {item.image ? (
-        <Image src={item.image} alt={item.name} fill sizes="320px" className="object-contain p-[10%]" />
+        <Image src={item.image} alt={item.name} fill sizes={sizes} priority={priority} className="object-contain p-[10%]" />
       ) : (
         <svg viewBox="0 0 100 100" className="w-[64%] overflow-visible drop-shadow-[0_8px_24px_rgb(0_0_0/0.5)]" aria-label={item.name} role="img">
           <defs>
@@ -65,7 +70,7 @@ export function ItemArt({
             {art === "coin" ? (
               <>
                 {drawings.coin}
-                <path d={LOGO_PATH} fillRule="evenodd" fill={`url(#${id}-foil)`} stroke="none" transform="translate(34 40) scale(0.204)" />
+                <image href={LOGO_SRC} x="32" y="38" width="36" height="23.9" />
               </>
             ) : (
               drawings[art]

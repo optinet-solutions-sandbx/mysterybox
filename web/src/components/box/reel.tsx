@@ -151,7 +151,7 @@ function Tile({ entry, highlight, dim }: { entry: ResolvedEntry; highlight?: boo
         dim && "opacity-30",
       )}
     >
-      <ItemArt item={entry.item} rarity={entry.rarity} showBrand={false} />
+      <ItemArt item={entry.item} rarity={entry.rarity} showBrand={false} sizes="140px" />
       <div className="px-3 py-2.5">
         <p className="truncate text-[11px] text-muted">{entry.item.brand}</p>
         <p className="font-display text-sm text-foil tabular">{formatUsd(entry.item.value)}</p>

@@ -19,7 +19,7 @@ export function InsideGrid({ entries }: { entries: ResolvedEntry[] }) {
       {rows.map((e) => (
         <li key={e.item.id} className="relative overflow-hidden rounded-[18px] border border-line bg-surface">
           <span aria-hidden className={`absolute inset-x-0 top-0 z-10 h-[3px] ${rarityBar[e.rarity]}`} />
-          <ItemArt item={e.item} rarity={e.rarity} showBrand={false} />
+          <ItemArt item={e.item} rarity={e.rarity} showBrand={false} sizes="(min-width: 1280px) 200px, (min-width: 640px) 30vw, 48vw" />
           <div className="space-y-1 px-3.5 pt-3 pb-4">
             <div className="flex items-center justify-between gap-2">
               <RarityTag rarity={e.rarity} />

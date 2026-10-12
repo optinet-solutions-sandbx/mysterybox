@@ -16,7 +16,7 @@ import "./globals.css";
 // Geist Mono only for genuinely technical strings (seed hashes).
 const display = Cinzel({ variable: "--font-display-face", subsets: ["latin"] });
 const body = Jost({ variable: "--font-body", subsets: ["latin"], style: ["normal", "italic"] });
-const numeric = Geist_Mono({ variable: "--font-numeric", subsets: ["latin"] });
+const numeric = Geist_Mono({ variable: "--font-numeric", subsets: ["latin"], preload: false });
 
 export const metadata: Metadata = {
   title: { default: `${brand.name} — ${brand.tagline}`, template: `%s · ${brand.name}` },

@@ -66,8 +66,8 @@ function Row({
     <div className="mb-5 flex overflow-hidden">
       <motion.div className="flex w-max gap-5" style={{ x }}>
         {[...items, ...items].map((item, i) => (
-          <figure key={i} className="flex w-80 shrink-0 items-center gap-4 rounded-[18px] border border-line bg-surface/70 p-3 backdrop-blur-sm">
-            <ItemArt item={item} showBrand={false} className="size-24 shrink-0 rounded-[12px]" />
+          <figure key={i} className="flex w-80 shrink-0 items-center gap-4 rounded-[18px] border border-line bg-surface p-3">
+            <ItemArt item={item} showBrand={false} sizes="96px" className="size-24 shrink-0 rounded-[12px]" />
             <figcaption className="min-w-0">
               <p className="truncate font-display text-[11px] tracking-[0.18em] text-accent">{item.brand}</p>
               <p className="truncate text-sm text-fg">{item.name}</p>

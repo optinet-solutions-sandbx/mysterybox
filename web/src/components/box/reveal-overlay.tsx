@@ -113,6 +113,7 @@ export function RevealOverlay({
                 item={entry.item}
                 rarity={entry.rarity}
                 showBrand={false}
+                sizes="288px"
                 className="rounded-[28px] shadow-[0_40px_100px_-30px_var(--tone)] ring-1 ring-[color:var(--tone)]/40"
               />
             </motion.div>

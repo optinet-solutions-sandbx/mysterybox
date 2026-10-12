@@ -4,12 +4,13 @@ import {
   isMotionValue,
   motion,
   useMotionValue,
+  useMotionValueEvent,
   useReducedMotion,
   useSpring,
   useTransform,
   type MotionValue,
 } from "motion/react";
-import { useEffect, type CSSProperties, type PointerEvent } from "react";
+import { useEffect, useState, type CSSProperties, type PointerEvent } from "react";
 import { brand } from "@/config/brand";
 import type { BoxMaterial } from "@/domain/types";
 import { GoldDust } from "@/components/fx/gold-dust";
@@ -161,6 +162,10 @@ export function Box3D({
   const lidAngle = useTransform(openMV, [0, 1], [0, 104]);
   const light = useTransform(openMV, [0, 0.25, 1], [0, 0.65, 1]);
   const beamScale = useTransform(openMV, [0, 1], [0.2, 1]);
+  // Only mount the gold dust while the lid is open: closed boxes would otherwise run ~22
+  // invisible infinite animations each.
+  const [lit, setLit] = useState(false);
+  useMotionValueEvent(light, "change", (v) => setLit(v > 0.04));
 
   const vars = {
     "--w": `${width}px`,
@@ -202,8 +207,8 @@ export function Box3D({
       {/* Floor shadow */}
       <motion.div
         aria-hidden
-        className="absolute rounded-[50%] bg-[var(--floor-shadow)] blur-xl"
-        style={{ width: width * 1.25, height: h * 0.32, top: "64%" }}
+        className="absolute rounded-[50%] bg-[radial-gradient(closest-side,var(--floor-shadow),transparent)]"
+        style={{ width: width * 1.5, height: h * 0.5, top: "58%" }}
         animate={float && !reduce ? { scale: [1, 0.9, 1], opacity: [0.85, 0.6, 0.85] } : {}}
         transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
       />
@@ -215,14 +220,14 @@ export function Box3D({
           style={{ opacity: light, width: width * 1.05, height: h * 2.1, bottom: "52%" }}
         >
           <motion.div
-            className="absolute inset-0 origin-bottom blur-2xl"
+            className="absolute inset-0 origin-bottom"
             style={{
               scaleY: beamScale,
               background:
                 "radial-gradient(50% 60% at 50% 100%, rgb(255 244 214 / 0.95), rgb(226 196 127 / 0.45) 40%, rgb(61 107 255 / 0.18) 70%, transparent 100%)",
             }}
           />
-          <GoldDust count={22} className="inset-x-[18%] bottom-0 h-full" />
+          {lit && <GoldDust count={18} className="inset-x-[18%] bottom-0 h-full" />}
         </motion.div>
       )}
 
@@ -257,7 +262,7 @@ export function Box3D({
         <div className={cn(s.face, s.front, "grid place-items-center")}>
           <div className="flex flex-col items-center" style={{ marginTop: l * 0.9 }}>
             <span style={{ width: width * 0.36, color: m.ink === "foil" ? undefined : "#0f1c3f" }}>
-              <LogoMark tone={m.ink === "foil" ? "foil" : "solid"} className="w-full drop-shadow-[0_1px_0_rgb(0_0_0/0.35)]" />
+              <LogoMark tone={m.ink === "foil" ? "foil" : "solid"} sizes="160px" className="w-full drop-shadow-[0_2px_3px_rgb(0_0_0/0.45)]" />
             </span>
             <span className={s.caption} style={{ fontSize: Math.max(6, h * 0.055), marginTop: h * 0.07 }}>
               {brand.name}
