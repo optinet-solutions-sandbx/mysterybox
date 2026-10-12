@@ -1,3 +1,4 @@
+import { preload } from "react-dom";
 import { formatUsd } from "@/domain/money";
 import { boxStats, getBox, getItem, listBoxes, listShowcaseItems, resolveEntries, topItemsIn } from "@/services/catalog";
 import { Faq } from "@/components/landing/faq";
@@ -18,6 +19,8 @@ const showcase = [
 ];
 
 export default function HomePage() {
+  // The hero marble is the largest painted element: fetch it early (dark is the default mode).
+  preload("/textures/marble-dark.webp", { as: "image", fetchPriority: "high" });
   const byPrice = [...listBoxes()].sort((a, b) => a.price - b.price);
   const shelf: ShelfBox[] = byPrice.map((b) => {
     const { top } = boxStats(b);
