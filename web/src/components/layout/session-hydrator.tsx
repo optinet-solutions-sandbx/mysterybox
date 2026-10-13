@@ -36,7 +36,8 @@ export function SessionHydrator() {
         if (s.currentEmail === current) return;
         if (current) useLedgers.getState().save(current, snapshotOf(useSession.getState()));
         current = s.currentEmail;
-        useSession.setState(current ? (useLedgers.getState().byEmail[current] ?? freshSnapshot()) : freshSnapshot());
+        // Fill fields a stored snapshot predates, so nothing carries over from the previous account.
+        useSession.setState({ ...freshSnapshot(), ...(current ? useLedgers.getState().byEmail[current] : undefined) });
         void useSession.getState().ensureSeeds();
       });
       const offSession = useSession.subscribe((s) => {

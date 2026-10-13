@@ -9,6 +9,7 @@ import { sellBackValue } from "@/domain/odds";
 import type { Box, Cents, InventoryItem, ResolvedEntry, Transaction, TransactionType } from "@/domain/types";
 import { getItem } from "@/services/catalog";
 import { drawFromBox, type Seeds } from "@/services/play";
+import { emptyMockState, type MockState } from "@/box-api/mock-server";
 
 /**
  * Mock player session, persisted to localStorage. Stands in for the platform's
@@ -16,6 +17,12 @@ import { drawFromBox, type Seeds } from "@/services/play";
  */
 
 export type WithdrawalOutcome = { ok: true } | { ok: false; reason: "insufficient_funds" | "below_minimum" };
+
+/** An open the box page is working on (resumed after a reload); the pay key is reused on retry. */
+export interface PendingOpen {
+  openId: string;
+  payKey: string | null;
+}
 
 export type OpenOutcome =
   | { ok: true; inventoryItem: InventoryItem; entry: ResolvedEntry }
@@ -31,6 +38,12 @@ interface SessionState {
   /** Seeds retired by rotation, newest first; their server seed is now public. */
   revealedSeeds: Seeds[];
   ageConfirmed: boolean;
+  /** The box API mock's tables for this account (opens, credit ledger, used payment keys). */
+  boxApi: MockState;
+  /** Per box slug: the open the box page has prepared or is resuming. */
+  pendingOpens: Record<string, PendingOpen>;
+  /** "Your seed" on the box page, remembered per account. */
+  preferredClientSeed: string;
 
   deposit(amount: Cents): void;
   /** Placeholder for payouts: reserves the amount as a pending withdrawal until the back office settles it. */
@@ -44,6 +57,8 @@ interface SessionState {
   rotateSeeds(): Promise<void>;
   ensureSeeds(): Promise<void>;
   confirmAge(): void;
+  setPendingOpen(slug: string, pending: PendingOpen | null): void;
+  setPreferredClientSeed(seed: string): void;
   reset(): void;
 }
 
@@ -71,6 +86,9 @@ const initial = {
   seeds: null as Seeds | null,
   revealedSeeds: [] as Seeds[],
   ageConfirmed: false,
+  boxApi: emptyMockState(),
+  pendingOpens: {} as Record<string, PendingOpen>,
+  preferredClientSeed: "",
 };
 
 export const useSession = create<SessionState>()(
@@ -197,19 +215,32 @@ export const useSession = create<SessionState>()(
         set({ ageConfirmed: true });
       },
 
+      setPendingOpen(slug, pending) {
+        set((s) => {
+          const next = { ...s.pendingOpens };
+          if (pending) next[slug] = pending;
+          else delete next[slug];
+          return { pendingOpens: next };
+        });
+      },
+
+      setPreferredClientSeed(seed) {
+        set({ preferredClientSeed: seed.slice(0, 64) });
+      },
+
       reset() {
-        set({ ...initial, ageConfirmed: get().ageConfirmed });
+        set({ ...initial, boxApi: emptyMockState(), pendingOpens: {}, ageConfirmed: get().ageConfirmed });
         void get().ensureSeeds();
       },
     }),
     {
       name: "mock-session",
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => localStorage),
       // Rehydrated explicitly by <SessionHydrator /> so server and first client render match.
       skipHydration: true,
-      migrate: (persisted) => ({ held: 0, ...(persisted as object) }),
-      partialize: ({ balance, held, inventory, transactions, seeds, revealedSeeds, ageConfirmed }) => ({
+      migrate: (persisted) => ({ held: 0, boxApi: emptyMockState(), pendingOpens: {}, preferredClientSeed: "", ...(persisted as object) }),
+      partialize: ({ balance, held, inventory, transactions, seeds, revealedSeeds, ageConfirmed, boxApi, pendingOpens, preferredClientSeed }) => ({
         balance,
         held,
         inventory,
@@ -217,21 +248,47 @@ export const useSession = create<SessionState>()(
         seeds,
         revealedSeeds,
         ageConfirmed,
+        boxApi,
+        pendingOpens,
+        preferredClientSeed,
       }),
     },
   ),
 );
 
 /** The per-account part of the session (everything but the device's age confirmation). */
-export type SessionSnapshot = Pick<SessionState, "balance" | "held" | "inventory" | "transactions" | "seeds" | "revealedSeeds">;
+export type SessionSnapshot = Pick<
+  SessionState,
+  "balance" | "held" | "inventory" | "transactions" | "seeds" | "revealedSeeds" | "boxApi" | "pendingOpens" | "preferredClientSeed"
+>;
 
 export function snapshotOf(s: SessionSnapshot): SessionSnapshot {
-  return { balance: s.balance, held: s.held, inventory: s.inventory, transactions: s.transactions, seeds: s.seeds, revealedSeeds: s.revealedSeeds };
+  return {
+    balance: s.balance,
+    held: s.held,
+    inventory: s.inventory,
+    transactions: s.transactions,
+    seeds: s.seeds,
+    revealedSeeds: s.revealedSeeds,
+    boxApi: s.boxApi,
+    pendingOpens: s.pendingOpens,
+    preferredClientSeed: s.preferredClientSeed,
+  };
 }
 
 /** A new account's wallet: the demo starting balance and nothing else. */
 export function freshSnapshot(): SessionSnapshot {
-  return { balance: initial.balance, held: 0, inventory: [], transactions: [], seeds: null, revealedSeeds: [] };
+  return {
+    balance: initial.balance,
+    held: 0,
+    inventory: [],
+    transactions: [],
+    seeds: null,
+    revealedSeeds: [],
+    boxApi: emptyMockState(),
+    pendingOpens: {},
+    preferredClientSeed: "",
+  };
 }
 
 /** False on the server and until localStorage has been read; gate balance/inventory UI on it. */

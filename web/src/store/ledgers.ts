@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import type { SessionSnapshot } from "./session";
+import { freshSnapshot, type SessionSnapshot } from "./session";
 
 /**
  * Every browser account's wallet, inventory and history, keyed by email. `useSession` is the
@@ -50,7 +50,12 @@ export const useLedgers = create<LedgersState>()(
     }),
     {
       name: "grailnoir-ledgers",
-      version: 1,
+      version: 2,
+      // v2 added the box API's per-account tables; older snapshots get empty ones.
+      migrate: (persisted) => {
+        const byEmail = (persisted as { byEmail?: Record<string, Partial<SessionSnapshot>> }).byEmail ?? {};
+        return { byEmail: Object.fromEntries(Object.entries(byEmail).map(([email, snap]) => [email, { ...freshSnapshot(), ...snap }])) } as LedgersState;
+      },
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
     },
