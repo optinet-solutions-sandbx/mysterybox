@@ -29,7 +29,8 @@ export async function prepareOpen(api: BoxApi, slug: string, pending: PendingOpe
   if (open.status === "created") return { kind: "ready", open, pending, notice: null };
   if (open.status === "paid") return { kind: "resolved", result: await api.spin(open.openId) };
   if (open.status === "resolved") return { kind: "resolved", result: open };
-  return fresh(api, slug, "Your last open expired before payment. A new one is ready.");
+  // Only worth saying if the player tried to pay; an unattempted open just gets a new seal.
+  return fresh(api, slug, pending.payKey ? "Your last open expired before payment. A new one is ready." : null);
 }
 
 export async function runOpen(

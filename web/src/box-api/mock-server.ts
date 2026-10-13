@@ -1,9 +1,9 @@
 import { economy } from "@/config/economy";
 import { sha256Hex } from "@/domain/fair";
 import { tradeInCredits } from "@/domain/odds";
-import type { InventoryItem, Transaction } from "@/domain/types";
+import type { BonusRow, InventoryItem, Transaction } from "@/domain/types";
 import { DEFAULT_CLIENT_SEED, bonusHash, drawOpen, tableHash, verifyOpen, type BonusSpinResult, type VerifyResult } from "@/engine/draw";
-import { catalogBox, getBox, listBoxes, outcomeArt } from "@/services/catalog";
+import { catalogBox, getBox, listBoxes, outcomeArt, type CatalogOutcome } from "@/services/catalog";
 import {
   BoxApiError,
   type ApiBox,
@@ -50,6 +50,8 @@ export interface StoredOpen {
   clientSeed: string | null;
   clientSeedSource: "player" | "server-default" | null;
   status: "created" | "paid" | "resolved";
+  /** The table frozen onto the open at creation; spin, verify and display use it, never today's catalogue. */
+  snapshot?: TableCopy;
   payment?: { method: PayMethod; key: string };
   resolved?: {
     digest: string;
@@ -60,6 +62,12 @@ export interface StoredOpen {
     awardId: string | null;
     resolvedAt: number;
   };
+}
+
+export interface TableCopy {
+  priceCents: number;
+  outcomes: CatalogOutcome[];
+  bonus: BonusRow[];
 }
 
 /** The mock server's own tables for one account (opens, credit ledger, used payment keys). */
@@ -141,6 +149,25 @@ function withLedger(state: MockState, entries: Omit<LedgerEntry, "id">[]): MockS
   return { ...state, ledger: [...state.ledger, ...added], nextLedgerId: id };
 }
 
+/**
+ * The table an open was created with. Opens stored before snapshots existed fall back to today's
+ * table only while its hash still matches; otherwise the open can't be honoured as created.
+ */
+async function pinnedTable(o: StoredOpen): Promise<TableCopy> {
+  if (o.snapshot) return o.snapshot;
+  const box = await apiBox(o.boxSlug);
+  if (box.tableHash !== o.tableHash) throw new BoxApiError(409, "table_changed");
+  return { priceCents: box.priceCents, outcomes: box.outcomes, bonus: box.bonus };
+}
+
+/** A frozen table by its hash: one pinned on this account's opens, else the box's current one. */
+async function tableByHash(w: MockWorld, slug: string, hash: string): Promise<TableCopy | null> {
+  const pinned = w.box.opens.find((o) => o.boxSlug === slug && o.tableHash === hash && o.snapshot)?.snapshot;
+  if (pinned) return pinned;
+  const box = await apiBox(slug);
+  return box.tableHash === hash ? { priceCents: box.priceCents, outcomes: box.outcomes, bonus: box.bonus } : null;
+}
+
 function committedView(o: StoredOpen, now: number): OpenCommitted {
   return {
     openId: o.openId,
@@ -158,10 +185,9 @@ function committedView(o: StoredOpen, now: number): OpenCommitted {
 
 async function resolvedView(o: StoredOpen): Promise<OpenResolved> {
   const r = o.resolved!;
-  const box = await apiBox(o.boxSlug);
-  const outcome = box.outcomes.find((x) => x.id === r.outcomeId)!;
+  const outcome = (await pinnedTable(o)).outcomes.find((x) => x.id === r.outcomeId)!;
   const clientSeed = o.clientSeed ?? DEFAULT_CLIENT_SEED;
-  const verifyUrl = `/provably-fair?${new URLSearchParams({ slug: o.boxSlug, serverSeed: o.serverSeed, clientSeed, tableHash: o.tableHash, serverHash: o.serverHash, outcomeId: r.outcomeId })}`;
+  const verifyUrl = `/provably-fair?${new URLSearchParams({ slug: o.boxSlug, serverSeed: o.serverSeed, clientSeed, tableHash: o.tableHash, bonusHash: o.bonusHash, serverHash: o.serverHash, outcomeId: r.outcomeId })}`;
   return {
     openId: o.openId,
     boxSlug: o.boxSlug,
@@ -204,6 +230,7 @@ export async function createOpen(w: MockWorld, { boxSlug }: { boxSlug: string },
     clientSeed: null,
     clientSeedSource: null,
     status: "created",
+    snapshot: { priceCents: box.priceCents, outcomes: box.outcomes, bonus: box.bonus },
   };
   const keep = w.box.opens.filter((o) => !(o.status === "created" && w.now > o.expiresAt + PRUNE_AFTER_MS));
   return { world: { ...w, box: { ...w.box, opens: [...keep, open] } }, result: committedView(open, w.now) };
@@ -231,6 +258,7 @@ export async function pay(
   const open = findOpen(w, openId);
   if (isExpired(open, w.now)) throw new BoxApiError(409, "expired");
   if (open.status !== "created") throw new BoxApiError(409, "already_paid");
+  await pinnedTable(open); // refuse, before charging, an open whose table can't be honoured
 
   let next = w;
   if (method === "card") {
@@ -260,11 +288,10 @@ export async function spin(w: MockWorld, { openId }: { openId: string }, deps: M
   const open = findOpen(w, openId);
   if (open.status === "resolved") return { world: w, result: await resolvedView(open) };
   if (open.status !== "paid") throw new BoxApiError(409, "not_paid");
-  const box = await apiBox(open.boxSlug);
-  if (box.tableHash !== open.tableHash) throw new BoxApiError(409, "table_changed");
+  const table = await pinnedTable(open);
 
   const clientSeed = open.clientSeed ?? DEFAULT_CLIENT_SEED;
-  const d = await drawOpen({ slug: open.boxSlug, serverSeed: open.serverSeed, clientSeed, outcomes: box.outcomes, bonus: box.bonus });
+  const d = await drawOpen({ slug: open.boxSlug, serverSeed: open.serverSeed, clientSeed, outcomes: table.outcomes, bonus: table.bonus });
   const at = iso(w.now);
   let next = w;
   let awardId: string | null = null;
@@ -340,27 +367,35 @@ export async function listAwards(w: MockWorld): Promise<OpResult<AwardView[]>> {
   return { world: w, result: awards };
 }
 
-/** Stateless, like the backend's public GET /v1/verify. */
-export async function verify(q: VerifyQuery): Promise<VerifyResult> {
-  const box = await apiBox(q.slug);
-  if (q.tableHash !== box.tableHash) throw new BoxApiError(404, "unknown_table");
-  return verifyOpen({
+/** Like the backend's public GET /v1/verify: a pure recomputation against the frozen table for that hash. */
+export async function verify(w: MockWorld, q: VerifyQuery): Promise<OpResult<VerifyResult>> {
+  const table = await tableByHash(w, q.slug, q.tableHash);
+  if (!table) throw new BoxApiError(404, "unknown_table");
+  const result = await verifyOpen({
     slug: q.slug,
-    priceDollars: box.priceCents / 100,
+    priceDollars: table.priceCents / 100,
     serverSeed: q.serverSeed,
     clientSeed: q.clientSeed,
     serverHash: q.serverHash,
     tableHash: q.tableHash,
-    table: box.outcomes,
-    bonus: box.bonus,
+    table: table.outcomes,
+    bonus: table.bonus,
+    bonusHash: q.bonusHash,
     outcomeId: q.outcomeId,
+    bonusCredits: q.bonusCredits,
   });
+  return { world: w, result };
 }
 
-export async function getTable(hash: string): Promise<TableSnapshot> {
-  const box = (await apiBoxes()).find((b) => b.tableHash === hash);
-  if (!box) throw new BoxApiError(404, "unknown_table");
-  return { boxSlug: box.slug, version: 1, tableHash: box.tableHash, priceCents: box.priceCents, entries: box.outcomes.map(({ id, percent }) => ({ id, percent })) };
+export async function getTable(w: MockWorld, { hash }: { hash: string }): Promise<OpResult<TableSnapshot>> {
+  for (const b of await apiBoxes()) {
+    const table = await tableByHash(w, b.slug, hash);
+    if (table) {
+      const entries = table.outcomes.map(({ id, percent }) => ({ id, percent }));
+      return { world: w, result: { boxSlug: b.slug, version: 1, tableHash: hash, priceCents: table.priceCents, entries } };
+    }
+  }
+  throw new BoxApiError(404, "unknown_table");
 }
 
 export async function tableLog(): Promise<TableLogEntry[]> {

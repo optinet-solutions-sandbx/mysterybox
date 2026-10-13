@@ -36,7 +36,12 @@ export function createHttpBoxApi(baseUrl: string, token: () => string | null): B
     getOpen: (openId) => call("GET", `/opens/${id(openId)}`),
     tradeIn: (awardId) => call("POST", `/awards/${id(awardId)}/trade-in`),
     myCredits: () => call("GET", "/me/credits"),
-    verify: (q) => call("GET", `/verify?${new URLSearchParams({ ...q, nonce: "1" } as Record<string, string>)}`),
+    verify: (q) => {
+      // Their verify takes these parameters; the outcome and free-spin comparison happens in the browser.
+      const params = new URLSearchParams({ slug: q.slug, serverSeed: q.serverSeed, clientSeed: q.clientSeed, nonce: "1", tableHash: q.tableHash });
+      if (q.bonusHash) params.set("bonusHash", q.bonusHash);
+      return call("GET", `/verify?${params}`);
+    },
     getTable: (hash) => call("GET", `/tables/${id(hash)}`),
     tableLog: () => call("GET", "/tables/log"),
     // Pending the backend: no awards listing in their contract yet.

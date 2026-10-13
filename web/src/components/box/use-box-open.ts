@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useReducedMotion } from "motion/react";
 import { boxApi, BoxApiError, type OpenCommitted, type OpenResolved, type PayMethod } from "@/box-api";
 import { formatCredit } from "@/domain/money";
 import { useSession } from "@/store/session";
+import { latest, singleFlight } from "./guards";
 import { prepareOpen, runOpen } from "./open-flow";
 
 /**
@@ -43,16 +44,20 @@ export function useBoxOpen(slug: string, { enabled, quick }: { enabled: boolean;
   const [history, setHistory] = useState<OpenResolved[]>([]);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [busy, setBusy] = useState(false);
-  const running = useRef(false);
+  // One player action at a time (a double click is dropped), and only the newest prepare may land.
+  const [flight] = useState(singleFlight);
+  const [prepares] = useState(latest);
 
   const remember = useCallback((r: OpenResolved) => setHistory((h) => (h.some((x) => x.openId === r.openId) ? h : [...h, r])), []);
 
   /** Shows the open that is waiting (or resumes one interrupted by a reload). State changes only after an await. */
   const prepare = useCallback(
     async (isCancelled: () => boolean = () => false) => {
+      const token = prepares.next();
+      const stale = () => isCancelled() || !prepares.isCurrent(token);
       try {
         const p = await prepareOpen(boxApi, slug, useSession.getState().pendingOpens[slug]);
-        if (isCancelled()) return;
+        if (stale()) return;
         if (p.kind === "ready") {
           setPendingOpen(slug, p.pending);
           setOpen(p.open);
@@ -64,12 +69,12 @@ export function useBoxOpen(slug: string, { enabled, quick }: { enabled: boolean;
           setPhase("result");
         }
       } catch (e) {
-        if (isCancelled()) return;
+        if (stale()) return;
         setNotice(messageFor(e));
         setPhase("error");
       }
     },
-    [slug, setPendingOpen, remember],
+    [slug, setPendingOpen, remember, prepares],
   );
 
   useEffect(() => {
@@ -82,12 +87,10 @@ export function useBoxOpen(slug: string, { enabled, quick }: { enabled: boolean;
     };
   }, [enabled, prepare]);
 
-  const start = useCallback(
+  const startInner = useCallback(
     async (method: PayMethod) => {
       const pending = useSession.getState().pendingOpens[slug];
-      if (!pending || running.current) return;
-      running.current = true;
-      setBusy(true);
+      if (!pending) return;
       setNotice(null);
       setPhase("working");
       try {
@@ -113,63 +116,78 @@ export function useBoxOpen(slug: string, { enabled, quick }: { enabled: boolean;
         } else {
           setPhase("ready");
         }
-      } finally {
-        running.current = false;
-        setBusy(false);
       }
     },
     [slug, quick, reduce, setPendingOpen, remember, prepare],
   );
 
   /** Closes the result and prepares the next open (a new seal). */
-  const next = useCallback(async () => {
+  const nextInner = useCallback(async () => {
     setPhase("idle");
     setResult(null);
     setPendingOpen(slug, null);
     await prepare();
   }, [slug, setPendingOpen, prepare]);
 
+  /** Every player action goes through one flight, with the buttons disabled while it runs. */
+  const guarded = useCallback(
+    (task: () => Promise<void>) =>
+      flight(async () => {
+        setBusy(true);
+        try {
+          await task();
+        } finally {
+          setBusy(false);
+        }
+      }),
+    [flight],
+  );
+
+  const start = useCallback((method: PayMethod) => guarded(() => startInner(method)), [guarded, startInner]);
+  const next = useCallback(() => guarded(nextInner), [guarded, nextInner]);
+  const retry = useCallback(() => guarded(() => prepare()), [guarded, prepare]);
   const openAgain = useCallback(
-    async (method: PayMethod) => {
-      await next();
-      await start(method);
-    },
-    [next, start],
+    (method: PayMethod) =>
+      guarded(async () => {
+        await nextInner();
+        await startInner(method);
+      }),
+    [guarded, nextInner, startInner],
   );
 
   const tradeIn = useCallback(
-    async (awardId: string) => {
-      setBusy(true);
-      try {
-        const r = await boxApi.tradeIn(awardId);
-        setNotice({ tone: "ok", text: `Traded in for ${formatCredit(r.credits)}. Site credit buys boxes and can't be withdrawn.` });
-      } catch (e) {
-        setNotice(messageFor(e));
-      } finally {
-        setBusy(false);
-      }
-      await next();
-    },
-    [next],
+    (awardId: string) =>
+      guarded(async () => {
+        try {
+          const r = await boxApi.tradeIn(awardId);
+          setNotice({ tone: "ok", text: `Traded in for ${formatCredit(r.credits)}. Site credit buys boxes and can't be withdrawn.` });
+        } catch (e) {
+          setNotice(messageFor(e));
+        }
+        await nextInner();
+      }),
+    [guarded, nextInner],
   );
 
   const ship = useCallback(
-    async (awardId: string, label: string) => {
-      // Stub: there is no shipping endpoint in the backend's contract yet; this reuses the demo shipping request.
-      useSession.getState().requestShipping(awardId);
-      setNotice({ tone: "ok", text: `Shipping requested for ${label}. Demo only: nothing ships.` });
-      await next();
-    },
-    [next],
+    (awardId: string, label: string) =>
+      guarded(async () => {
+        // Stub: there is no shipping endpoint in the backend's contract yet; this reuses the demo shipping request.
+        useSession.getState().requestShipping(awardId);
+        setNotice({ tone: "ok", text: `Shipping requested for ${label}. Demo only: nothing ships.` });
+        await nextInner();
+      }),
+    [guarded, nextInner],
   );
 
   const keep = useCallback(
-    async (label: string) => {
-      setNotice({ tone: "ok", text: `${label} is in your inventory.` });
-      await next();
-    },
-    [next],
+    (label: string) =>
+      guarded(async () => {
+        setNotice({ tone: "ok", text: `${label} is in your inventory.` });
+        await nextInner();
+      }),
+    [guarded, nextInner],
   );
 
-  return { phase, open, result, history, notice, busy, seed, setSeed, credit, start, next, openAgain, tradeIn, ship, keep };
+  return { phase, open, result, history, notice, busy, seed, setSeed, credit, start, next, retry, openAgain, tradeIn, ship, keep };
 }

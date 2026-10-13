@@ -1,20 +1,20 @@
 import { economy } from "@/config/economy";
 
-const steps = [
+export const steps = [
   {
     numeral: "I",
     title: "Open",
-    body: "Pay the box price. The result is sealed by a seed committed before you open, so nobody can change it.",
+    body: "Pay the box price. The secret that decides your open is sealed before you pay, so nobody can change the result afterwards.",
   },
   {
     numeral: "II",
     title: "Reveal",
-    body: "The reel lands on your piece. Every piece and its exact odds are listed below.",
+    body: "The box opens on the result and the piece or credit rises out. Every outcome and its exact odds are listed below.",
   },
   {
     numeral: "III",
-    title: "Keep, ship or sell back",
-    body: `Keep it in your inventory, have it shipped, or sell it back instantly for ${Math.round(economy.sellBackRate * 100)}% of its value.`,
+    title: "Ship it or trade it in",
+    body: `Have the piece shipped to you, or trade it in for ${Math.round(economy.sellBackRate * 100)}% of its value in site credit, which buys boxes and can’t be withdrawn.`,
   },
 ];
 

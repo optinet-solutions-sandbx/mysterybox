@@ -140,6 +140,11 @@ with sync_playwright() as p:
         expect(page.get_by_role("button", name=re.compile(r"^Open the box"))).to_be_enabled(timeout=10_000)
         step(f"{vp_name}: {first_action} -> status {page.get_by_role('status').first.inner_text()!r}; header {page.get_by_label('Wallet').inner_text()!r}")
 
+        # Check the first open, so the next open must clear that verdict (a verdict belongs to one open).
+        page.get_by_text("Was it fair").click()
+        page.get_by_role("button", name="Check this open").click()
+        expect(page.get_by_text(re.compile(r"^Matches"))).to_be_visible(timeout=10_000)
+
         # Quick open, then close the result.
         page.get_by_text("Quick open").click()
         page.get_by_role("button", name=re.compile(r"^Open the box")).click()
@@ -151,8 +156,9 @@ with sync_playwright() as p:
         step(f"{vp_name}: quick open -> {second_title!r}")
         page.screenshot(path=str(OUT / f"{vp_name}-09-after-open.png"))
 
-        # Analysis appears after an open; its check must match.
+        # Analysis now describes the second open: the first open's verdict must be gone until it is checked again.
         expect(page.get_by_role("heading", name="Analysis")).to_be_visible()
+        expect(page.get_by_text(re.compile(r"^Matches"))).to_have_count(0)
         page.get_by_text("Was it fair").click()
         page.get_by_role("button", name="Check this open").click()
         expect(page.get_by_text(re.compile(r"^Matches"))).to_be_visible(timeout=10_000)

@@ -31,8 +31,10 @@ export function createMockBoxApi(host: MockHost, opts: MockOptions = {}): BoxApi
   function stateful<A, R>(op: (w: MockWorld, args: A, deps: MockDeps) => Promise<OpResult<R>>, args: A): Promise<R> {
     const run = queue.then(async () => {
       await wait(latency());
-      const { world, result } = await op({ ...host.read(), now: now() }, args, deps);
-      host.write({ accountId: world.accountId, usd: world.usd, transactions: world.transactions, inventory: world.inventory, box: world.box });
+      const before: MockWorld = { ...host.read(), now: now() };
+      const { world, result } = await op(before, args, deps);
+      // Read-only operations hand back the same world; writing it back could only clobber newer state.
+      if (world !== before) host.write({ accountId: world.accountId, usd: world.usd, transactions: world.transactions, inventory: world.inventory, box: world.box });
       return result;
     });
     queue = run.catch(() => undefined);
@@ -54,8 +56,8 @@ export function createMockBoxApi(host: MockHost, opts: MockOptions = {}): BoxApi
     getOpen: (openId) => stateful(server.getOpen, { openId }),
     tradeIn: (awardId) => stateful(server.tradeIn, { awardId }),
     myCredits: () => stateful(server.myCredits, undefined),
-    verify: (q) => stateless(() => server.verify(q)),
-    getTable: (hash) => stateless(() => server.getTable(hash)),
+    verify: (q) => stateful(server.verify, q),
+    getTable: (hash) => stateful(server.getTable, { hash }),
     tableLog: () => stateless(server.tableLog),
     listAwards: () => stateful(server.listAwards, undefined),
   };

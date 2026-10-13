@@ -122,8 +122,12 @@ export interface VerifyInput {
   /** The frozen odds table, in stored order. */
   table: { id: string; percent: number; freeSpins?: number }[];
   bonus: { credits: number; percent: number }[];
+  /** The free-spin table hash pinned on the open. */
+  bonusHash?: string;
   /** The outcome the server returned. */
   outcomeId?: string;
+  /** What each free spin paid, as the server returned it. */
+  bonusCredits?: number[];
 }
 
 export interface VerifyResult {
@@ -148,8 +152,15 @@ export async function verifyOpen(q: VerifyInput): Promise<VerifyResult> {
   if (q.tableHash !== undefined && (await tableHash(q.slug, q.priceDollars, q.table)) !== q.tableHash) {
     return { ok: false, ...result, reason: "This odds table isn't the one pinned on the open." };
   }
+  if (q.bonusHash !== undefined && (await bonusHash(q.slug, q.bonus)) !== q.bonusHash) {
+    return { ok: false, ...result, reason: "This free-spin table isn't the one pinned on the open." };
+  }
   if (q.outcomeId !== undefined && outcome.id !== q.outcomeId) {
     return { ok: false, ...result, reason: "The roll lands on a different outcome." };
+  }
+  const recomputed = bonusSpins.map((b) => b.credits);
+  if (q.bonusCredits !== undefined && (q.bonusCredits.length !== recomputed.length || q.bonusCredits.some((c, i) => c !== recomputed[i]))) {
+    return { ok: false, ...result, reason: "The free spins paid differently than the roll says." };
   }
   return { ok: true, ...result, reason: null };
 }

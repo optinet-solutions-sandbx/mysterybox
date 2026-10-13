@@ -40,7 +40,7 @@ describe("box page open flow", () => {
     expect(again).toMatchObject({ kind: "ready", open: { openId: first.open.openId } });
   });
 
-  it("replaces an expired prepared open with a fresh one and says so", async () => {
+  it("quietly replaces an expired open the player never tried to pay", async () => {
     const h = harness();
     const first = await prepareOpen(h.api, SLUG, undefined);
     if (first.kind !== "ready") throw new Error("not ready");
@@ -49,7 +49,16 @@ describe("box page open flow", () => {
     expect(again.kind).toBe("ready");
     if (again.kind !== "ready") return;
     expect(again.open.openId).not.toBe(first.open.openId);
-    expect(again.notice).toMatch(/expired/);
+    expect(again.notice).toBeNull();
+  });
+
+  it("says so when an open expired after the player tried to pay", async () => {
+    const h = harness();
+    const first = await prepareOpen(h.api, SLUG, undefined);
+    if (first.kind !== "ready") throw new Error("not ready");
+    h.advance(16 * 60 * 1000);
+    const again = await prepareOpen(h.api, SLUG, { ...first.pending, payKey: "tried" });
+    expect(again).toMatchObject({ kind: "ready", notice: expect.stringMatching(/expired/) });
   });
 
   it("opens: sets the seed, pays once with a stored key, spins", async () => {

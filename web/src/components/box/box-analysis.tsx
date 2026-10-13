@@ -98,19 +98,26 @@ function FairCheck({ box, last }: { box: CatalogBox; last: OpenResolved }) {
 
   async function check() {
     setChecking(true);
+    // The table frozen onto this open (by its hash), not today's catalogue.
+    const pinned = await boxApi.getTable(last.tableHash).catch(() => null);
+    const spinsOf = new Map(box.outcomes.map((o) => [o.id, o.freeSpins]));
+    const table = pinned ? pinned.entries.map((e) => ({ ...e, freeSpins: spinsOf.get(e.id) ?? 0 })) : box.outcomes;
+    const bonusCredits = last.bonusSpins.map((b) => b.credits);
     const local = await verifyOpen({
       slug: last.boxSlug,
-      priceDollars: box.priceCents / 100,
+      priceDollars: (pinned?.priceCents ?? box.priceCents) / 100,
       serverSeed: last.serverSeed,
       clientSeed: last.clientSeed,
       serverHash: last.serverHash,
       tableHash: last.tableHash,
-      table: box.outcomes,
+      table,
       bonus: box.bonus,
+      bonusHash: last.bonusHash,
       outcomeId: last.outcome.id,
+      bonusCredits,
     });
     try {
-      const api = await boxApi.verify({ slug: last.boxSlug, serverSeed: last.serverSeed, clientSeed: last.clientSeed, tableHash: last.tableHash, serverHash: last.serverHash, outcomeId: last.outcome.id });
+      const api = await boxApi.verify({ slug: last.boxSlug, serverSeed: last.serverSeed, clientSeed: last.clientSeed, tableHash: last.tableHash, bonusHash: last.bonusHash, serverHash: last.serverHash, outcomeId: last.outcome.id, bonusCredits });
       setState({ local, api, error: null });
     } catch {
       setState({ local, api: null, error: "The server check didn't answer; the check in your browser stands on its own." });
@@ -135,7 +142,7 @@ function FairCheck({ box, last }: { box: CatalogBox; last: OpenResolved }) {
         </Button>
         {state && (
           <p role="status" className={ok ? "font-semibold text-success" : "font-semibold text-danger"}>
-            {ok ? "Matches: your browser got the same roll and outcome." : `Doesn't match: ${state.local.reason ?? state.api?.reason ?? "the results differ"}`}
+            {ok ? "Matches: your browser got the same roll, outcome and free spins." : `Doesn't match: ${state.local.reason ?? state.api?.reason ?? "the results differ"}`}
           </p>
         )}
       </div>

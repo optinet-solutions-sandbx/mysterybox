@@ -84,6 +84,8 @@ export interface VerifyQuery {
   bonusHash?: string;
   serverHash?: string;
   outcomeId?: string;
+  /** What each free spin paid, to compare with the recomputation (our addition). */
+  bonusCredits?: number[];
 }
 
 /** GET /v1/tables/{hash}: the frozen table, in stored order. */

@@ -16,6 +16,10 @@ interface Inputs {
   clientSeed: string;
   tableHash: string;
   serverHash: string;
+  /** What the open showed, so the check compares the result itself, not only the seal and table. */
+  outcomeId?: string;
+  bonusHash?: string;
+  bonusCredits?: number[];
 }
 
 /**
@@ -33,7 +37,15 @@ export function FairnessPanel() {
     const q = new URLSearchParams(window.location.search);
     const slug = q.get("slug");
     if (!slug) return;
-    const next = { slug, serverSeed: q.get("serverSeed") ?? "", clientSeed: q.get("clientSeed") ?? "", tableHash: q.get("tableHash") ?? "", serverHash: q.get("serverHash") ?? "" };
+    const next = {
+      slug,
+      serverSeed: q.get("serverSeed") ?? "",
+      clientSeed: q.get("clientSeed") ?? "",
+      tableHash: q.get("tableHash") ?? "",
+      serverHash: q.get("serverHash") ?? "",
+      outcomeId: q.get("outcomeId") ?? undefined,
+      bonusHash: q.get("bonusHash") ?? undefined,
+    };
     void Promise.resolve().then(() => setFromUrl(next));
   }, []);
 
@@ -65,7 +77,18 @@ export function FairnessPanel() {
                     <Button
                       size="sm"
                       variant="secondary"
-                      onClick={() => setInputs({ slug: o.boxSlug, serverSeed: o.serverSeed, clientSeed: o.clientSeed ?? "", tableHash: o.tableHash, serverHash: o.serverHash })}
+                      onClick={() =>
+                        setInputs({
+                          slug: o.boxSlug,
+                          serverSeed: o.serverSeed,
+                          clientSeed: o.clientSeed ?? "",
+                          tableHash: o.tableHash,
+                          serverHash: o.serverHash,
+                          outcomeId: o.resolved!.outcomeId,
+                          bonusHash: o.bonusHash,
+                          bonusCredits: o.resolved!.bonusSpins.map((b) => b.credits),
+                        })
+                      }
                     >
                       Check
                     </Button>
@@ -101,11 +124,26 @@ function Verifier({ defaults }: { defaults: Inputs | null }) {
   async function verify() {
     setBusy(true);
     const hash = tableHash || (await boxApi.getBox(slug)).tableHash;
-    const local = await verifyOpen({ slug, priceDollars: box.priceCents / 100, serverSeed, clientSeed, serverHash: defaults?.serverHash || undefined, tableHash: hash, table: box.outcomes, bonus: box.bonus });
+    // The table frozen for that hash (fetched by hash, as the backend's verifier does).
+    const pinned = await boxApi.getTable(hash).catch(() => null);
+    const spinsOf = new Map(box.outcomes.map((o) => [o.id, o.freeSpins]));
+    const table = pinned ? pinned.entries.map((e) => ({ ...e, freeSpins: spinsOf.get(e.id) ?? 0 })) : box.outcomes;
+    const expected = { outcomeId: defaults?.outcomeId, bonusHash: defaults?.bonusHash, bonusCredits: defaults?.bonusCredits };
+    const local = await verifyOpen({
+      slug,
+      priceDollars: (pinned?.priceCents ?? box.priceCents) / 100,
+      serverSeed,
+      clientSeed,
+      serverHash: defaults?.serverHash || undefined,
+      tableHash: hash,
+      table,
+      bonus: box.bonus,
+      ...expected,
+    });
     let api: VerifyResult | null = null;
     let apiError: string | null = null;
     try {
-      api = await boxApi.verify({ slug, serverSeed, clientSeed, tableHash: hash, serverHash: defaults?.serverHash || undefined });
+      api = await boxApi.verify({ slug, serverSeed, clientSeed, tableHash: hash, serverHash: defaults?.serverHash || undefined, ...expected });
     } catch {
       apiError = "The API couldn't check this table hash; the result below is your browser's own.";
     }

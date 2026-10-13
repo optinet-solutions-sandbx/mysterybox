@@ -123,6 +123,10 @@ function Stage({ box, entries, catalog, categoryLabel, stats }: StageProps) {
                 <ButtonLink size="lg" href={`/sign-in?next=${encodeURIComponent(`/boxes/${box.slug}`)}`} className="min-w-60">
                   Sign in to open
                 </ButtonLink>
+              ) : flow.phase === "error" ? (
+                <Button size="lg" variant="secondary" onClick={() => void flow.retry()} disabled={flow.busy} className="min-w-60">
+                  Try again
+                </Button>
               ) : (
                 <Button size="lg" onClick={() => void flow.start(method)} disabled={flow.phase !== "ready" || flow.busy} className="min-w-60">
                   {working ? "Opening…" : flow.phase === "idle" ? "Preparing…" : openLabel}
@@ -215,7 +219,7 @@ function Stage({ box, entries, catalog, categoryLabel, stats }: StageProps) {
               <SessionCounters history={flow.history} />
             </div>
           )}
-          {SHOW_ANALYSIS && last && <BoxAnalysis box={catalog} last={last} />}
+          {SHOW_ANALYSIS && last && <BoxAnalysis key={last.openId} box={catalog} last={last} />}
         </div>
       </section>
 

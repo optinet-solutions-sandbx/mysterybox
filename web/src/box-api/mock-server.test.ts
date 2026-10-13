@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { sha256Hex } from "@/domain/fair";
 import type { InventoryItem } from "@/domain/types";
-import { drawOpen } from "@/engine/draw";
+import { drawOpen, tableHash } from "@/engine/draw";
 import { catalogBox, getBox, getItem } from "@/services/catalog";
 import { freshSnapshot } from "@/store/session";
 import { BoxApiError, type BoxApi } from "./contract";
@@ -180,6 +180,25 @@ describe("mock box API: spin", () => {
     expect(balance).toBe(r.creditsAwarded);
     expect(ledger.map((e) => e.reason).sort()).toEqual(["bonus-award", "box-award"]);
     expect(h.world().inventory).toHaveLength(0);
+  });
+});
+
+describe("mock box API: the table pinned on the open", () => {
+  it("spins, shows and verifies against the table pinned at creation, even after the catalogue changes", async () => {
+    const h = harness({ seeds: [seedOf(31)] });
+    const { openId } = await h.api.createOpen(SLUG);
+    // Emulate a catalogue edit after creation: the open keeps the (different) table it was created with.
+    const only = { ...box.outcomes.find((o) => o.kind === "item")!, percent: 100 };
+    const snapshot = { priceCents: box.priceCents, outcomes: [only], bonus: [] };
+    const pinned = await tableHash(SLUG, box.priceCents / 100, snapshot.outcomes);
+    const w = h.world();
+    h.setWorld({ ...w, box: { ...w.box, opens: w.box.opens.map((o) => (o.openId === openId ? { ...o, snapshot, tableHash: pinned } : o)) } });
+    await h.api.pay(openId, { method: "card", idempotencyKey: "k" });
+    const r = await h.api.spin(openId);
+    expect(r.outcome.id).toBe(only.id);
+    expect(r.tableHash).toBe(pinned);
+    expect(await h.api.verify({ slug: SLUG, serverSeed: r.serverSeed, clientSeed: r.clientSeed, tableHash: pinned, outcomeId: r.outcome.id })).toMatchObject({ ok: true });
+    expect((await h.api.getTable(pinned)).entries).toEqual([{ id: only.id, percent: 100 }]);
   });
 });
 

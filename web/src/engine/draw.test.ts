@@ -95,6 +95,19 @@ describe("engine: the backend kit's draw recipe", () => {
     expect(tampered.reason).toMatch(/seal/);
   });
 
+  it("rejects free spins that paid differently than the roll, and a free-spin table that isn't the pinned one", async () => {
+    const v = vectors.vectors[0];
+    const spinTable = entries.map(({ id, percent }) => ({ id, percent, freeSpins: id === v.spins[0].outcomeId ? 1 : 0 }));
+    const base = { slug, priceDollars: price, serverSeed: v.serverSeed, clientSeed: v.clientSeed, table: spinTable, bonus, outcomeId: v.spins[0].outcomeId };
+    expect((await verifyOpen({ ...base, bonusCredits: [v.spins[1].bonusIfFreeSpin], bonusHash: await bonusHash(slug, bonus) })).ok).toBe(true);
+    const paidWrong = await verifyOpen({ ...base, bonusCredits: [v.spins[1].bonusIfFreeSpin + 1] });
+    expect(paidWrong.ok).toBe(false);
+    expect(paidWrong.reason).toMatch(/free spin/i);
+    const otherTable = await verifyOpen({ ...base, bonusHash: "0".repeat(64) });
+    expect(otherTable.ok).toBe(false);
+    expect(otherTable.reason).toMatch(/free-spin table/i);
+  });
+
   it("rejects an open whose pinned table hash isn't the table being checked", async () => {
     const f = vectors.fullOpen.spin;
     const r = await verifyOpen({ slug, priceDollars: 25, serverSeed: f.serverSeed, clientSeed: f.clientSeed, tableHash: f.tableHash, table, bonus });
