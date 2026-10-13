@@ -1,5 +1,6 @@
 import { economy } from "@/config/economy";
 import { sha256Hex } from "@/domain/fair";
+import { tradeInCredits } from "@/domain/odds";
 import type { InventoryItem, Transaction } from "@/domain/types";
 import { DEFAULT_CLIENT_SEED, bonusHash, drawOpen, tableHash, verifyOpen, type BonusSpinResult, type VerifyResult } from "@/engine/draw";
 import { catalogBox, getBox, listBoxes, outcomeArt } from "@/services/catalog";
@@ -113,7 +114,7 @@ export function apiBoxes(): Promise<ApiBox[]> {
   return Promise.all(listBoxes().map((b) => apiBox(b.slug)));
 }
 
-export const tradeInCredits = (valueCents: number) => Math.floor((valueCents * TRADE_IN_RATE) / 100);
+export { tradeInCredits };
 
 const creditBalance = (state: MockState) => state.ledger.reduce((s, e) => s + e.delta, 0);
 const isExpired = (o: StoredOpen, now: number) => o.status === "created" && now > o.expiresAt;

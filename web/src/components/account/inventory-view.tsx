@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { boxApi } from "@/box-api";
+import { economy } from "@/config/economy";
 import type { InventoryItem, InventoryStatus } from "@/domain/types";
-import { formatUsd } from "@/domain/money";
-import { rarityFor, sellBackValue } from "@/domain/odds";
+import { formatCredit, formatUsd } from "@/domain/money";
+import { rarityFor, tradeInCredits } from "@/domain/odds";
 import { getBox, getItem } from "@/services/catalog";
 import { useAuthHydrated, useCurrentUser } from "@/store/auth";
 import { useSession, useSessionHydrated } from "@/store/session";
@@ -18,7 +20,7 @@ type Tab = "held" | "shipping" | "sold";
 const tabStatuses: Record<Tab, InventoryStatus[]> = {
   held: ["held"],
   shipping: ["shipping_pending", "shipping_processing", "shipped"],
-  sold: ["sold"],
+  sold: ["sold", "traded"],
 };
 
 const statusLabel: Record<InventoryStatus, string> = {
@@ -35,16 +37,16 @@ export function InventoryView() {
   const authHydrated = useAuthHydrated();
   const user = useCurrentUser();
   const inventory = useSession((s) => s.inventory);
-  const sellBack = useSession((s) => s.sellBack);
   const [tab, setTab] = useState<Tab>("held");
+  const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   if (!hydrated || !authHydrated) return <div className="h-64 animate-pulse rounded-card bg-surface" />;
-  if (!user) return <AuthPrompt title="Sign in to see your pieces" body="Everything you open lands here, ready to keep, ship home or sell back." />;
+  if (!user) return <AuthPrompt title="Sign in to see your pieces" body="Every piece you open lands here, ready to ship home or trade in for site credit." />;
 
   const held = inventory.filter((i) => i.status === "held");
   const heldValue = held.reduce((sum, i) => sum + getItem(i.itemId).value, 0);
-  const sellAllValue = held.reduce((sum, i) => sum + sellBackValue(getItem(i.itemId).value), 0);
+  const tradeAllCredits = held.reduce((sum, i) => sum + tradeInCredits(getItem(i.itemId).value), 0);
   const visible = inventory.filter((i) => tabStatuses[tab].includes(i.status));
 
   return (
@@ -57,12 +59,16 @@ export function InventoryView() {
         {held.length > 0 && (
           <Button
             variant="secondary"
-            onClick={() => {
-              const credited = sellBack(held.map((i) => i.uid));
-              setMessage(`Sold ${held.length} items for ${formatUsd(credited)}.`);
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              let credited = 0;
+              for (const i of held) credited += (await boxApi.tradeIn(i.uid)).credits;
+              setBusy(false);
+              setMessage(`Traded in ${held.length} pieces for ${formatCredit(credited)}. Site credit buys boxes and can't be withdrawn.`);
             }}
           >
-            Sell all for <span className="font-display tabular">{formatUsd(sellAllValue)}</span>
+            Trade in all for <span className="font-display tabular">{formatCredit(tradeAllCredits)}</span>
           </Button>
         )}
       </div>
@@ -82,12 +88,15 @@ export function InventoryView() {
                 tab === t ? "bg-fg text-bg" : "text-muted hover:text-fg",
               )}
             >
-              {t === "held" ? "Inventory" : t === "shipping" ? "Shipping" : "Sold"} <span className="font-display">{count}</span>
+              {t === "held" ? "Inventory" : t === "shipping" ? "Shipping" : "Traded in"} <span className="font-display">{count}</span>
             </button>
           );
         })}
       </div>
 
+      <p className="mb-2 text-sm text-muted">
+        Trade-ins pay {Math.round(economy.sellBackRate * 100)}% of listed value as site credit, which buys boxes and can&rsquo;t be withdrawn.
+      </p>
       <p role="status" aria-live="polite" className="mb-4 min-h-5 text-sm text-success">
         {message}
       </p>
@@ -112,7 +121,6 @@ export function InventoryView() {
 }
 
 function InventoryCard({ inv, onMessage }: { inv: InventoryItem; onMessage: (m: string) => void }) {
-  const sellBack = useSession((s) => s.sellBack);
   const requestShipping = useSession((s) => s.requestShipping);
   const cancelShipping = useSession((s) => s.cancelShipping);
   const item = getItem(inv.itemId);
@@ -139,9 +147,12 @@ function InventoryCard({ inv, onMessage }: { inv: InventoryItem; onMessage: (m: 
               <Button
                 size="sm"
                 variant="secondary"
-                onClick={() => onMessage(`Sold back for ${formatUsd(sellBack([inv.uid]))}.`)}
+                onClick={async () => {
+                  const { credits } = await boxApi.tradeIn(inv.uid);
+                  onMessage(`Traded in for ${formatCredit(credits)}. Site credit buys boxes and can't be withdrawn.`);
+                }}
               >
-                Sell back · <span className="font-display tabular">{formatUsd(sellBackValue(item.value))}</span>
+                Trade in · <span className="font-display tabular">{formatCredit(tradeInCredits(item.value))}</span>
               </Button>
               <Button
                 size="sm"

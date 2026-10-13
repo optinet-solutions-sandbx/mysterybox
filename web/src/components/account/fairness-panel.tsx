@@ -1,122 +1,160 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
-import { computeRoll, sha256Hex } from "@/domain/fair";
-import { pickByRoll } from "@/domain/odds";
-import { formatUsd } from "@/domain/money";
-import { listBoxes, resolveEntries } from "@/services/catalog";
+import { useEffect, useState, type ReactNode } from "react";
+import { boxApi } from "@/box-api";
+import { bands, verifyOpen, type VerifyResult } from "@/engine/draw";
+import { formatCredit, formatPercent, formatUsd } from "@/domain/money";
+import { catalogBox, listBoxes } from "@/services/catalog";
 import { useSession, useSessionHydrated } from "@/store/session";
 import { Button } from "@/components/ui/button";
 
 const field = "w-full rounded-xl bg-surface-2 px-3 py-2.5 font-mono text-sm ring-1 ring-line";
 
+interface Inputs {
+  slug: string;
+  serverSeed: string;
+  clientSeed: string;
+  tableHash: string;
+  serverHash: string;
+}
+
+/**
+ * The public check on the backend's recipe: recompute any open from its secret, your seed and the
+ * table hash, in this browser and through the API, and compare. Recent opens fill it in.
+ */
 export function FairnessPanel() {
   const hydrated = useSessionHydrated();
-  const seeds = useSession((s) => s.seeds);
-  const revealed = useSession((s) => s.revealedSeeds);
-  const setClientSeed = useSession((s) => s.setClientSeed);
-  const rotateSeeds = useSession((s) => s.rotateSeeds);
-  const [draft, setDraft] = useState<string | null>(null);
+  const opens = useSession((s) => s.boxApi.opens);
+  const [inputs, setInputs] = useState<Inputs | null>(null);
+  const [fromUrl, setFromUrl] = useState<Inputs | null>(null);
 
-  if (!hydrated || !seeds) return <div className="h-64 animate-pulse rounded-card bg-surface" />;
+  // A verify link (?slug&serverSeed&clientSeed&tableHash) prefills the form; read after mount.
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const slug = q.get("slug");
+    if (!slug) return;
+    const next = { slug, serverSeed: q.get("serverSeed") ?? "", clientSeed: q.get("clientSeed") ?? "", tableHash: q.get("tableHash") ?? "", serverHash: q.get("serverHash") ?? "" };
+    void Promise.resolve().then(() => setFromUrl(next));
+  }, []);
+
+  if (!hydrated) return <div className="h-64 animate-pulse rounded-card bg-surface" />;
+  const resolved = opens.filter((o) => o.status === "resolved" && o.resolved).sort((a, b) => b.resolved!.resolvedAt - a.resolved!.resolvedAt).slice(0, 10);
+  const active = inputs ?? fromUrl;
 
   return (
     <div className="grid gap-8 lg:grid-cols-2">
       <section className="rounded-card bg-surface p-6 ring-1 ring-line">
-        <h2 className="text-lg font-semibold">Your active seeds</h2>
-        <dl className="mt-5 grid gap-4 text-sm">
-          <Row label="Server seed (hashed)">{seeds.serverSeedHash}</Row>
-          <Row label="Next nonce">{seeds.nonce}</Row>
-        </dl>
-        <form
-          className="mt-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (draft !== null) setClientSeed(draft);
-            setDraft(null);
-          }}
-        >
-          <label className="text-xs font-semibold tracking-wide text-subtle uppercase" htmlFor="client-seed">
-            Client seed
-          </label>
-          <div className="mt-1.5 flex gap-2">
-            <input id="client-seed" className={field} value={draft ?? seeds.clientSeed} onChange={(e) => setDraft(e.target.value)} />
-            <Button type="submit" variant="secondary" disabled={draft === null}>
-              Save
-            </Button>
-          </div>
-        </form>
-        <Button className="mt-6" onClick={() => void rotateSeeds()}>
-          Rotate seeds and reveal current server seed
-        </Button>
-
-        {revealed.length > 0 && (
-          <div className="mt-8">
-            <h3 className="text-sm font-semibold">Revealed seeds</h3>
-            <ul className="mt-3 grid gap-3">
-              {revealed.map((s) => (
-                <li key={s.serverSeedHash} className="rounded-xl bg-surface-2 p-3 font-mono text-[11px] break-all text-muted">
-                  <p>server: {s.serverSeed}</p>
-                  <p>hash: {s.serverSeedHash}</p>
-                  <p>
-                    client: {s.clientSeed} · nonces 0–{Math.max(0, s.nonce - 1)}
+        <h2 className="text-lg font-semibold">Your recent opens</h2>
+        <p className="mt-1 text-sm text-muted">Every open has its own secret. Once the spin is done, the secret is shown here so you can check the result.</p>
+        {resolved.length === 0 ? (
+          <p className="mt-6 text-sm text-subtle">No opens yet. Open a box, then come back to check it.</p>
+        ) : (
+          <ul className="mt-5 grid gap-3">
+            {resolved.map((o) => {
+              const box = catalogBox(listBoxes().find((b) => b.slug === o.boxSlug)!);
+              const outcome = box.outcomes.find((x) => x.id === o.resolved!.outcomeId);
+              return (
+                <li key={o.openId} className="rounded-xl bg-surface-2 p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold">{outcome?.label ?? o.resolved!.outcomeId}</p>
+                      <p className="text-xs text-muted">
+                        {box.name} · {new Date(o.resolved!.resolvedAt).toLocaleString("en-US")}
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setInputs({ slug: o.boxSlug, serverSeed: o.serverSeed, clientSeed: o.clientSeed ?? "", tableHash: o.tableHash, serverHash: o.serverHash })}
+                    >
+                      Check
+                    </Button>
+                  </div>
+                  <p className="mt-2 truncate font-mono text-[11px] text-subtle" title={o.serverHash}>
+                    seal {o.serverHash}
+                  </p>
+                  <p className="truncate font-mono text-[11px] text-subtle" title={o.serverSeed}>
+                    secret {o.serverSeed}
                   </p>
                 </li>
-              ))}
-            </ul>
-          </div>
+              );
+            })}
+          </ul>
         )}
       </section>
 
-      <Verifier key={revealed[0]?.serverSeedHash ?? "none"} defaults={revealed[0]} />
+      <Verifier key={active ? `${active.slug}-${active.serverSeed}-${active.clientSeed}` : "empty"} defaults={active} />
     </div>
   );
 }
 
-function Verifier({ defaults }: { defaults?: { serverSeed: string; serverSeedHash: string; clientSeed: string } }) {
+function Verifier({ defaults }: { defaults: Inputs | null }) {
   const boxes = listBoxes();
+  const [slug, setSlug] = useState(defaults?.slug ?? boxes[0].slug);
   const [serverSeed, setServerSeed] = useState(defaults?.serverSeed ?? "");
   const [clientSeed, setClientSeed] = useState(defaults?.clientSeed ?? "");
-  const [nonce, setNonce] = useState("0");
-  const [slug, setSlug] = useState(boxes[0].slug);
-  const [result, setResult] = useState<{ hash: string; roll: number; item: string; value: number } | null>(null);
+  const [tableHash, setTableHash] = useState(defaults?.tableHash ?? "");
+  const [result, setResult] = useState<{ local: VerifyResult; api: VerifyResult | null; apiError: string | null } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const box = catalogBox(boxes.find((b) => b.slug === slug) ?? boxes[0]);
 
   async function verify() {
-    const box = boxes.find((b) => b.slug === slug)!;
-    const roll = await computeRoll(serverSeed, clientSeed, Number(nonce));
-    const entry = pickByRoll(resolveEntries(box), roll);
-    setResult({ hash: await sha256Hex(serverSeed), roll, item: entry.item.name, value: entry.item.value });
+    setBusy(true);
+    const hash = tableHash || (await boxApi.getBox(slug)).tableHash;
+    const local = await verifyOpen({ slug, priceDollars: box.priceCents / 100, serverSeed, clientSeed, serverHash: defaults?.serverHash || undefined, tableHash: hash, table: box.outcomes, bonus: box.bonus });
+    let api: VerifyResult | null = null;
+    let apiError: string | null = null;
+    try {
+      api = await boxApi.verify({ slug, serverSeed, clientSeed, tableHash: hash, serverHash: defaults?.serverHash || undefined });
+    } catch {
+      apiError = "The API couldn't check this table hash; the result below is your browser's own.";
+    }
+    setResult({ local, api, apiError });
+    setBusy(false);
   }
+
+  const outcome = result ? box.outcomes.find((o) => o.id === result.local.outcomeId) : undefined;
+  const band = outcome ? bands(box.outcomes).find((b) => b.entry.id === outcome.id) : undefined;
+  const agrees = result?.api ? result.api.digest === result.local.digest && result.api.outcomeId === result.local.outcomeId && result.api.ok === result.local.ok : false;
 
   return (
     <section className="rounded-card bg-surface p-6 ring-1 ring-line">
-      <h2 className="text-lg font-semibold">Verify a result</h2>
-      <p className="mt-1 text-sm text-muted">Recompute any opening from its seeds. Server seeds become public after rotation.</p>
+      <h2 className="text-lg font-semibold">Check a result</h2>
+      <p className="mt-1 text-sm text-muted">Recompute any open from its secret, your seed and the table hash. Your browser does the maths itself.</p>
       <div className="mt-5 grid gap-3">
-        <input className={field} placeholder="Server seed" value={serverSeed} onChange={(e) => setServerSeed(e.target.value)} />
-        <input className={field} placeholder="Client seed" value={clientSeed} onChange={(e) => setClientSeed(e.target.value)} />
-        <div className="grid grid-cols-2 gap-3">
-          <input className={field} type="number" min={0} placeholder="Nonce" value={nonce} onChange={(e) => setNonce(e.target.value)} />
-          <select className={field} value={slug} onChange={(e) => setSlug(e.target.value)}>
-            {boxes.map((b) => (
-              <option key={b.slug} value={b.slug}>
-                {b.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <Button onClick={() => void verify()} disabled={!serverSeed || !clientSeed}>
-          Verify
+        <select aria-label="Box" className={field} value={slug} onChange={(e) => setSlug(e.target.value)}>
+          {boxes.map((b) => (
+            <option key={b.slug} value={b.slug}>
+              {b.name}
+            </option>
+          ))}
+        </select>
+        <input aria-label="Secret (server seed)" className={field} placeholder="Secret (server seed)" value={serverSeed} onChange={(e) => setServerSeed(e.target.value)} />
+        <input aria-label="Your seed (client seed)" className={field} placeholder="Your seed (client seed)" value={clientSeed} onChange={(e) => setClientSeed(e.target.value)} />
+        <input aria-label="Table hash" className={field} placeholder="Table hash (empty: this box's current table)" value={tableHash} onChange={(e) => setTableHash(e.target.value)} />
+        <Button onClick={() => void verify()} disabled={!serverSeed || !clientSeed || busy}>
+          {busy ? "Checking…" : "Verify"}
         </Button>
       </div>
       {result && (
-        <dl className="mt-6 grid gap-3 text-sm">
-          <Row label="SHA-256 of server seed">{result.hash}</Row>
-          <Row label="Roll (0–99,999)">{result.roll.toLocaleString("en-US")}</Row>
-          <Row label="Item">
-            {result.item} · {formatUsd(result.value)}
-          </Row>
-        </dl>
+        <>
+          <p role="status" className={result.local.ok ? "mt-5 text-sm font-semibold text-success" : "mt-5 text-sm font-semibold text-danger"}>
+            {result.local.ok ? "This open checks out." : `This open doesn't check out: ${result.local.reason}`}
+            {result.api && (agrees ? " Matches the API." : " The API's answer differs.")}
+          </p>
+          {result.apiError && <p className="mt-1 text-xs text-subtle">{result.apiError}</p>}
+          <dl className="mt-4 grid gap-3 text-sm">
+            <Row label="SHA-256 of the secret (the seal)">{result.local.serverHash}</Row>
+            <Row label="Roll (0 to 1)">{result.local.roll}</Row>
+            {band && <Row label="Band on the 0–100 line">{`${band.from.toFixed(4)} to ${band.to.toFixed(4)} (${formatPercent(band.entry.percent)})`}</Row>}
+            <Row label="Outcome">
+              {outcome ? `${outcome.label} · ${outcome.kind === "item" ? formatUsd(outcome.valueCents ?? 0) : formatCredit(outcome.credits)}` : result.local.outcomeId}
+            </Row>
+            {result.local.bonusSpins.length > 0 && (
+              <Row label="Free spins">{result.local.bonusSpins.map((b) => `spin ${b.nonce}: +${formatCredit(b.credits)}`).join(" · ")}</Row>
+            )}
+          </dl>
+        </>
       )}
     </section>
   );

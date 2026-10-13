@@ -5,10 +5,10 @@ import { Container, PageHeader } from "@/components/ui/layout";
 export const metadata: Metadata = { title: "Provably fair" };
 
 const steps = [
-  ["Commit", "Before you open anything we show the SHA-256 hash of a secret server seed. The hash locks the seed in without revealing it."],
-  ["Mix", "Each opening combines that server seed with your client seed (change it any time) and a nonce that counts up by one per opening."],
-  ["Roll", "HMAC-SHA256(server seed, “client seed:nonce”) gives a number from 0 to 99,999. The box’s odds table maps every number to exactly one item."],
-  ["Reveal", "Rotate your seeds to publish the old server seed. Hash it yourself to confirm it matches the commitment, then recompute any result below."],
+  ["Seal", "Before you pay, we choose a secret and show its SHA-256 hash: the seal. It locks the secret in without revealing it."],
+  ["Your seed", "Add your own seed before paying and it goes into the roll, so neither side decides it alone. With none, we use the published default, grailnoir-default."],
+  ["Roll", "HMAC-SHA256 of “DRAW-box-secret-seed-1” gives a number from 0 to 1. Times 100, it lands in exactly one band of the box’s odds table. Free spins use spin numbers 2 and 3."],
+  ["Check", "After the spin we show the secret. Hash it to match the seal and recompute the roll here. This proves the result wasn’t changed after you paid; it doesn’t prove every player gets the same table."],
 ];
 
 export default function ProvablyFairPage() {
@@ -17,7 +17,7 @@ export default function ProvablyFairPage() {
       <PageHeader
         eyebrow="Verification"
         title="Provably fair"
-        intro="Every result is decided by seeds committed before you open, so neither side can change it afterwards."
+        intro="Every open is decided by a secret sealed before you pay and your own seed, so the result can’t be changed afterwards."
       />
       <Container className="py-10">
         <ol className="mb-12 grid gap-4 md:grid-cols-4">
@@ -31,7 +31,7 @@ export default function ProvablyFairPage() {
         </ol>
         <FairnessPanel />
         <p className="mt-6 text-xs text-subtle">
-          Prototype note: the mock keeps the server seed in your browser. In production it stays on the server until rotation.
+          Prototype note: the showcase runs the backend’s logic in your browser, so a tester could read a secret in dev tools before the spin. The backend developer’s server keeps it on the server until the spin.
         </p>
       </Container>
     </>

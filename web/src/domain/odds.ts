@@ -63,6 +63,11 @@ export function sellBackValue(value: Cents, rate: number = economy.sellBackRate)
   return Math.floor(value * rate);
 }
 
+/** Site credit a piece trades in for: the sell-back rate of its listed value, in whole credits (1 credit = $1). */
+export function tradeInCredits(value: Cents, rate: number = economy.sellBackRate): number {
+  return Math.floor((value * rate) / 100);
+}
+
 /** Rarity by value multiple of the box price, so every box has a full ladder. */
 export function rarityFor(value: Cents, boxPrice: Cents): Rarity {
   const multiple = value / boxPrice;

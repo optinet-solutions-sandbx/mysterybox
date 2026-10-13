@@ -6,7 +6,7 @@ import { useState } from "react";
 import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "motion/react";
 import { Menu, Package, Plus, X } from "lucide-react";
 import { primaryNav } from "@/config/nav";
-import { formatUsd } from "@/domain/money";
+import { formatCredit, formatUsd } from "@/domain/money";
 import { useAuthHydrated, useCurrentUser, type Account } from "@/store/auth";
 import { useSession, useSessionHydrated } from "@/store/session";
 import { buttonClasses } from "@/components/ui/button";
@@ -131,6 +131,7 @@ export function SiteHeader() {
 function BalancePill() {
   const hydrated = useSessionHydrated();
   const balance = useSession((s) => s.balance);
+  const credit = useSession((s) => s.boxApi.ledger.reduce((sum, e) => sum + e.delta, 0));
   return (
     <Link
       href="/wallet"
@@ -140,6 +141,11 @@ function BalancePill() {
       <span className={cn("text-sm font-semibold tabular", !hydrated && "animate-pulse text-subtle")}>
         {hydrated ? formatUsd(balance) : "$—"}
       </span>
+      {hydrated && credit > 0 && (
+        <span className="hidden text-xs font-semibold text-accent tabular sm:inline" title="Site credit buys boxes and can't be withdrawn">
+          + {formatCredit(credit)}
+        </span>
+      )}
       <span className="grid size-8 place-items-center rounded-full bg-foil text-on-accent">
         <Plus className="size-4" />
       </span>
