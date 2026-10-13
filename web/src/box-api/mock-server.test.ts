@@ -226,7 +226,8 @@ describe("per-account storage", () => {
   });
 
   it("fills the box API fields when swapping in an account saved before they existed", () => {
-    const { boxApi: _drop, pendingOpens: _p, preferredClientSeed: _s, ...legacy } = freshSnapshot();
+    const added = ["boxApi", "pendingOpens", "preferredClientSeed"];
+    const legacy = Object.fromEntries(Object.entries(freshSnapshot()).filter(([k]) => !added.includes(k)));
     const swapped = { ...freshSnapshot(), ...legacy };
     expect(swapped.boxApi).toEqual(emptyMockState());
     expect(swapped.pendingOpens).toEqual({});

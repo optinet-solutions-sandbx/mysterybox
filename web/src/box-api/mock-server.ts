@@ -160,10 +160,16 @@ async function resolvedView(o: StoredOpen): Promise<OpenResolved> {
   const box = await apiBox(o.boxSlug);
   const outcome = box.outcomes.find((x) => x.id === r.outcomeId)!;
   const clientSeed = o.clientSeed ?? DEFAULT_CLIENT_SEED;
-  const { status: _status, clientSeed: _seed, ...committed } = committedView(o, 0);
   const verifyUrl = `/provably-fair?${new URLSearchParams({ slug: o.boxSlug, serverSeed: o.serverSeed, clientSeed, tableHash: o.tableHash, serverHash: o.serverHash, outcomeId: r.outcomeId })}`;
   return {
-    ...committed,
+    openId: o.openId,
+    boxSlug: o.boxSlug,
+    priceCents: o.priceCents,
+    serverHash: o.serverHash,
+    tableHash: o.tableHash,
+    bonusHash: o.bonusHash,
+    nonce: 1,
+    expiresAt: iso(o.expiresAt),
     status: "resolved",
     serverSeed: o.serverSeed,
     clientSeed,

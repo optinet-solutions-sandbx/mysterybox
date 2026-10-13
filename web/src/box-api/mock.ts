@@ -32,8 +32,7 @@ export function createMockBoxApi(host: MockHost, opts: MockOptions = {}): BoxApi
     const run = queue.then(async () => {
       await wait(latency());
       const { world, result } = await op({ ...host.read(), now: now() }, args, deps);
-      const { now: _now, ...persist } = world;
-      host.write(persist);
+      host.write({ accountId: world.accountId, usd: world.usd, transactions: world.transactions, inventory: world.inventory, box: world.box });
       return result;
     });
     queue = run.catch(() => undefined);
