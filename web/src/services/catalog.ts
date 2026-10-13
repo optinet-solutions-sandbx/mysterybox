@@ -1,8 +1,11 @@
 import { economy } from "@/config/economy";
 import { boxes } from "@/data/boxes";
 import { items } from "@/data/items";
-import { expectedValue, rarityFor, rtp } from "@/domain/odds";
-import type { Box, Category, Item, ResolvedEntry } from "@/domain/types";
+import { rarityFor } from "@/domain/odds";
+import type { BonusRow, Box, Category, Item, Rarity, ResolvedEntry } from "@/domain/types";
+import { boxMaths, type BoxMaths, type OutcomeKind } from "@/engine/maths";
+
+export type { OutcomeKind } from "@/engine/maths";
 
 /**
  * Catalog read API. Today it reads static mock modules; swap the bodies for the real
@@ -45,14 +48,84 @@ export function resolveEntries(box: Box): ResolvedEntry[] {
 
 export function boxStats(box: Box) {
   const entries = resolveEntries(box);
-  const ev = expectedValue(entries.map((e) => ({ value: e.item.value, weight: e.weight })));
+  const { maths } = catalogBox(box);
   const byValue = [...entries].sort((a, b) => b.item.value - a.item.value);
   return {
-    ev,
-    rtp: rtp(ev, box.price),
+    ev: maths.payFaceCents,
+    rtp: maths.returnFace,
     top: byValue[0],
     floor: byValue[byValue.length - 1],
   };
+}
+
+/** One row of a box's odds table in the backend kit's format (`Outcome` in their API). */
+export interface CatalogOutcome {
+  id: string;
+  label: string;
+  rarity: Rarity;
+  kind: OutcomeKind;
+  credits: number;
+  freeSpins: number;
+  /** Listed value of a piece; null for credit (credit counts at 1 credit = $1). */
+  valueCents: number | null;
+  /** Chance in percent; a box's rows sum to 100. */
+  percent: number;
+}
+
+/** A box as the backend kit's API describes it, minus the hashes (see box-api). */
+export interface CatalogBox {
+  slug: string;
+  name: string;
+  tagline: string;
+  priceCents: number;
+  outcomes: CatalogOutcome[];
+  bonus: BonusRow[];
+  maths: BoxMaths;
+}
+
+/** Our entries as the kit's outcomes, in authored order (the order the bands walk). */
+export function boxOutcomes(box: Box): CatalogOutcome[] {
+  return box.entries.map((e) => {
+    const item = getItem(e.itemId);
+    const credit = item.category === "credit";
+    return {
+      id: item.id,
+      label: credit ? item.name : `${item.brand} ${item.name}`,
+      rarity: rarityFor(item.value, box.price),
+      kind: credit ? (item.freeSpins ? "bonus" : "credit") : "item",
+      credits: credit ? item.value / 100 : 0,
+      freeSpins: item.freeSpins ?? 0,
+      valueCents: credit ? null : item.value,
+      percent: e.weight / (economy.oddsScale / 100),
+    };
+  });
+}
+
+const catalogCache = new Map<string, CatalogBox>();
+
+/** Synchronous, so Server Components can prerender from it; the live flow goes through box-api. */
+export function catalogBox(box: Box): CatalogBox {
+  const cached = catalogCache.get(box.slug);
+  if (cached) return cached;
+  const outcomes = boxOutcomes(box);
+  const result = {
+    slug: box.slug,
+    name: box.name,
+    tagline: box.tagline,
+    priceCents: box.price,
+    outcomes,
+    bonus: box.bonus,
+    maths: boxMaths({ priceCents: box.price, outcomes, bonus: box.bonus }),
+  };
+  catalogCache.set(box.slug, result);
+  return result;
+}
+
+const unknownPiece: Item = { id: "unknown", name: "Site credit", brand: "Credit", category: "credit", value: 0 };
+
+/** Photo or drawing for an outcome id. Unknown ids (e.g. from a live API) get the credit coin, never a throw. */
+export function outcomeArt(id: string): Item {
+  return itemById.get(id) ?? unknownPiece;
 }
 
 /** Most valuable items of one category, for hero/showcase use. */

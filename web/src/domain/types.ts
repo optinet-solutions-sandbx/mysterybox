@@ -55,12 +55,20 @@ export interface Item {
   /** Width/height of the trimmed photo; used to give every piece the same visual size. */
   imageAspect?: number;
   art?: ItemArtKey;
+  /** Credit items only: free spins this outcome carries (the backend kit's bonus rows). */
+  freeSpins?: number;
 }
 
 export interface BoxEntry {
   itemId: string;
   /** Integer weight; all entries of a box sum to economy.oddsScale. */
   weight: number;
+}
+
+/** One row of a box's free-spin table: what a free spin pays, in credit, and its chance in percent. */
+export interface BonusRow {
+  credits: number;
+  percent: number;
 }
 
 export interface Box {
@@ -74,6 +82,8 @@ export interface Box {
   badge?: "new" | "hot" | "limited";
   featured?: boolean;
   material: BoxMaterial;
+  /** Free-spin table (empty when no outcome carries free spins). */
+  bonus: BonusRow[];
 }
 
 /** A box entry joined with its item and derived display data. */
@@ -98,7 +108,9 @@ export type InventoryStatus =
   | "sold"
   | "shipping_pending"
   | "shipping_processing"
-  | "shipped";
+  | "shipped"
+  /** Traded in for site credit (the backend kit's trade-in). */
+  | "traded";
 
 export interface InventoryItem {
   uid: string;
@@ -107,6 +119,8 @@ export interface InventoryItem {
   acquiredAt: string;
   status: InventoryStatus;
   draw: Draw;
+  /** The box API open this piece came from (absent for pieces from before the API). */
+  openId?: string;
 }
 
 export type TransactionType =

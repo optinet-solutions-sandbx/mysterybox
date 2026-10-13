@@ -27,6 +27,7 @@ const statusLabel: Record<InventoryStatus, string> = {
   shipping_pending: "Shipping requested",
   shipping_processing: "Preparing shipment",
   shipped: "Shipped",
+  traded: "Traded in",
 };
 
 export function InventoryView() {

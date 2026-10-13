@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildDemoPlayers } from "@/data/demo-players";
 import { boxes } from "@/data/boxes";
-import { getItem } from "@/services/catalog";
+import { catalogBox } from "@/services/catalog";
 import { economy } from "@/config/economy";
 import { boxPerformance, dailyMetrics, kpis, overviewRow, presetRange } from "./analytics";
 
@@ -61,7 +61,7 @@ describe("back-office numbers", () => {
   });
 
   it("box performance shows each box's configured return (priced at or just under 90%) next to actual returns", () => {
-    const perf = boxPerformance(players, presetRange("all", today, "2026-01-01"), boxes, (id) => getItem(id).value, economy.oddsScale);
+    const perf = boxPerformance(players, presetRange("all", today, "2026-01-01"), boxes, (b) => catalogBox(b).maths.returnFace);
     for (const b of perf) {
       expect(b.expectedRtp).toBeLessThanOrEqual(economy.targetRtp + 1e-9);
       expect(b.expectedRtp).toBeGreaterThan(economy.targetRtp - 0.05);

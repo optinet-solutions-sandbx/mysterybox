@@ -170,19 +170,21 @@ export function dailyMetrics(players: PlayerRecord[], range: DateRange): DailyMe
   return [...rows.values()];
 }
 
-/** Configured return (sum of weight × value / scale / price) next to what players actually received. */
-export function boxPerformance(players: PlayerRecord[], range: DateRange, boxes: Box[], valueOf: (itemId: string) => Cents, scale: number): BoxPerformanceRow[] {
+/**
+ * Configured return next to what players actually received. The configured return comes from the
+ * same per-open maths the site shows and the draw uses (free spins at their table's average).
+ */
+export function boxPerformance(players: PlayerRecord[], range: DateRange, boxes: Box[], configuredReturn: (box: Box) => number): BoxPerformanceRow[] {
   return boxes.map((b) => {
     const plays = players.flatMap((p) => p.plays.filter((o) => o.boxId === b.id && inRange(o.at, range)));
     const played = sum(plays.map((o) => o.priceCents));
     const earned = sum(plays.map((o) => o.valueCents));
-    const ev = sum(b.entries.map((e) => e.weight * valueOf(e.itemId))) / scale;
     return {
       boxId: b.id,
       name: b.name,
       status: "live",
       priceCents: b.price,
-      expectedRtp: ev / b.price,
+      expectedRtp: configuredReturn(b),
       openings: plays.length,
       playedCents: played,
       earnedCents: earned,

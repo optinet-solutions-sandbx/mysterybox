@@ -4,7 +4,7 @@ import { Fragment, useMemo, useState } from "react";
 import { Boxes, ChevronDown } from "lucide-react";
 import { formatUsd } from "@/domain/money";
 import { boxPerformance } from "@/domain/analytics";
-import { getItem, resolveEntries } from "@/services/catalog";
+import { catalogBox, resolveEntries } from "@/services/catalog";
 import { OddsTable } from "@/components/box/odds-table";
 import { cn } from "@/lib/cn";
 import { useBackofficeData } from "./data";
@@ -14,7 +14,7 @@ import { PageTitle, RangeControl, formatCount, formatDay, formatPct } from "./ui
 export function BoxesView() {
   const { players, range, boxes, scale } = useBackofficeData();
   const [open, setOpen] = useState<string | null>(null);
-  const perf = useMemo(() => (range ? boxPerformance(players, range, boxes, (id) => getItem(id).value, scale) : []), [players, range, boxes, scale]);
+  const perf = useMemo(() => (range ? boxPerformance(players, range, boxes, (b) => catalogBox(b).maths.returnFace) : []), [players, range, boxes]);
 
   if (!range) return <div className="h-[60vh] animate-pulse rounded-2xl bg-surface" />;
 
