@@ -107,44 +107,63 @@ with sync_playwright() as p:
         page.wait_for_url("**/boxes/first-edition")
         step(f"{vp_name}: registered {email} (6 field errors on empty submit; wrong code -> {wrong_code!r}); back on the box")
 
-        open_btn = page.get_by_role("button", name=re.compile(r"^Open for"))
-        expect(open_btn).to_be_enabled(timeout=10_000)
+        open_btn = page.get_by_role("button", name=re.compile(r"^Open the box"))
+        expect(open_btn).to_be_enabled(timeout=15_000)
+        seal = page.locator("dd[title]").first.get_attribute("title") or ""
         page.screenshot(path=str(OUT / f"{vp_name}-06-box.png"))
         bal_before = page.get_by_label("Wallet").inner_text()
 
-        # Full-length spin first, capture mid-spin frame.
+        # Full-length open first: the server answers, then shake -> lid -> the outcome rises -> result.
         open_btn.click()
-        page.wait_for_timeout(1200)
-        page.screenshot(path=str(OUT / f"{vp_name}-07-spinning.png"))
+        page.wait_for_timeout(700)
+        page.screenshot(path=str(OUT / f"{vp_name}-07-shaking.png"))
+        page.wait_for_timeout(1100)
+        page.screenshot(path=str(OUT / f"{vp_name}-07b-rising.png"))
         reveal = page.get_by_role("dialog")
         expect(reveal).to_be_visible(timeout=12_000)
-        page.wait_for_timeout(900)
+        page.wait_for_timeout(1500)
         page.screenshot(path=str(OUT / f"{vp_name}-08-reveal.png"))
-        item_name = page.locator("#reveal-title").inner_text()
+        first_title = page.locator("#reveal-title").inner_text()
         bal_after_open = page.get_by_label("Wallet").inner_text()
-        step(f"{vp_name}: opened -> {item_name!r}; balance {bal_before} -> {bal_after_open}")
+        assert len(seal) == 64, f"seal not shown before paying: {seal!r}"
+        step(f"{vp_name}: seal {seal[:12]}...; opened -> {first_title!r}; balance {bal_before} -> {bal_after_open}")
 
-        page.get_by_role("button", name=re.compile(r"^Sell back for")).click()
+        # A piece offers Ship it / Trade in for credit; credit offers Done.
+        trade = page.get_by_role("button", name=re.compile(r"^Trade in for"))
+        if trade.count() > 0:
+            trade.click()
+            first_action = "traded in"
+        else:
+            page.get_by_role("button", name="Done").click()
+            first_action = "credit, done"
         expect(reveal).to_be_hidden()
-        status = page.get_by_role("status").first.inner_text()
-        step(f"{vp_name}: sold back -> status {status!r}; balance {page.get_by_label('Wallet').inner_text()}")
+        expect(page.get_by_role("button", name=re.compile(r"^Open the box"))).to_be_enabled(timeout=10_000)
+        step(f"{vp_name}: {first_action} -> status {page.get_by_role('status').first.inner_text()!r}; header {page.get_by_label('Wallet').inner_text()!r}")
 
-        # Quick open + keep.
+        # Quick open, then close the result.
         page.get_by_text("Quick open").click()
-        page.get_by_role("button", name=re.compile(r"^Open for")).click()
-        expect(reveal).to_be_visible(timeout=6_000)
-        kept = page.locator("#reveal-title").inner_text()
-        page.get_by_role("button", name="Keep it").click()
+        page.get_by_role("button", name=re.compile(r"^Open the box")).click()
+        expect(reveal).to_be_visible(timeout=8_000)
+        second_title = page.locator("#reveal-title").inner_text()
+        keep = page.get_by_role("button", name="Keep for now")
+        (keep if keep.count() > 0 else page.get_by_role("button", name="Done")).click()
         expect(reveal).to_be_hidden()
-        step(f"{vp_name}: quick open -> kept {kept!r}")
-        page.screenshot(path=str(OUT / f"{vp_name}-09-after-keep.png"))
+        step(f"{vp_name}: quick open -> {second_title!r}")
+        page.screenshot(path=str(OUT / f"{vp_name}-09-after-open.png"))
+
+        # Analysis appears after an open; its check must match.
+        expect(page.get_by_role("heading", name="Analysis")).to_be_visible()
+        page.get_by_text("Was it fair").click()
+        page.get_by_role("button", name="Check this open").click()
+        expect(page.get_by_text(re.compile(r"^Matches"))).to_be_visible(timeout=10_000)
+        page.screenshot(path=str(OUT / f"{vp_name}-09b-analysis.png"))
+        step(f"{vp_name}: Analysis 'Check this open' -> matches")
         page.locator("#odds").scroll_into_view_if_needed()
         page.screenshot(path=str(OUT / f"{vp_name}-10-odds.png"))
 
         page.goto(BASE + "/inventory")
         page.wait_for_timeout(500)
-        credit_ship_disabled = page.get_by_role("button", name="Request shipping").first.is_disabled() if "Credit" in kept else None
-        # Seed one shippable item so the shipping path always runs (random draws are usually credit).
+        # Seed one shippable piece so the shipping and trade-in paths always run (most opens pay credit).
         page.evaluate(
             """() => {
               const raw = JSON.parse(localStorage.getItem('mock-session'));
@@ -164,7 +183,9 @@ with sync_playwright() as p:
         page.get_by_role("button", name="Cancel request").first.click()
         page.get_by_role("tab", name=re.compile("Inventory")).click()
         expect(page.get_by_text("Datejust 36", exact=True)).to_be_visible()
-        step(f"{vp_name}: shipping cancelled -> item back in inventory; credit item ship disabled = {credit_ship_disabled}")
+        page.get_by_role("button", name=re.compile(r"^Trade in ·")).first.click()
+        expect(page.get_by_role("status").first).to_contain_text("Traded in for", timeout=8_000)
+        step(f"{vp_name}: shipping cancelled, then traded in -> {page.get_by_role('status').first.inner_text()!r}; header {page.get_by_label('Wallet').inner_text()!r}")
 
         page.goto(BASE + "/wallet")
         page.wait_for_timeout(400)
@@ -173,14 +194,17 @@ with sync_playwright() as p:
         page.screenshot(path=str(OUT / f"{vp_name}-12-wallet.png"), full_page=True)
 
         page.goto(BASE + "/provably-fair")
-        page.get_by_role("button", name=re.compile("Rotate seeds")).click()
-        page.wait_for_timeout(500)
-        page.get_by_role("combobox").select_option("first-edition")
-        page.get_by_role("button", name="Verify").click()
-        page.wait_for_timeout(500)
+        expect(page.get_by_role("heading", name="Your recent opens")).to_be_visible(timeout=10_000)
+        checks = page.get_by_role("button", name="Check", exact=True)
+        expect(checks.first).to_be_visible(timeout=10_000)
+        listed = checks.count()
+        checks.last.click()  # newest first, so the last one is this run's first open
+        page.get_by_role("button", name="Verify", exact=True).click()
+        expect(page.get_by_text("This open checks out. Matches the API.")).to_be_visible(timeout=10_000)
         page.screenshot(path=str(OUT / f"{vp_name}-13-fair.png"), full_page=True)
-        verified_item = page.locator("dt:text('Item') + dd").inner_text()
-        step(f"{vp_name}: verifier nonce 0 on revealed seed -> {verified_item!r} (first opening was {item_name!r})")
+        verified = page.locator("dt:text('Outcome') + dd").inner_text()
+        assert first_title in verified, f"verifier says {verified!r}, the first open showed {first_title!r}"
+        step(f"{vp_name}: verifier ({listed} opens listed) -> {verified!r} matches the first open {first_title!r} and the API")
 
         page.goto(BASE + "/account")
         expect(page.get_by_role("heading", name="Avery Laurent")).to_be_visible(timeout=10_000)
