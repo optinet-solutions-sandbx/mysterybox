@@ -46,3 +46,30 @@ export function formatDisplayedOdds(p: number): string {
 export function formatExactOdds(p: number): string {
   return `${(p * 100).toFixed(3)}%`;
 }
+
+const trimZeros = (s: string) => (s.includes(".") ? s.replace(/\.?0+$/, "") : s);
+
+/**
+ * Box API odds, which arrive as percents (0–100): 2 decimals from 10% up, otherwise 3 significant
+ * digits, so a rare piece reads "0.00405%", never "0%" or "<0.01%".
+ */
+export function formatPercent(pct: number): string {
+  if (pct === 0) return "0%";
+  return `${trimZeros(pct >= 10 ? pct.toFixed(2) : pct.toPrecision(3))}%`;
+}
+
+/** The stored percent itself, to at most 8 decimals (the backend's numeric(12,8)). */
+export function formatExactPercent(pct: number): string {
+  return `${trimZeros(pct.toFixed(8))}%`;
+}
+
+/** "1 in 24,691": 100 divided by the percent, rounded. */
+export function formatOneIn(pct: number): string {
+  if (!(pct > 0)) return "never";
+  return `1 in ${Math.round(100 / pct).toLocaleString("en-US")}`;
+}
+
+/** Site credit counts 1 credit = $1 on screen; it buys boxes and can't be withdrawn. */
+export function formatCredit(credits: number): string {
+  return `${formatUsd(Math.round(credits * 100))} credit`;
+}
