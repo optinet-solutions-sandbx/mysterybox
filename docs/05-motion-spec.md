@@ -36,12 +36,13 @@ Libraries:
 | **Header** | Transparent over the hero, smoked glass after 24px, hides while reading down | `SiteHeader` |
 | **Cursor** | A gold ring that swells into a label ("Open", "Tilt", "Preview") over `data-cursor` targets; fine pointers only | `Cursor` |
 | **Catalog** | Filter and sort re-flow with shared layout; each card's lid lifts with light on hover | `BoxCatalog`, `BoxCard` |
-| **Box page** | **The core moment:** Open → the box trembles while the draw is made (at least 0.8 s) → the lid bursts open with light as the drum reel spins below (6 s; tiles turn and shrink toward the edges; velocity blur; Skip available) → the winner glows | `BoxStage`, `Reel` (`DrumTile` with `rotateY` and `scale` from position) |
-| **Reveal** | Full screen: rarity-colored rays turn slowly, a 28-spark burst, a white-gold flash for epic/legendary, the plate turns in from −95°, rarity and name rise, the value counts up in foil, then the actions | `RevealOverlay` |
+| **Box page** | **The core moment (on the backend kit, 2026-10-13):** Open → the server answers (seed → pay → spin) → only then the box trembles (0.8 s; 0.25 s Quick open) → the lid opens and the outcome rises out of the box (a sibling over `Box3D`, the hero's 120/17 spring) → the result. The reel no longer spins during an open (the kit forbids near-miss visuals); it stays as the idle contents strip | `BoxStage`, `useBoxOpen`, `Box3D` |
+| **Result** | A neutral overlay, the same for every outcome: the piece (or the credit coin) settles in, the name and value rise and the value counts up in foil; free spins reveal one after another, then the credit total; then the actions. (`RevealOverlay`, with rays, burst and a flash by rarity, is no longer used by the box page) | `ResultOverlay` |
 
 ## Reduced motion
 
-- **Reel:** duration 0, and Skip is moot.
+- **Box page:** no shake and no waits; the piece and the result appear without motion (the lid still
+  springs open). The reel doesn't spin during an open.
 - **Hero:** no loop; the box stays open.
 - **Ritual:** unpinned and fully open.
 - **Keyhole:** unpinned, showing the CTA.

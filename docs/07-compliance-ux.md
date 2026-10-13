@@ -11,26 +11,28 @@ have to be pulled later. Counsel signs off before any public launch.
 | "Prototype, demo credits only" banner on every page | `PrototypeBanner` |
 | Age confirmation on entry (18+ placeholder; 21+ may be required by state or counsel) | `AgeGate`, `brand.minimumAge` |
 | Responsible-play line with a US helpline in the footer | `SiteFooter` ("1-800-GAMBLER") |
-| Full odds disclosure one scroll from every Open button: item, value, probability, roll range | `OddsAtAGlance` under the button, `OddsTable` on `/boxes/[slug]` |
-| Displayed odds and back-office odds shown side by side, both derived from the same weights (never a separate "display" number) | `OddsTable` ("Operator view" column) |
+| Full odds disclosure one scroll from every Open button: outcome, value, exact percent, 1 in N, and the free-spin table | `OddsAtAGlance` under the button, `BoxOdds` ("Box content and odds") on `/boxes/[slug]` |
+| Displayed odds and back-office odds derived from the same numbers (never a separate "display" number): the box page shows the percent the draw uses (full precision in the tooltip); the back office still shows weights | `BoxOdds`, `OddsTable` ("Operator view" column, `/admin/boxes`) |
 | Account needed to open; 18+ and terms accepted at registration; marketing opt-in unchecked by default | `/register`, `BoxStage` "Sign in to open" |
 | Return-to-player shown and defined, with "most openings return less than the price" | Box page stats and footnote, FAQ |
-| Verifiable draws (seed commitment before opening) | `/provably-fair`, the seed line under the opener |
-| Sell-back rate stated wherever sell-back is offered | Reveal dialog, inventory, FAQ |
+| Verifiable opens: the seal (secret hash) shown before paying, the secret revealed by the spin, a public check | "Sealed before you pay" panel, Analysis → "Was it fair", `/provably-fair` |
+| Trade-in rate stated wherever trade-in is offered, and that site credit buys boxes and can't be withdrawn | Result overlay, inventory, box page strip (the landing, FAQ and legal pages still say "sell back": next pass) |
 | Shipping cancellation rules stated (pending only) | Inventory messages, FAQ |
 
 ## Copy rules
 
 - **Don't say:** "win", "winner", "jackpot" (outside a battle mode name to be reviewed), "profit",
   "investment", "guaranteed", "risk-free", "free money", "can't lose", "worth up to $X" as a promise.
-- **Do say:** "open", "reveal", "pull", "top item", "keep", "sell back", "odds", "return to player".
+- **Do say:** "open", "reveal", "pull", "top item", "keep", "trade in", "site credit", "odds",
+  "return to player".
   State value claims as listed values with the odds next to them.
 - **Never show fabricated activity** ("@user just pulled a Rolex!", "Live now", fake counters or
   testimonials). Use real data, or label it as demo data in plain view. (The FTC Consumer Review Rule
   and GrailTurf's lesson.)
 - **Never show offers that don't exist** ("Claim bonus" with no bonus behind it).
-- **No near-miss engineering:** reel fillers follow the real odds (enforced by `buildReel` and its
-  test).
+- **No near-miss engineering:** the reel no longer spins during an open; the reveal starts after the
+  server's result, ends on it and treats every outcome the same. The idle strip's fillers follow the real
+  odds (`buildReel` and its test).
 - **No content aimed at minors:** no cartoon mascots, school themes or youth-coded slang.
 - Referral and creator pages must carry a paid-relationship disclosure.
 

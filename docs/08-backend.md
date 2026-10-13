@@ -1,5 +1,10 @@
 # 08 · Backend: schema, roles and the front-end contract
 
+> **Update 2026-10-13:** for the box system this draft is superseded by the backend developer's kit
+> (Misty-style v1.0). The front end now talks to their contract through `web/src/box-api/`, see
+> [10-box-system-handoff.md](10-box-system-handoff.md). This draft stays as the reference for accounts,
+> roles and the back office.
+
 **Status: initial draft, 2026-10-12.** It's ready for the sync with John (see the last section).
 The schema runs and is tested in an in-process Postgres. It has **not** been deployed to a Supabase
 project. The UI still runs on the browser mock, so nothing calls Supabase yet.

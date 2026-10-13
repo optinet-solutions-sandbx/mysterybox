@@ -26,10 +26,13 @@ web/src
 │  ├─ battles/ deals/ rewards/ leaderboard/ affiliates/   (ComingSoon stubs)
 │  └─ legal/[slug]/     placeholder outlines
 ├─ backend/             contract.ts, supabase-api.ts (placeholder), seed generator, PGlite schema tests
+├─ box-api/             the backend developer's API: contract.ts, mock-server.ts + mock.ts (in-browser server,
+│                       the default), http.ts (their server), index.ts (NEXT_PUBLIC_BACKEND switch)
 ├─ components/{ui,layout,landing,box,item,account,auth,admin,common}
 ├─ config/              brand.ts, economy.ts, nav.ts
 ├─ data/                items.ts, boxes.ts (mock catalog)
 ├─ domain/              types, money, odds, fair, reel (+ *.test.ts)
+├─ engine/              the backend kit's draw recipe on Web Crypto: draw.ts, maths.ts, test-vectors.json
 ├─ lib/                 cn, theme
 ├─ services/            catalog.ts, play.ts (+ catalog.test.ts): the backend seam
 └─ store/               session.ts (signed-in wallet), ledgers.ts (every account's wallet), auth.ts (accounts + roles),
@@ -43,6 +46,11 @@ supabase/               migrations (schema, RLS, RPCs), seed.sql (generated), co
 - `Item { id, name, brand, category, value: Cents, image? }`
 - `Box { id, slug, name, tagline, category, price: Cents, entries: BoxEntry[], badge?, featured?, material }` (`material`: obsidian, navy, sapphire, ivory or gold)
 - `BoxEntry { itemId, weight }`. The weights of a box sum to `economy.oddsScale` (100,000).
+- `Item.freeSpins?` (credit rows that carry free spins), `Box.bonus: BonusRow[]` (the free-spin table),
+  `InventoryStatus` adds `traded`, `InventoryItem.openId?` (the box API open a piece came from).
+- The box API's shapes live in `box-api/contract.ts`: `CatalogOutcome { id, label, rarity, kind
+  (item | credit | bonus), credits, freeSpins, valueCents (null for credit), percent }`, `OpenCommitted`,
+  `OpenResolved`, `LedgerEntry`, `VerifyResult`, `TableSnapshot`.
 - `ResolvedEntry { item, weight, probability, rarity }`
 - `Draw { serverSeedHash, clientSeed, nonce, roll }`: everything needed to re-verify one opening.
 - `InventoryItem { uid, itemId, boxId, acquiredAt, status, draw }`
@@ -54,7 +62,14 @@ Components never read `data/` directly. They go through:
 
 - `services/catalog.ts`: `listBoxes`, `listFeaturedBoxes`, `getBox`, `getItem`, `resolveEntries`,
   `boxStats`, `topItemsIn`, `listShowcaseItems`. These are **synchronous** so pages prerender.
-- `services/play.ts`: `drawFromBox(box, seeds) → { entry, draw }`.
+- `services/catalog.ts` also has `catalogBox(box)` / `boxOutcomes(box)` (the kit's format, synchronous,
+  `percent = weight / 1000`) and `outcomeArt(id)` (local photo or drawing, never throws).
+- `services/play.ts`: `drawFromBox(box, seeds) → { entry, draw }`. **Legacy:** only `session.openBox`
+  uses it; the box page opens through `box-api`.
+- `box-api` (`boxApi` from `@/box-api`): `listBoxes`, `getBox`, `createOpen`, `setClientSeed`, `pay`,
+  `spin`, `getOpen`, `tradeIn`, `myCredits`, `verify`, `getTable`, `tableLog`, `listAwards` (pending the
+  backend). The mock stores its tables in the session (`boxApi`), next to `pendingOpens` and
+  `preferredClientSeed`.
 - `store/session.ts` actions: `openBox`, `sellBack`, `requestShipping`, `cancelShipping`, `deposit`,
   `setClientSeed`, `rotateSeeds`, `ensureSeeds`, `confirmAge`, `reset`.
 
@@ -62,11 +77,10 @@ Components never read `data/` directly. They go through:
   The mock keeps one shared session for every account in the browser; a real backend scopes balance,
   inventory and seeds per user, sends the code by email and never returns it to the page.
 
-**To connect a real platform:** keep these signatures and move the bodies to API calls. Catalog reads
-become `'use cache'` async functions with `cacheLife`, and pages await them. `openBox` calls the
-server, which owns seeds, balance and inventory. The client keeps only the animation: it receives
-`{ item, draw }` and spins the reel to it. If a turnkey vendor ships its own front end, this mock-up
-becomes the design spec instead.
+**To connect the backend developer's API:** set `NEXT_PUBLIC_BACKEND=api` and
+`NEXT_PUBLIC_BOX_API_URL`. Still to do then: the bearer token, pointing the prebuilt pages (landing, box
+list, box page layout) at the API instead of the local catalogue, and replacing the UI's direct reads of
+the mock's storage (header credit, recent opens). See [10-box-system-handoff.md](10-box-system-handoff.md).
 
 ## State and hydration
 
@@ -117,6 +131,13 @@ becomes the design spec instead.
   the real odds.
 - `services/catalog.test.ts` checks that ids and slugs are unique, every box's odds sum to 100%, and
   RTP sits in (target − 5%, target].
+- `engine/draw.test.ts` runs every check in the backend kit's test vectors (seal, key, digest, roll,
+  outcome, free spins, table hash, the full open) plus the per-open maths.
+- `box-api/mock-server.test.ts` covers the open lifecycle (created, paid, resolved, expired), seed rules,
+  idempotent pay and spin, 402 and 409, the secret hidden before the spin, trade-in, verify and the
+  pinned table; `http.test.ts` covers paths and errors.
+- `components/box/open-flow.test.ts` and `guards.test.ts` cover prepare, resume, retry and one action at
+  a time.
 - Browser verification: see "Verification" in the root `CLAUDE.md`.
 
 ## Deploying a preview (when asked)

@@ -9,12 +9,12 @@ behavior via `ComingSoon`. **Planned** = no route yet.
 |---|---|---|
 | `/` | Landing: hero (load sequence + looping 3D box), vault strip, pinned ritual, tier shelf, odds proof, modes, FAQ, keyhole finale | Built |
 | `/boxes` | Catalog of 3D box cards (lid lifts on hover), category filter and price sort with animated re-flow | Built |
-| `/boxes/[slug]` | Box stage (3D box + stats + Open + odds-at-a-glance bar), **shake → lid → drum reel (Skip) → full-screen reveal**, "How it works" strip, "What's inside" grid with odds pills, odds table with **displayed and back-office odds**. Signed out, Open becomes "Sign in to open" | Built |
+| `/boxes/[slug]` | Box stage on the backend kit's logic: the open's **seal** and table hash shown before paying, optional **Your seed**, pay method (demo balance or site credit), **Open the box** (seed → pay → spin through `box-api`), then **shake → lid → the outcome rises out → neutral result** (free spins one after another; Ship it / Trade in / Keep for now), visit counters, the idle contents strip (the reel no longer spins), "How it works" strip, "What's inside" grid, **Box content and odds** (exact percent, 1 in N) with the free-spin table, **Analysis** after an open. Signed out, Open becomes "Sign in to open" | Built (mock API) |
 | `/register` | MISTY-style "Create your account": email, first/last name, country code + phone, password (live rules), 18+/terms (required), marketing opt-in (unchecked), then a 6-digit email code (shown on screen in the prototype) | Built (mock) |
 | `/sign-in` | Email + password, "Forgot password?" note, unverified accounts go to the code step; returns to `?next=` | Built (mock) |
-| `/inventory` | Held / Shipping / Sold tabs; sell back, sell all, request shipping, cancel while pending | Built |
-| `/wallet` | Demo balance, quick top-ups, activity log, reset session | Built |
-| `/provably-fair` | Explainer, active seeds, client-seed edit, rotate and reveal, verifier | Built |
+| `/inventory` | Inventory / Shipping / Traded in tabs; trade in for site credit (90% of listed value), trade in all, request shipping, cancel while pending | Built |
+| `/wallet` | Demo balance (it pays for opens as the "card"), quick top-ups, activity log, reset session. A site-credit ledger page is next pass | Built |
+| `/provably-fair` | The kit's recipe explained, **Your recent opens** (each with its revealed secret), and a verifier (box, secret, your seed, table hash; prefilled from an open or a verify link) that recomputes in the browser and through the API | Built |
 | `/how-it-works` | Steps, trust pillars, full FAQ | Built |
 | `/battles` | Multiplayer openings | Stub |
 | `/deals` | Pick an item and set a chance | Stub |
@@ -28,59 +28,73 @@ behavior via `ComingSoon`. **Planned** = no route yet.
 | `/admin/boxes` | Configured vs actual return per box, with the displayed/back-office odds table | Built (mock) |
 | `/admin/staff`, `/admin/audit` | Super admin only: role matrix, staff list and role changes, add staff, promote a player; audit log | Built (mock) |
 | `/legal/[slug]` | terms, privacy, odds-disclosure, responsible-play, shipping (placeholder outlines) | Built (placeholder) |
-| Global | Prototype banner, sticky header with live balance and inventory count, age gate, footer with responsible-play line, smooth scroll, gold cursor | Built |
+| Global | Prototype banner, sticky header with live balance (plus site credit) and inventory count, age gate, footer with responsible-play line, smooth scroll, gold cursor | Built |
 
-## Core flow: open a box (Built)
+## Core flow: open a box (Built, on the backend kit's logic)
+
+The box system follows the backend developer's Misty-style kit v1.0; see
+[10-box-system-handoff.md](10-box-system-handoff.md) for what changed on 2026-10-13.
 
 ```
-Box page ──Open for $X──▶ charge + reserve nonce ──▶ box trembles (≥0.8 s) while the draw is made
-   ▲                                                         │  (HMAC roll → item → inventory)
-   │                                                         ▼
-   │                         lid bursts open with light; drum reel spins 6 s (1 s Quick open; Skip)
-   │                                                         ▼
-   └──Open again◀── full-screen reveal (rays, burst, plate turn, value count-up)
-                     │        │
-                Keep it   Sell back (credit = 90% of value → balance)
+Box page loads ──▶ createOpen: the server picks a secret, returns its seal (sha256), price, table hash
+   │                (shown under the button, with an optional "Your seed")
+   ▼
+"Open the box · $X" ──▶ setClientSeed (if any) → pay (demo balance as card, or site credit; idempotent key)
+                        → spin (resolves once on the open's pinned table; free spins at nonce 2, 3; reveals the secret)
+   ▼
+box shakes (0.8 s; 0.25 s Quick open) → lid opens → the outcome rises out → result overlay
+   │   piece: Ship it (stub) · Trade in for $N credit (90%) · Keep for now
+   │   credit: Done · free spins revealed one after another, then the credit total
+   └──▶ Open again / the next open is prepared (a new seal)
 ```
 
 **Acceptance criteria**
 
-- The open button is disabled until the session has hydrated and seeds exist, and while a spin runs.
-  If the balance is too low, an inline error and a "Top up" link appear.
-- Balance and nonce update **before** the draw resolves, so double clicks cannot reuse a nonce.
-- The reel's filler tiles are sampled with the **box's real odds**. The marker lands inside the
-  winning tile at a random offset; the winner is highlighted and the others dim.
-- The reveal shows the rarity glow, brand, name, value and rarity. **Keep**, **Sell back for $Y** and
-  **Open again for $X** all work. Escape or the backdrop means Keep.
-- Under the controls: the server-seed hash, client seed, nonce and a link to verify.
-- With `prefers-reduced-motion`, the reel jumps straight to the result and the reveal does not
-  animate.
+- The open exists, with its seal shown, before the player pays; the secret appears only in the spin
+  result.
+- One action at a time: a double click can't pay twice or show a seal for a different open.
+- The reveal starts only after the spin response and ends on the server's outcome. No near-miss
+  visuals; every outcome gets the same neutral treatment.
+- A reload mid-open resumes from the open's status (created → ready, paid → spin, resolved → result) and
+  never charges twice. An unpaid open expires after 15 minutes and is replaced quietly (a notice only if
+  the player had tried to pay).
+- Each open pins a copy of its table; spin and verify use that copy, never today's catalogue.
+- A low demo balance shows an inline error with a "Top up" link; pay with site credit when it covers
+  the price.
+- With `prefers-reduced-motion`, nothing shakes or waits; the piece and the result appear without
+  motion.
 
 ## Inventory (Built)
 
-- Statuses: `held` → `sold`, or `held` → `shipping_pending` → `shipping_processing` → `shipped`.
-  Only `pending` can be cancelled by the user (per the vendor demo).
-- Site-credit items cannot be shipped.
-- "Sell all" sells every held item in one transaction.
+- Statuses: `held` → `traded` (traded in for site credit), or `held` → `shipping_pending` →
+  `shipping_processing` → `shipped`. `sold` remains for pieces sold back before the box API. Only
+  `pending` can be cancelled by the user (per the vendor demo).
+- Credit from opens goes straight to site credit; it no longer lands in the inventory. Older credit
+  items can't be shipped.
+- "Trade in all" trades in every held piece.
 - **Planned:** a shipping address form, US state validation, and a status timeline.
 
 ## Wallet (Built as a demo)
 
-- Quick top-ups ($50, $100, $250, $1,000) and an activity list (deposits, openings, sell-backs,
-  shipping events).
+- Quick top-ups ($50, $100, $250, $1,000) and an activity list (deposits, openings paid by card,
+  shipping events). Trade-ins and credit from opens go to site credit, not the balance.
 - **Production:** card and crypto deposits through the chosen processor (not Stripe; see the digest),
   plus deposit limits, cool-off and self-exclusion in Account. Withdrawals go "through items" if the
   vendor model is kept.
 
-## Provably fair (Built)
+## Provably fair (Built, the kit's recipe)
 
-- roll = `floor(uint32(HMAC_SHA256(serverSeed, clientSeed + ":" + nonce)[0..8]) / 2^32 × 100000)`.
-  The item is the entry whose roll range contains the roll (ranges are shown in each box's odds
-  table).
-- Rotating seeds reveals the old server seed and keeps the client seed. The verifier recomputes the
-  hash, the roll and the item for any box.
-- **The mock keeps the server seed in localStorage. Production must keep it server-side until it is
-  rotated.**
+- seal = `sha256(serverSeed)`, shown before payment. digest =
+  `HMAC-SHA256(key "DRAW-<slug>-<serverSeed>-<clientSeed>-<nonce>", message "")`; roll = the first 13 hex
+  digits / 2^52; the outcome is the first band, in stored order, whose upper edge is above roll × 100.
+  Free spins use nonce 2, 3, … on the box's free-spin table. Pinned by the kit's test vectors
+  (`web/src/engine/test-vectors.json`).
+- Every open has its own secret (no seed rotation). With no client seed, the published default
+  `grailnoir-default` is used and recorded.
+- The verifier recomputes the seal, the roll, the outcome and each free spin in the browser and through
+  the API, against the table frozen for that table hash.
+- **The mock keeps the secret in localStorage until the spin; the backend developer's server keeps it
+  server-side.**
 
 ## Secondary modes (Stubs; build in Phase 3)
 
