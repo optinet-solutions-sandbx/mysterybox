@@ -1,5 +1,5 @@
 import type { ResolvedEntry } from "@/domain/types";
-import { formatDisplayedOdds, formatUsd } from "@/domain/money";
+import { formatPercent, formatUsd } from "@/domain/money";
 import { ItemArt } from "@/components/item/item-art";
 import { RarityTag } from "@/components/item/rarity-tag";
 
@@ -23,7 +23,7 @@ export function InsideGrid({ entries }: { entries: ResolvedEntry[] }) {
           <div className="space-y-1 px-3.5 pt-3 pb-4">
             <div className="flex items-center justify-between gap-2">
               <RarityTag rarity={e.rarity} />
-              <span className="rounded-pill border border-line px-2 py-0.5 text-[11px] font-semibold text-fg tabular">{formatDisplayedOdds(e.probability)}</span>
+              <span className="rounded-pill border border-line px-2 py-0.5 text-[11px] font-semibold text-fg tabular">{formatPercent(e.probability * 100)}</span>
             </div>
             <p className="truncate pt-1 text-xs font-semibold tracking-wide text-muted">{e.item.brand}</p>
             <p className="line-clamp-2 min-h-10 text-sm leading-snug font-medium">{e.item.name}</p>

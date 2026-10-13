@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { boxStats, categoryLabels, getBox, listBoxes, resolveEntries } from "@/services/catalog";
+import { boxStats, catalogBox, categoryLabels, getBox, listBoxes, resolveEntries } from "@/services/catalog";
 import { BoxStage } from "@/components/box/box-stage";
 import { InsideGrid } from "@/components/box/inside-grid";
-import { OddsTable } from "@/components/box/odds-table";
+import { BoxOdds } from "@/components/box/box-odds";
 import { HowItWorksStrip } from "@/components/box/how-it-works-strip";
 
 /** Every slug is prerendered by generateStaticParams, so a blocking navigation is effectively instant. */
@@ -30,6 +30,7 @@ export default async function BoxPage({ params }: PageProps<"/boxes/[slug]">) {
       <BoxStage
         box={box}
         entries={entries}
+        catalog={catalogBox(box)}
         categoryLabel={categoryLabels[box.category]}
         stats={{ rtp: stats.rtp, topName: stats.top.item.name, topValue: stats.top.item.value, topProbability: stats.top.probability }}
       />
@@ -39,7 +40,7 @@ export default async function BoxPage({ params }: PageProps<"/boxes/[slug]">) {
       <section id="inside" className="mx-auto max-w-7xl scroll-mt-24 px-4 py-14 sm:px-6 lg:px-8">
         <h2 className="font-display text-3xl font-semibold sm:text-4xl">What’s inside</h2>
         <p className="mt-3 max-w-2xl text-muted">
-          Every piece this box can contain, with its listed value and the exact chance of getting it.
+          Every outcome this box can give, with its listed value and the exact chance of getting it.
         </p>
         <div className="mt-8">
           <InsideGrid entries={entries} />
@@ -47,15 +48,10 @@ export default async function BoxPage({ params }: PageProps<"/boxes/[slug]">) {
       </section>
 
       <section id="odds" className="mx-auto max-w-7xl scroll-mt-24 px-4 pb-10 sm:px-6 lg:px-8">
-        <h2 className="font-display text-3xl font-semibold sm:text-4xl">Odds</h2>
+        <h2 className="font-display text-3xl font-semibold sm:text-4xl">Box content and odds</h2>
         <div className="mt-6">
-          <OddsTable entries={entries} />
+          <BoxOdds box={catalogBox(box)} />
         </div>
-        <p className="mt-4 max-w-3xl text-sm text-subtle">
-          Values are listed retail or resale prices, which are also used for sell-back. Average return is the
-          probability-weighted listed value divided by the box price. Individual openings vary widely, and most return
-          less than the price.
-        </p>
       </section>
     </>
   );
