@@ -1,27 +1,20 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
+import { stepsFor } from "./how-it-works-strip";
 
-afterEach(() => {
-  vi.unstubAllEnvs();
-  vi.resetModules();
-});
-
-async function stripText() {
-  const { steps } = await import("./how-it-works-strip");
-  return steps.map((s) => `${s.title} ${s.body}`).join(" ");
-}
+const text = (tradeIn: boolean) =>
+  stepsFor(tradeIn)
+    .map((s) => `${s.title} ${s.body}`)
+    .join(" ");
 
 describe("box page how-it-works strip", () => {
-  it("describes the open the backend runs: sealed before paying, then ship or trade in for credit", async () => {
-    const text = await stripText();
-    expect(text).not.toMatch(/sell|reel|spin/i);
-    expect(text).toMatch(/trade/i);
-    expect(text).toMatch(/can.t be withdrawn/);
+  it("describes the open the backend runs: sealed before paying, then ship or trade in for credit", () => {
+    expect(text(true)).not.toMatch(/sell|reel|spin/i);
+    expect(text(true)).toMatch(/trade/i);
+    expect(text(true)).toMatch(/can.t be withdrawn/);
   });
 
-  it("drops trade-in when NEXT_PUBLIC_TRADE_IN=off: pieces are kept or shipped", async () => {
-    vi.stubEnv("NEXT_PUBLIC_TRADE_IN", "off");
-    const text = await stripText();
-    expect(text).not.toMatch(/trade|sell|can.t be withdrawn/i);
-    expect(text).toMatch(/ship/i);
+  it("drops trade-in when the site setting turns it off: pieces are kept or shipped", () => {
+    expect(text(false)).not.toMatch(/trade|sell|can.t be withdrawn/i);
+    expect(text(false)).toMatch(/ship/i);
   });
 });

@@ -1,6 +1,7 @@
-import { tradeInEnabled, tradeInRate } from "@/config/features";
+import { tradeInRate } from "@/config/features";
+import { loadSiteSettings } from "@/services/catalog-source";
 
-export const steps = [
+export const stepsFor = (tradeInEnabled: boolean) => [
   {
     numeral: "I",
     title: "Open",
@@ -21,7 +22,8 @@ export const steps = [
 ];
 
 /** Compact three-step explainer for the box page. */
-export function HowItWorksStrip() {
+export async function HowItWorksStrip() {
+  const steps = stepsFor((await loadSiteSettings()).tradeIn);
   return (
     <section id="how-it-works" aria-labelledby="how-strip" className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
       <h2 id="how-strip" className="font-display text-3xl font-semibold sm:text-4xl">

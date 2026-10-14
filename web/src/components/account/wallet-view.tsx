@@ -2,7 +2,7 @@
 
 import { useId, useState, type FormEvent } from "react";
 import { economy } from "@/config/economy";
-import { tradeInEnabled } from "@/config/features";
+import { useTradeIn } from "@/components/site-settings-provider";
 import { formatUsd } from "@/domain/money";
 import { useAuthHydrated, useCurrentUser } from "@/store/auth";
 import { useSession, useSessionHydrated } from "@/store/session";
@@ -20,6 +20,7 @@ export function WalletView() {
   const deposit = useSession((s) => s.deposit);
   const cancelWithdrawal = useSession((s) => s.cancelWithdrawal);
   const reset = useSession((s) => s.reset);
+  const tradeInEnabled = useTradeIn();
 
   if (!hydrated || !authHydrated) return <div className="h-64 animate-pulse rounded-card bg-surface" />;
   if (!user) return <AuthPrompt title="Sign in to see your wallet" body={tradeInEnabled ? "Your demo balance and every top-up, open and trade-in are kept with your account." : "Your demo balance and every top-up and open are kept with your account."} />;

@@ -106,7 +106,7 @@ lucide-react. Icybox runs on the same Next, Tailwind and Motion stack.
 | `config/brand.ts` | Every brand string (name, domain, tagline and `taglineLines`, descriptor, box side line, entity, age), derived from the brand pack. |
 | `components/brand/logo-mark.tsx` | `LogoMark` (foil, or solid: the pack's silhouette or a mask of the mark), `LOGO_SRC`, `LOGO_SIZE`, `LOCKUP_SIZE`, `logoHeightAt()`. |
 | `lib/theme.ts`, `components/layout/theme-toggle.tsx` | Light/dark boot script, storage key, toggle. |
-| `config/features.ts` | Product switches read at build time: `tradeInEnabled` (`NEXT_PUBLIC_TRADE_IN`, default on) and `tradeInRate`. |
+| `config/features.ts`, `components/site-settings-provider.tsx` | `tradeInDefault` (`NEXT_PUBLIC_TRADE_IN`, the fallback without Supabase), `tradeInRate`; the provider hands the live `trade_in_enabled` setting (loaded with the catalogue by `loadSiteSettings`) to client components as `useTradeIn()`. |
 | `config/economy.ts` | Mock economy: target RTP (90%), sell-back rate (90%), starting balance ($10k), top-ups, odds scale (100,000). |
 | `config/media.ts` | `referenceImage()` / `NEXT_PUBLIC_REFERENCE_IMAGES`, the switch for the third-party photos (see Rules). |
 | `domain/` | **Pure, unit-tested logic.** Types, money (incl. `formatPercent`, `formatOneIn`, `formatCredit`), odds (normalize, price, `pickByRoll`, `rollRanges`, rarity, sell-back, `tradeInCredits`), the legacy HMAC rolls, reel strip building. |
@@ -186,8 +186,10 @@ anything moves; the browser only animates and verifies it.**
    box. Keep the 18+ and responsible-play lines. State the trade-in rate wherever trade-in is offered,
    and that site credit buys boxes and can't be withdrawn. No slot-machine words on player screens:
    "bonus open" (not "free spin"), "draw" or "open" (not "spin"), "trade in" (not "sell back"); code
-   and API names stay as the kit has them. Trade-in copy follows `tradeInEnabled` (`config/features.ts`,
-   `NEXT_PUBLIC_TRADE_IN`), so every new mention of trade-in needs its "off" wording too.
+   and API names stay as the kit has them. Trade-in copy follows the `trade_in_enabled` setting (super admins switch it
+   on Configuration): `useTradeIn()` in client components, `loadSiteSettings()` on the server
+   (`NEXT_PUBLIC_TRADE_IN` is only the default without Supabase). Every new mention of trade-in needs
+   its "off" wording too.
 9. **Third-party product photos are live by the team's choice** (2026-10-09, at their risk).
    `web/public/reference/misty/` holds 52 cut-outs taken from themistybox.com (a competitor; the
    copyright belongs to MISTY and/or the brands), with sources in `SOURCES.md`. Replace them with

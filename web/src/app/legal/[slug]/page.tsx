@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { brand } from "@/config/brand";
-import { tradeInEnabled } from "@/config/features";
+import { loadSiteSettings } from "@/services/catalog-source";
 import { Container, PageHeader } from "@/components/ui/layout";
 
-const pages: Record<string, { title: string; summary: string; outline: string[] }> = {
+const pagesFor = (tradeInEnabled: boolean): Record<string, { title: string; summary: string; outline: string[] }> => ({
   terms: {
     title: "Terms of service",
     summary: "The agreement between the player and the operator.",
@@ -30,7 +30,8 @@ const pages: Record<string, { title: string; summary: string; outline: string[] 
     summary: "How physical items are delivered.",
     outline: ["Shipping regions (US at launch)", "Timelines and tracking", "Cancelling a pending request", "Authenticity and damaged-item claims"],
   },
-};
+});
+const pages = pagesFor(true);
 
 /** Every slug is prerendered by generateStaticParams, so a blocking navigation is effectively instant. */
 export const instant = false;
@@ -45,7 +46,7 @@ export async function generateMetadata({ params }: PageProps<"/legal/[slug]">): 
 }
 
 export default async function LegalPage({ params }: PageProps<"/legal/[slug]">) {
-  const page = pages[(await params).slug];
+  const page = pagesFor((await loadSiteSettings()).tradeIn)[(await params).slug];
   if (!page) notFound();
 
   return (

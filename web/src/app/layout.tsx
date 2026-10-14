@@ -12,7 +12,8 @@ import { Cursor } from "@/components/fx/cursor";
 import { SmoothScroll } from "@/components/fx/smooth-scroll";
 import { themeBootScript } from "@/lib/theme";
 import { CatalogProvider } from "@/components/catalog-provider";
-import { loadCatalogData } from "@/services/catalog-source";
+import { SiteSettingsProvider } from "@/components/site-settings-provider";
+import { loadCatalogData, loadSiteSettings } from "@/services/catalog-source";
 import "lenis/dist/lenis.css";
 import "./globals.css";
 
@@ -31,7 +32,7 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const catalog = await loadCatalogData();
+  const [catalog, settings] = await Promise.all([loadCatalogData(), loadSiteSettings()]);
   return (
     <html
       lang="en"
@@ -46,6 +47,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="flex min-h-full flex-col">
         <CatalogProvider data={catalog}>
+          <SiteSettingsProvider value={settings}>
           <PrototypeBanner />
           <SiteOnly>
             <SiteHeader />
@@ -59,6 +61,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           </SiteOnly>
           <SessionHydrator />
           <div aria-hidden className="grain" />
+          </SiteSettingsProvider>
         </CatalogProvider>
       </body>
     </html>

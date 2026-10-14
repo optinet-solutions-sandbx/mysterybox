@@ -1,18 +1,20 @@
 import type { ReactNode } from "react";
 import { Eye, PackageCheck, ShieldCheck } from "lucide-react";
 import { brand } from "@/config/brand";
-import { tradeInEnabled, tradeInRate } from "@/config/features";
+import { tradeInRate } from "@/config/features";
+import { loadSiteSettings } from "@/services/catalog-source";
 import { LogoMark } from "@/components/brand/logo-mark";
 import { Container } from "@/components/ui/layout";
 
-const reasons = [
+const reasonsFor = (tradeInEnabled: boolean) => [
   { icon: Eye, text: "Every box shows its odds before you open it." },
   { icon: PackageCheck, text: tradeInEnabled ? `Keep the piece, ship it home, or trade it in for ${tradeInRate} of its value in credit.` : "Keep the piece or ship it home." },
   { icon: ShieldCheck, text: "Every roll can be checked on the provably fair page." },
 ];
 
 /** Register / sign-in frame: brand column on the left, the form card on the right (stacked on phones). */
-export function AuthShell({ title, intro, children }: { title: string; intro: ReactNode; children: ReactNode }) {
+export async function AuthShell({ title, intro, children }: { title: string; intro: ReactNode; children: ReactNode }) {
+  const reasons = reasonsFor((await loadSiteSettings()).tradeIn);
   return (
     <section className="relative isolate overflow-hidden">
       <div aria-hidden className="absolute -top-1/3 -left-1/4 -z-10 h-[140%] w-[90%] bg-[radial-gradient(closest-side,var(--aurora-b),transparent)]" />

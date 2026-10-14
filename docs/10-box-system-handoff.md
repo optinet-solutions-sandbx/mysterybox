@@ -212,8 +212,8 @@ Until they say otherwise, these defaults stand:
 - [ ] **The deferred minor issues** listed above.
 - [ ] **Lighthouse** on https://mysterybox-seven.vercel.app, mobile and desktop (CLAUDE.md performance
   rules).
-- [ ] **Trade-in switch (2026-10-14).** `NEXT_PUBLIC_TRADE_IN=off` hides trade-in on every player
-  screen (the team is weighing it against the legal research). If the team drops it, the API should
+- [ ] **Trade-in switch (2026-10-14).** The `trade_in_enabled` setting (super admins, Configuration
+  page) hides trade-in on every player screen (the team is weighing it against the legal research). If the team drops it, the API should
   refuse `POST /awards/{id}/trade-in` too; until then only the screens hide it. The player-facing words
   are now "bonus open" (not "free spin") and "draw" (not "spin"); the API and code names are unchanged.
 - [ ] **A logo warning.** The e2e runs logged a console warning that the header logo's preload

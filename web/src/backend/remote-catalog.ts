@@ -144,6 +144,10 @@ export async function loadSettings(): Promise<SettingRow[]> {
   return rows.map((r) => ({ key: String(r.key), value: r.value, updatedAt: String(r.updated_at) }));
 }
 
+/** Settings the site itself reads (services/catalog-source loadSiteSettings): saving them refreshes the site. */
+const SITE_SETTINGS = new Set(["trade_in_enabled"]);
+
 export async function saveSetting(key: string, value: unknown, userId: string) {
   check(await sb().from("settings").update({ value, updated_at: new Date().toISOString(), updated_by: userId }).eq("key", key));
+  if (SITE_SETTINGS.has(key)) await revalidateCatalog();
 }

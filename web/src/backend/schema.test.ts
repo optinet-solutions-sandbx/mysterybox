@@ -366,6 +366,16 @@ describe("catalogue editing", () => {
     expect(catalogFromRows(rows, [], []).items[0]).toMatchObject({ reference: "126200", condition: "unworn", authentication: "Entrupy report 4471" });
   });
 
+  it("has a trade-in switch that anyone reads and only super admins change", async () => {
+    const read = await as(db, null, () => sql<{ value: unknown }>(db, "select value from public.settings where key = 'trade_in_enabled'"));
+    expect(read[0].value).toBe(true);
+    await as(db, admin, () => sql(db, "update public.settings set value = 'false' where key = 'trade_in_enabled'"));
+    expect((await sql<{ value: unknown }>(db, "select value from public.settings where key = 'trade_in_enabled'"))[0].value).toBe(true);
+    await as(db, owner, () => sql(db, "update public.settings set value = 'false', updated_by = $1 where key = 'trade_in_enabled'", [owner]));
+    expect((await sql<{ value: unknown }>(db, "select value from public.settings where key = 'trade_in_enabled'"))[0].value).toBe(false);
+    await sql(db, "update public.settings set value = 'true', updated_by = null where key = 'trade_in_enabled'");
+  });
+
   it("stores product photos in a public bucket that only staff can write", async () => {
     const [bucket] = await sql<{ public: boolean }>(db, "select public from storage.buckets where id = 'catalog'");
     expect(bucket.public).toBe(true);

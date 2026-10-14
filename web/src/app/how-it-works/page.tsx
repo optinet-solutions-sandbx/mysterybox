@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import { tradeInEnabled } from "@/config/features";
 import { formatUsd } from "@/domain/money";
-import { getCatalog } from "@/services/catalog-source";
+import { getCatalog, loadSiteSettings } from "@/services/catalog-source";
 import { Faq } from "@/components/landing/faq";
 import { OddsProof } from "@/components/landing/odds-proof";
 import { Ritual } from "@/components/landing/ritual";
@@ -11,6 +10,7 @@ export const metadata: Metadata = { title: "How it works" };
 
 export default async function HowItWorksPage() {
   const { boxStats, getBox, findItem, listBoxes, listShowcaseItems, resolveEntries } = await getCatalog();
+  const { tradeIn: tradeInEnabled } = await loadSiteSettings();
   const prices = listBoxes().map((b) => b.price);
   const proofBox = getBox("jewel-vault") ?? listBoxes()[0];
   return (

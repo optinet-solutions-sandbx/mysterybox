@@ -5,12 +5,13 @@ import { useRef, useState } from "react";
 import type { Item } from "@/domain/types";
 import { formatUsd } from "@/domain/money";
 import { economy } from "@/config/economy";
-import { tradeInEnabled, tradeInRate } from "@/config/features";
+import { tradeInRate } from "@/config/features";
+import { useTradeIn } from "@/components/site-settings-provider";
 import { BOX_WIDTH, Box3D } from "@/components/box3d/box-3d";
 import { ItemArt } from "@/components/item/item-art";
 import { cn } from "@/lib/cn";
 
-const steps = [
+const stepsFor = (tradeInEnabled: boolean) => [
   {
     numeral: "I",
     title: "Choose your box",
@@ -37,6 +38,8 @@ const steps = [
 export function Ritual({ item, priceRange }: { item: Item; priceRange: string }) {
   const ref = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
+  const tradeInEnabled = useTradeIn();
+  const steps = stepsFor(tradeInEnabled);
   const { scrollYProgress: p } = useScroll({ target: ref, offset: ["start start", "end end"] });
   const [step, setStep] = useState(0);
   useMotionValueEvent(p, "change", (v) => setStep(v < 0.34 ? 0 : v < 0.67 ? 1 : 2));

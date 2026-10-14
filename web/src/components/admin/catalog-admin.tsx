@@ -22,6 +22,7 @@ import {
 } from "@/backend/remote-catalog";
 import { CREDIT_CATEGORY, MIXED_CATEGORY, categoryLabel, productCategories } from "@/config/brand-pack";
 import { economy } from "@/config/economy";
+import { tradeInDefault } from "@/config/features";
 import { freeSpinTable, priceBox } from "@/domain/box-pricing";
 import { formatUsd } from "@/domain/money";
 import { normalizeWeights } from "@/domain/odds";
@@ -792,7 +793,13 @@ function swap<T>(list: T[], a: number, b: number): T[] {
 
 // Configuration ------------------------------------------------------------------------------------
 
-const SETTINGS: { key: string; label: string; help: string; kind: "cents" | "mode" | "fixed" }[] = [
+const SETTINGS: { key: string; label: string; help: string; kind: "cents" | "mode" | "fixed" | "toggle" }[] = [
+  {
+    key: "trade_in_enabled",
+    label: "Trade-in for site credit",
+    help: "On: players can trade pieces in for site credit. Off: pieces are kept or shipped, and the site's wording changes to match. The site updates as soon as you save.",
+    kind: "toggle",
+  },
   { key: "payments_mode", label: "Payments mode", help: "demo: deposits complete at once. live: they wait for the payment provider.", kind: "mode" },
   { key: "min_withdrawal_cents", label: "Smallest withdrawal", help: "Players can't request less than this.", kind: "cents" },
   { key: "max_deposit_cents", label: "Largest single deposit", help: "Per request.", kind: "cents" },
@@ -813,7 +820,7 @@ export function SettingsView() {
   const valueOf = (key: string): unknown =>
     isSupabase
       ? rows?.find((r) => r.key === key)?.value
-      : ({ payments_mode: "demo", min_withdrawal_cents: economy.minWithdrawal, max_deposit_cents: 1_000_000, starting_balance_cents: economy.startingBalance, sell_back_rate: economy.sellBackRate } as Record<string, unknown>)[key];
+      : ({ trade_in_enabled: tradeInDefault, payments_mode: "demo", min_withdrawal_cents: economy.minWithdrawal, max_deposit_cents: 1_000_000, starting_balance_cents: economy.startingBalance, sell_back_rate: economy.sellBackRate } as Record<string, unknown>)[key];
 
   return (
     <>
@@ -860,7 +867,17 @@ function SettingRowEditor({
   editable: boolean;
   onSave: (value: unknown) => Promise<void>;
 }) {
-  const shown = setting.kind === "cents" ? formatUsd(Number(value ?? 0)) : setting.kind === "fixed" ? `${Math.round(Number(value ?? 0) * 100)}%` : String(value ?? "—");
+  const shown =
+    setting.kind === "cents"
+      ? formatUsd(Number(value ?? 0))
+      : setting.kind === "fixed"
+        ? `${Math.round(Number(value ?? 0) * 100)}%`
+        : setting.kind === "toggle"
+          ? value === false
+            ? "Off"
+            : "On"
+          : String(value ?? "—");
+  const [saving, setSaving] = useState(false);
   const [draft, setDraft] = useState<string | null>(null);
   const id = useId();
   return (
@@ -871,7 +888,25 @@ function SettingRowEditor({
         </label>
         <p className="text-xs text-muted">{setting.help}</p>
       </div>
-      {draft === null ? (
+      {setting.kind === "toggle" ? (
+        <>
+          <span className={cn("font-semibold", value === false ? "text-muted" : "text-success")}>{shown}</span>
+          {editable && (
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={saving}
+              onClick={async () => {
+                setSaving(true);
+                await onSave(value === false);
+                setSaving(false);
+              }}
+            >
+              {saving ? "Saving…" : value === false ? "Turn on" : "Turn off"}
+            </Button>
+          )}
+        </>
+      ) : draft === null ? (
         <>
           <span className="font-semibold tabular">{shown}</span>
           {editable && (

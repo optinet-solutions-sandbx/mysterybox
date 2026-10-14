@@ -3,7 +3,8 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useRef } from "react";
 import type { OpenResolved } from "@/box-api";
-import { tradeInEnabled, tradeInRate } from "@/config/features";
+import { tradeInRate } from "@/config/features";
+import { useTradeIn } from "@/components/site-settings-provider";
 import { formatCredit } from "@/domain/money";
 import { outcomeArt } from "@/services/catalog";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,7 @@ export function ResultOverlay({
   openAgainLabel: string;
 }) {
   const reduce = useReducedMotion();
+  const tradeInEnabled = useTradeIn();
   const panel = useRef<HTMLDivElement>(null);
   const piece = result?.outcome.kind === "item" ? result : null;
   useDialog(open, piece ? onKeep : onClose, panel);

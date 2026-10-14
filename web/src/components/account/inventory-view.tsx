@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { boxApi } from "@/box-api";
-import { tradeInEnabled, tradeInRate } from "@/config/features";
+import { tradeInRate } from "@/config/features";
+import { useTradeIn } from "@/components/site-settings-provider";
 import type { InventoryItem, InventoryStatus } from "@/domain/types";
 import { formatCredit, formatUsd } from "@/domain/money";
 import { rarityFor, tradeInCredits } from "@/domain/odds";
@@ -41,6 +42,7 @@ export function InventoryView() {
   const [tab, setTab] = useState<Tab>("held");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const tradeInEnabled = useTradeIn();
 
   if (!hydrated || !authHydrated) return <div className="h-64 animate-pulse rounded-card bg-surface" />;
   if (!user) return <AuthPrompt title="Sign in to see your pieces" body={tradeInEnabled ? "Every piece you open lands here, ready to ship home or trade in for site credit." : "Every piece you open lands here, ready to ship home."} />;
@@ -127,6 +129,7 @@ export function InventoryView() {
 
 function InventoryCard({ inv, onMessage }: { inv: InventoryItem; onMessage: (m: string) => void }) {
   const requestShipping = useSession((s) => s.requestShipping);
+  const tradeInEnabled = useTradeIn();
   const cancelShipping = useSession((s) => s.cancelShipping);
   const item = getItem(inv.itemId);
   const box = getBox(inv.boxId);

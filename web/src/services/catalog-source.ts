@@ -1,5 +1,6 @@
 import { cacheLife, cacheTag } from "next/cache";
-import { SUPABASE_ANON_KEY, SUPABASE_URL, isSupabaseCatalog } from "@/backend/config";
+import { SUPABASE_ANON_KEY, SUPABASE_URL, isSupabase, isSupabaseCatalog } from "@/backend/config";
+import { tradeInDefault } from "@/config/features";
 import { createCatalog, setActiveCatalog, staticCatalogData, type Catalog, type CatalogData } from "./catalog";
 import { catalogFromRows } from "./catalog-rows";
 
@@ -33,6 +34,29 @@ export async function loadCatalogData(): Promise<CatalogData> {
     rest("box_items?select=box_id,item_id,position,weight&order=box_id,position"),
   ]);
   return catalogFromRows(itemRows, boxRows, oddsRows);
+}
+
+export interface SiteSettings {
+  /** Trade-in for site credit offered to players (back office → Configuration). */
+  tradeIn: boolean;
+}
+
+/**
+ * Site-wide settings super admins change in the back office, cached with the catalogue (same tag),
+ * so saving a setting refreshes the site at once. Without Supabase: the build-time defaults.
+ */
+export async function loadSiteSettings(): Promise<SiteSettings> {
+  "use cache";
+  cacheTag("catalog");
+  cacheLife("hours");
+  if (!isSupabase) return { tradeIn: tradeInDefault };
+  try {
+    const rows = await rest("settings?select=key,value&key=eq.trade_in_enabled");
+    const value = rows[0]?.value;
+    return { tradeIn: typeof value === "boolean" ? value : tradeInDefault };
+  } catch {
+    return { tradeIn: tradeInDefault };
+  }
 }
 
 let built: { data: CatalogData; catalog: Catalog } | null = null;

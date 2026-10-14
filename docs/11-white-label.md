@@ -105,6 +105,14 @@ Grail Noir:
    `NEXT_PUBLIC_BRAND=<id>`, `NEXT_PUBLIC_ACCOUNTS=supabase` and `NEXT_PUBLIC_CATALOG=supabase`.
 3. Provision its staff (`scripts/provision_staff.mjs`), sign in to `/admin` and add products.
 
+## Trade-in on or off (back office)
+
+A super admin opens **Configuration** and uses **Turn off** / **Turn on** next to *Trade-in for site
+credit*. The site updates as soon as it's saved. Off hides trade-in wherever players see it: pieces are
+kept or shipped, and the wording on the home page, box pages, FAQ, inventory and sign-in panel changes
+to match. Pieces already traded in stay in players' history. The box system's API keeps offering
+trade-in until the backend developer turns it off there too.
+
 ## Switches (environment variables)
 
 | Variable | Values | Controls |
@@ -113,7 +121,7 @@ Grail Noir:
 | `NEXT_PUBLIC_CATALOG` | `supabase` or empty | Catalogue from the database with back-office editing, or the built-in catalogue (read-only). |
 | `NEXT_PUBLIC_ACCOUNTS` | `supabase` or empty | Accounts on Supabase, or in the browser (mock). |
 | `NEXT_PUBLIC_BACKEND` | `mock` or `api` | The box system: in the browser, or the backend developer's server. |
-| `NEXT_PUBLIC_TRADE_IN` | `on` (default) / `off` | Trade-in for site credit. `off` hides it wherever players see it: pieces are kept or shipped, and the copy says so. The box system's API keeps offering trade-in until the backend developer turns it off too. |
+| `NEXT_PUBLIC_TRADE_IN` | `on` (default) / `off` | Only without Supabase: the trade-in default. With Supabase, a super admin switches trade-in on the Configuration page instead (below). |
 | `NEXT_PUBLIC_REFERENCE_IMAGES` | `on` / `off` | The borrowed product photos of the built-in catalogue (CLAUDE.md rule 9). Photos uploaded in the back office are not affected. |
 | `NEXT_PUBLIC_SHOW_ANALYSIS`, `NEXT_PUBLIC_DEMO_PLAYERS` | `on` / `off` | Box-page maths section; generated sample players in the back office. |
 

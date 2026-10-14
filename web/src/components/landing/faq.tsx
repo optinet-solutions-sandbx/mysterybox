@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { useState, type ReactNode } from "react";
-import { tradeInEnabled, tradeInRate } from "@/config/features";
+import { tradeInRate } from "@/config/features";
+import { useTradeIn } from "@/components/site-settings-provider";
 
-const faqs: { q: string; a: ReactNode }[] = [
+const faqsFor = (tradeInEnabled: boolean): { q: string; a: ReactNode }[] => [
   {
     q: "Are the pieces authentic?",
     a: "Every piece is sourced from vetted suppliers and authenticated before it ships. (Prototype copy: sourcing partners are still to be confirmed.)",
@@ -40,6 +41,7 @@ const faqs: { q: string; a: ReactNode }[] = [
 
 export function Faq({ limit }: { limit?: number }) {
   const [open, setOpen] = useState<number | null>(0);
+  const faqs = faqsFor(useTradeIn());
   return (
     <section className="py-28">
       <div className="mx-auto grid max-w-7xl gap-12 px-4 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">

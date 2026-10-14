@@ -5,7 +5,7 @@ import { motion, useReducedMotion } from "motion/react";
 import type { ResolvedEntry } from "@/domain/types";
 import { formatDisplayedOdds, formatUsd } from "@/domain/money";
 import { economy } from "@/config/economy";
-import { tradeInEnabled } from "@/config/features";
+import { useTradeIn } from "@/components/site-settings-provider";
 import { CountUp } from "@/components/fx/count-up";
 import { ItemArt } from "@/components/item/item-art";
 
@@ -25,6 +25,7 @@ export function OddsProof({
   rtp: number;
 }) {
   const reduce = useReducedMotion();
+  const tradeInEnabled = useTradeIn();
   const rows = [...entries].sort((a, b) => b.item.value - a.item.value).slice(0, 6);
   const minLog = Math.log10(Math.min(...rows.map((r) => r.probability)));
   const width = (p: number) => 12 + ((Math.log10(p) - minLog) / (0 - minLog)) * 88;
