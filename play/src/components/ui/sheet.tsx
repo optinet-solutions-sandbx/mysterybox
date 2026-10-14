@@ -67,7 +67,7 @@ export function Sheet({
         <div className="fixed inset-0 z-[70] flex items-end justify-center md:items-center md:p-6">
           <motion.div
             aria-hidden
-            className="absolute inset-0 bg-[rgb(3_5_14/0.72)]"
+            className="absolute inset-0 bg-[color-mix(in_oklab,var(--onyx-wine)_78%,transparent)]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -127,7 +127,7 @@ function SheetHeader({
       className="flex shrink-0 touch-none items-center justify-between gap-4 px-5 pt-3 pb-3 md:touch-auto md:px-7 md:pt-6"
     >
       <span aria-hidden className="absolute top-2 left-1/2 h-1 w-10 -translate-x-1/2 rounded-full bg-line md:hidden" />
-      <h2 id={titleId} className="mt-3 font-display text-lg md:mt-0">
+      <h2 id={titleId} className="mt-3 font-punch text-xl md:mt-0">
         {title}
       </h2>
       <button

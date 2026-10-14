@@ -9,6 +9,7 @@ import { PullInvite } from "@/components/pull/pull-invite";
 import { button } from "@/components/ui/button";
 import { formatDisplayedOdds, formatUsd } from "@/domain/money";
 import { allItems, bestRarity, boxesHolding, getItem } from "@/services/catalog";
+import { FORWARD, PageTransition } from "@/components/shell/page-transition";
 
 export function generateStaticParams() {
   return allItems().map((i) => ({ itemId: i.id }));
@@ -38,6 +39,7 @@ export default async function PullPage({ params }: PageProps<"/pull/[itemId]">) 
   const holders = boxesHolding(item.id).sort((a, b) => a.box.price - b.box.price);
 
   return (
+    <PageTransition>
     <div className="mx-auto max-w-6xl px-4 pt-6 md:px-8 md:pt-12">
       <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-16">
         <div
@@ -60,7 +62,7 @@ export default async function PullPage({ params }: PageProps<"/pull/[itemId]">) 
       </div>
 
       <section aria-labelledby="holders" className="mt-14">
-        <h2 id="holders" className="font-display text-2xl">
+        <h2 id="holders" className="font-punch text-3xl">
           Boxes that hold it
         </h2>
         <ul className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -77,7 +79,7 @@ export default async function PullPage({ params }: PageProps<"/pull/[itemId]">) 
                 <p className="font-display font-semibold tabular">{formatDisplayedOdds(probability)}</p>
                 <p className="text-xs text-subtle">chance</p>
               </div>
-              <Link href={`/box/${box.slug}`} className={button({ variant: "outline", size: "sm" })}>
+              <Link href={`/box/${box.slug}`} transitionTypes={FORWARD} className={button({ variant: "outline", size: "sm" })}>
                 View
               </Link>
             </li>
@@ -85,5 +87,6 @@ export default async function PullPage({ params }: PageProps<"/pull/[itemId]">) 
         </ul>
       </section>
     </div>
+    </PageTransition>
   );
 }

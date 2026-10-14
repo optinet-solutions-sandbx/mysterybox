@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
-import { isActive, NAV } from "./nav";
+import { isActive, NAV, navDirection } from "./nav";
 
 /** Phone navigation, pinned to the bottom like the app's tab bar. Hidden from lg up. */
 export function TabBar() {
@@ -11,6 +11,7 @@ export function TabBar() {
   return (
     <nav
       aria-label="Main"
+      style={{ viewTransitionName: "tab-bar" }}
       className="fixed inset-x-0 bottom-0 z-40 border-t border-line/70 bg-bg pb-safe lg:hidden"
     >
       <ul className="mx-auto grid max-w-md grid-cols-4 px-2 pt-1.5 pb-1.5">
@@ -20,13 +21,14 @@ export function TabBar() {
             <li key={href}>
               <Link
                 href={href}
+                transitionTypes={navDirection(pathname, href)}
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "mx-1 flex flex-col items-center gap-1 rounded-2xl py-2 text-[11px] font-medium transition-colors",
                   active ? "bg-surface text-fg" : "text-subtle",
                 )}
               >
-                <Icon className={cn("size-[22px]", active && "text-accent")} strokeWidth={active ? 2.1 : 1.7} />
+                <Icon className={cn("size-[22px]", active && "text-hot")} strokeWidth={active ? 2.2 : 1.7} />
                 {label}
               </Link>
             </li>

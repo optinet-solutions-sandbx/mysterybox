@@ -9,6 +9,9 @@ export const THEME_EVENT = "grailnoir-play-theme-change";
  */
 export const themeBootScript = `(function(){try{var k="${THEME_STORAGE_KEY}",d=document.documentElement,m=window.matchMedia("(prefers-color-scheme: light)");function a(){var s=localStorage.getItem(k);d.dataset.theme=s||(m.matches?"light":"dark")}a();m.addEventListener("change",function(){if(!localStorage.getItem(k)){a();window.dispatchEvent(new Event("${THEME_EVENT}"))}})}catch(e){document.documentElement.dataset.theme="dark"}})()`;
 
+/** Marks a returning visitor before first paint (phones then skip the home headline). */
+export const returningBootScript = `(function(){try{var k="grailnoir-play-seen",d=document.documentElement;if(localStorage.getItem(k))d.dataset.returning="1";else localStorage.setItem(k,"1")}catch(e){}})()`;
+
 export function readTheme(): Theme {
   return document.documentElement.dataset.theme === "light" ? "light" : "dark";
 }

@@ -11,6 +11,7 @@ import { ItemArt } from "@/components/item/item-art";
 import { RarityTag } from "@/components/item/rarity-tag";
 import { formatDisplayedOdds, formatUsd } from "@/domain/money";
 import { allBoxes, boxBySlug, resolveEntries, valueRange } from "@/services/catalog";
+import { BACK, PageTransition } from "@/components/shell/page-transition";
 
 export function generateStaticParams() {
   return allBoxes().map((b) => ({ slug: b.slug }));
@@ -33,8 +34,9 @@ export default async function BoxPage({ params }: PageProps<"/box/[slug]">) {
   const entries = resolveEntries(box);
 
   return (
+    <PageTransition>
     <div className="mx-auto max-w-7xl px-4 pt-4 md:px-8 md:pt-8">
-      <Link href="/" className="inline-flex items-center gap-1 text-sm font-medium text-muted hover:text-fg">
+      <Link href="/" transitionTypes={BACK} className="inline-flex items-center gap-1 text-sm font-medium text-muted hover:text-fg">
         <ChevronLeft className="size-4" />
         All boxes
       </Link>
@@ -66,7 +68,7 @@ export default async function BoxPage({ params }: PageProps<"/box/[slug]">) {
           </p>
 
           <section aria-labelledby="odds" className="mt-10">
-            <h2 id="odds" className="font-display text-xl">
+            <h2 id="odds" className="font-punch text-2xl">
               Odds
             </h2>
             <p className="mt-1 text-sm text-muted">The chances the draw uses. They never change after you buy.</p>
@@ -74,7 +76,7 @@ export default async function BoxPage({ params }: PageProps<"/box/[slug]">) {
           </section>
 
           <section aria-labelledby="inside" className="mt-10">
-            <h2 id="inside" className="font-display text-xl">
+            <h2 id="inside" className="font-punch text-2xl">
               Every piece inside
             </h2>
             <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -109,5 +111,6 @@ export default async function BoxPage({ params }: PageProps<"/box/[slug]">) {
       </div>
       <div className="h-20 lg:hidden" aria-hidden />
     </div>
+    </PageTransition>
   );
 }

@@ -80,7 +80,7 @@ export function OddsButton({ box, className }: { box: Box; className?: string })
           Tiers compare a piece&apos;s value with the box price: Grail is 25 times the price or more, Epic 5 times, Rare 1.5
           times, Uncommon half, and Common less than half.
         </p>
-        <h3 className="mt-8 font-display text-base">Every piece</h3>
+        <h3 className="mt-8 font-punch text-lg">Every piece</h3>
         <PieceOddsList box={box} />
       </Sheet>
     </>

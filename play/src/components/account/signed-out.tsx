@@ -22,7 +22,7 @@ export function RequireAccount({
   if (!account) {
     return (
       <div className="rounded-[32px] border border-line/80 bg-[var(--card)] px-6 py-12 text-center md:py-16">
-        <h2 className="font-display text-2xl">{title}</h2>
+        <h2 className="font-punch text-3xl">{title}</h2>
         <p className="mx-auto mt-2 max-w-md text-muted">{body}</p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <button type="button" onClick={() => openAuth("sign-up")} className={button({ size: "lg" })}>

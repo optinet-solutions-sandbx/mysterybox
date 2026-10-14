@@ -9,14 +9,6 @@ export const rarityLabel: Record<Rarity, string> = {
   grail: "Grail",
 };
 
-export const rarityText: Record<Rarity, string> = {
-  common: "text-rarity-common",
-  uncommon: "text-rarity-uncommon",
-  rare: "text-rarity-rare",
-  epic: "text-rarity-epic",
-  grail: "text-rarity-grail",
-};
-
 export const rarityBg: Record<Rarity, string> = {
   common: "bg-rarity-common",
   uncommon: "bg-rarity-uncommon",
@@ -25,22 +17,33 @@ export const rarityBg: Record<Rarity, string> = {
   grail: "bg-rarity-grail",
 };
 
+/** A coloured dot with the tier name in the text colour (plum and crimson are too dark for small type on garnet). */
 export function RarityTag({ rarity, className }: { rarity: Rarity; className?: string }) {
   return (
-    <span className={cn("inline-flex items-center gap-1.5 text-xs font-semibold", rarityText[rarity], className)}>
-      <span aria-hidden className="size-1.5 rounded-full bg-current" />
+    <span className={cn("inline-flex items-center gap-1.5 text-xs font-semibold text-muted", className)}>
+      <span aria-hidden className={cn("size-2 rounded-full", rarityBg[rarity])} />
       {rarityLabel[rarity]}
     </span>
   );
 }
+
+/** Text on each rarity's fill: dark on the light tiers, cream on plum and crimson. */
+const chipInk: Record<Rarity, string> = {
+  common: "text-[var(--onyx-wine)]",
+  uncommon: "text-[var(--onyx-wine)]",
+  rare: "text-[var(--cream)]",
+  epic: "text-[var(--cream)]",
+  grail: "text-[var(--onyx-wine)]",
+};
 
 /** Filled chip for the reveal screen, like the app's rarity badge. */
 export function RarityChip({ rarity, className }: { rarity: Rarity; className?: string }) {
   return (
     <span
       className={cn(
-        "inline-flex h-7 items-center rounded-lg px-2.5 text-xs font-bold tracking-wide text-[var(--bg)]",
+        "inline-flex h-7 items-center rounded-lg px-2.5 text-xs font-bold tracking-wide",
         rarityBg[rarity],
+        chipInk[rarity],
         className,
       )}
     >

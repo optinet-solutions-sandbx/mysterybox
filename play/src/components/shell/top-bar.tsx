@@ -12,7 +12,7 @@ import { cn } from "@/lib/cn";
 import { useCurrentAccount, useHydrated } from "@/store/app";
 import { openAddFunds, openAuth } from "@/store/ui";
 import { AccountMenu } from "./account-menu";
-import { isActive, NAV } from "./nav";
+import { isActive, NAV, navDirection } from "./nav";
 
 export function TopBar() {
   const pathname = usePathname();
@@ -20,7 +20,7 @@ export function TopBar() {
   const account = useCurrentAccount();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line/60 bg-bg/92">
+    <header style={{ viewTransitionName: "site-header" }} className="sticky top-0 z-40 border-b border-line/60 bg-bg/92">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 md:px-8">
         <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label={`${brand.name}, all boxes`}>
           <LogoMark className="w-11" sizes="44px" />
@@ -34,6 +34,7 @@ export function TopBar() {
               <Link
                 key={item.href}
                 href={item.href}
+                transitionTypes={navDirection(pathname, item.href)}
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "relative rounded-pill px-4 py-2 text-[15px] font-medium transition-colors",
@@ -41,7 +42,7 @@ export function TopBar() {
                 )}
               >
                 {item.label}
-                {active && <span aria-hidden className="absolute inset-x-4 -bottom-[13px] h-0.5 rounded-full bg-foil" />}
+                {active && <span aria-hidden className="absolute inset-x-4 -bottom-[13px] h-0.5 rounded-full bg-hot" />}
               </Link>
             );
           })}

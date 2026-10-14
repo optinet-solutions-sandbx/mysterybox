@@ -70,7 +70,8 @@ def sign_up(page, username: str, email: str) -> None:
 
 
 with sync_playwright() as p:
-    browser = p.chromium.launch()
+    # Software WebGL in headless Chromium; its driver notices are environment noise, not app errors.
+    browser = p.chromium.launch(args=["--enable-unsafe-swiftshader"])
     for vp_name, vp in [("desktop", {"width": 1440, "height": 900}), ("mobile", {"width": 390, "height": 844})]:
         mobile = vp_name == "mobile"
         ctx = browser.new_context(viewport=vp, is_mobile=mobile, has_touch=mobile, device_scale_factor=2 if mobile else 1, color_scheme="dark")
@@ -306,6 +307,8 @@ with sync_playwright() as p:
     ctx.close()
     browser.close()
 
+GPU_NOISE = ("GL Driver Message", "GroupMarkerNotSet", "software WebGL", "swiftshader")
+errors = [e for e in errors if not any(n in e for n in GPU_NOISE)]
 expected = [e for e in errors if "does-not-exist" in e or "404" in e]
 unexpected = [e for e in errors if e not in expected]
 (OUT / "result.json").write_text(json.dumps({"steps": log, "errors": unexpected, "expected_404": expected}, indent=2))

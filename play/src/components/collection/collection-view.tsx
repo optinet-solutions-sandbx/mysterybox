@@ -13,6 +13,7 @@ import { formatUsd } from "@/domain/money";
 import { sellBackValue } from "@/domain/odds";
 import { formatTimeLeft, shipmentStage, shippingQuote, vaultDeadline, type ShipmentStage } from "@/domain/wallet";
 import { useNow } from "@/lib/clock";
+import { HAPTIC, haptic, sfx } from "@/lib/sound";
 import { cn } from "@/lib/cn";
 import { sellPull, type Account, type Pull, type Shipment } from "@/store/app";
 import { toast } from "@/store/ui";
@@ -51,7 +52,7 @@ function Collection({ account }: { account: Account }) {
             onClick={() => setTab(t.id)}
             className={cn(
               "h-10 rounded-pill px-4 text-sm font-medium transition-colors md:px-5",
-              tab === t.id ? "bg-fg text-bg" : "text-muted hover:text-fg",
+              tab === t.id ? "bg-primary text-on-primary" : "text-muted hover:text-fg",
             )}
           >
             {t.label}
@@ -191,6 +192,8 @@ function SellSheet({ pull, onClose }: { pull: Pull | null; onClose: () => void }
               offer={sellBackValue(pull.value)}
               onSell={() => {
                 const paid = sellPull(pull.id);
+                sfx.sell();
+                haptic(HAPTIC.sell);
                 toast(`Sold. ${formatUsd(paid)} is in your withdrawable balance.`);
                 onClose();
               }}

@@ -20,9 +20,18 @@ export function AppHydrator() {
       sweepVaults();
     });
     const timer = setInterval(() => sweepVaults(), 30_000);
+    // A slow device can take longer than the browser allows for a screen transition; the page
+    // still changes, only the slide is skipped, so that abort isn't an error worth surfacing.
+    const quietAbort = (e: PromiseRejectionEvent) => {
+      if (e.reason instanceof DOMException && /Transition was aborted/.test(e.reason.message)) e.preventDefault();
+    };
+    window.addEventListener("unhandledrejection", quietAbort);
+    // Development only: lets the frame-capture scripts stage a reveal of any rarity.
+    if (process.env.NODE_ENV !== "production") Object.assign(window, { __playUi: useUi });
     return () => {
       alive = false;
       clearInterval(timer);
+      window.removeEventListener("unhandledrejection", quietAbort);
     };
   }, []);
   return null;
@@ -42,10 +51,10 @@ export function AgeGate() {
   const ageOk = useApp((s) => s.ageOk);
   if (!hydrated || ageOk) return null;
   return (
-    <div role="dialog" aria-modal="true" aria-labelledby="age-title" className="fixed inset-0 z-[90] grid place-items-center bg-bg bg-marble px-6">
+    <div role="dialog" aria-modal="true" aria-labelledby="age-title" className="fixed inset-0 z-[90] grid place-items-center bg-bg bg-[radial-gradient(60%_50%_at_50%_30%,color-mix(in_oklab,var(--primary)_30%,transparent),transparent_70%)] px-6">
       <div className="w-full max-w-sm text-center">
         <LogoMark className="mx-auto w-28" sizes="112px" />
-        <h1 id="age-title" className="mt-8 font-display text-2xl">
+        <h1 id="age-title" className="mt-8 font-punch text-4xl">
           Are you {brand.minimumAge} or older?
         </h1>
         <p className="mt-3 text-muted">

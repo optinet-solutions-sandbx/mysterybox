@@ -31,7 +31,7 @@ export function RewardsView() {
         </div>
       ) : (
         <div className="rounded-[32px] border border-line/80 bg-[var(--card)] p-6 md:p-10">
-          <h2 className="font-display text-2xl">Earn as you open</h2>
+          <h2 className="font-punch text-3xl">Earn as you open</h2>
           <p className="mt-2 max-w-lg text-muted">
             Every dollar you spend on boxes is a point toward the next level, and every friend you bring adds{" "}
             {formatUsd(economy.referralReward)} of credit to both of you.
@@ -98,7 +98,7 @@ function ReferralCard({ account }: { account: Account }) {
 
   return (
     <section aria-labelledby="refer" className="rounded-[32px] border border-line/80 bg-[var(--card)] p-5 md:p-8">
-      <h2 id="refer" className="font-display text-2xl">
+      <h2 id="refer" className="font-punch text-3xl">
         Bring a friend
       </h2>
       <p className="mt-2 text-muted">
@@ -150,7 +150,7 @@ function Leaderboard({ account }: { account: Account | null }) {
   return (
     <section aria-labelledby="board" className="rounded-[32px] border border-line/80 bg-surface/40 p-5 md:p-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="board" className="font-display text-2xl">
+        <h2 id="board" className="font-punch text-3xl">
           This week&apos;s leaderboard
         </h2>
         <span className="rounded-pill border border-line px-3 py-1 text-xs font-semibold text-muted">Sample data</span>

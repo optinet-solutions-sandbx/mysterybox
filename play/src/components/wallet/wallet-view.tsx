@@ -61,7 +61,7 @@ function Wallet({ account }: { account: Account }) {
       </section>
 
       <section aria-labelledby="history" className="mt-10">
-        <h2 id="history" className="font-display text-xl">
+        <h2 id="history" className="font-punch text-2xl">
           History
         </h2>
         <History txs={account.txs} />

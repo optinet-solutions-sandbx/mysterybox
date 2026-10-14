@@ -4,14 +4,16 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react";
 import { useRef, useState, type KeyboardEvent } from "react";
-import { Box3D } from "@/components/box3d/box-3d";
+import { Chest } from "@/components/chest/chest";
 import { ItemArt } from "@/components/item/item-art";
 import { formatUsd, formatUsdCompact } from "@/domain/money";
 import { SHELVES, type Box, type Shelf } from "@/domain/types";
 import { cn } from "@/lib/cn";
+import { sfx } from "@/lib/sound";
 import { useMedia } from "@/lib/use-media";
 import { boxesOnShelf, resolveEntries, valueRange } from "@/services/catalog";
 import { BuyButton } from "./buy-button";
+import { FORWARD } from "@/components/shell/page-transition";
 import { DropTimer } from "./drop-band";
 import { OddsButton } from "./odds-sheet";
 
@@ -36,7 +38,7 @@ export function ShelfSwitch({ value, onChange }: { value: Shelf; onChange: (s: S
           onClick={() => onChange(s)}
           className={cn(
             "h-10 shrink-0 rounded-pill border px-4 text-sm font-medium transition-colors",
-            value === s ? "border-transparent bg-fg text-bg" : "border-line text-muted hover:text-fg",
+            value === s ? "border-transparent bg-primary text-on-primary" : "border-line text-muted hover:text-fg",
           )}
         >
           {SHELF_LABEL[s]}
@@ -78,8 +80,10 @@ function Carousel({ boxes, index, onIndex }: { boxes: Box[]; index: number; onIn
   const reduce = useReducedMotion();
   const wide = useMedia("(min-width: 768px)");
   const [peek, setPeek] = useState(false);
-  const go = (d: number) => onIndex((index + d + boxes.length) % boxes.length);
-  const width = wide ? 250 : 200;
+  const go = (d: number) => {
+    sfx.swish();
+    onIndex((index + d + boxes.length) % boxes.length);
+  };
 
   function onKey(e: KeyboardEvent) {
     if (e.key === "ArrowRight") go(1);
@@ -124,7 +128,7 @@ function Carousel({ boxes, index, onIndex }: { boxes: Box[]; index: number; onIn
                 exit={{ opacity: 0, scale: 0.5 }}
                 transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 260, damping: 30 }}
               >
-                <Box3D material={b.material} width={width} float={pos === 0 && inView} open={pos === 0 && peek ? 0.14 : 0} beam={pos === 0} />
+                <Chest finish={b.material} still={pos !== 0} float={pos === 0 && inView} peek={pos === 0 && peek} priority={pos === 0} sizes="(min-width: 768px) 360px, 72vw" className={wide ? "h-[300px] w-[360px]" : "h-[230px] w-[270px]"} label={`${b.name} box`} />
               </motion.button>
             );
           })}
@@ -143,7 +147,7 @@ function Carousel({ boxes, index, onIndex }: { boxes: Box[]; index: number; onIn
       {boxes.length > 1 && (
         <div className="mt-1 flex justify-center gap-1.5" aria-hidden>
           {boxes.map((b, j) => (
-            <span key={b.id} className={cn("h-1.5 rounded-full transition-all duration-300", j === index ? "w-6 bg-accent" : "w-1.5 bg-line")} />
+            <span key={b.id} className={cn("h-1.5 rounded-full transition-all duration-300", j === index ? "w-6 bg-hot" : "w-1.5 bg-line")} />
           ))}
         </div>
       )}
@@ -167,7 +171,7 @@ function BoxDetails({ box }: { box: Box }) {
 
       <div className="mt-5 flex items-center justify-between text-sm">
         <span className="font-medium text-muted">Inside</span>
-        <Link href={`/box/${box.slug}`} className="inline-flex items-center gap-1 font-medium text-fg hover:text-accent">
+        <Link href={`/box/${box.slug}`} transitionTypes={FORWARD} className="inline-flex items-center gap-1 font-medium text-fg hover:text-hot">
           Details <ChevronRight className="size-4" />
         </Link>
       </div>

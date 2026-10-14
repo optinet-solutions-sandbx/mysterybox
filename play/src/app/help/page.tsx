@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { brand } from "@/config/brand";
 import { economy, shipping } from "@/config/economy";
 import { formatUsd } from "@/domain/money";
+import { PageTransition } from "@/components/shell/page-transition";
 
 export const metadata: Metadata = { title: "Help" };
 
@@ -97,13 +98,14 @@ const slug = (t: string) => t.toLowerCase().replace(/\W+/g, "-");
 
 export default function HelpPage() {
   return (
+    <PageTransition>
     <div className="mx-auto max-w-3xl px-4 pt-6 md:px-8 md:pt-12">
-      <h1 className="font-display text-4xl md:text-5xl">Help</h1>
+      <h1 className="font-punch text-5xl md:text-7xl">Help</h1>
       <p className="mt-2 text-muted">Answers about boxes, your pieces, payments, shipping and your account.</p>
       <div className="mt-10 space-y-10">
         {SECTIONS.map((s) => (
           <section key={s.title} aria-labelledby={slug(s.title)}>
-            <h2 id={slug(s.title)} className="font-display text-xl">
+            <h2 id={slug(s.title)} className="font-punch text-2xl">
               {s.title}
             </h2>
             <div className="mt-3 divide-y divide-line/70 rounded-3xl border border-line/80 bg-surface/40 px-5">
@@ -121,5 +123,6 @@ export default function HelpPage() {
         ))}
       </div>
     </div>
+    </PageTransition>
   );
 }

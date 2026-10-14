@@ -3,13 +3,14 @@
 import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { useRef } from "react";
-import { Box3D } from "@/components/box3d/box-3d";
+import { Chest } from "@/components/chest/chest";
 import { button } from "@/components/ui/button";
 import { countdownParts, dropEndsAt } from "@/domain/drops";
 import { formatUsd } from "@/domain/money";
 import { cn } from "@/lib/cn";
 import { useNow } from "@/lib/clock";
 import { allBoxes, valueRange } from "@/services/catalog";
+import { FORWARD } from "@/components/shell/page-transition";
 import { BuyButton } from "./buy-button";
 
 /** One digit pair that rolls up when it changes. */
@@ -18,7 +19,7 @@ function Unit({ value, label }: { value: number; label: string }) {
   const text = String(value).padStart(2, "0");
   return (
     <div className="text-center">
-      <div className="relative h-[1.15em] overflow-hidden font-display text-4xl font-semibold tabular md:text-5xl">
+      <div className="relative h-[1.05em] overflow-hidden text-5xl leading-none font-extrabold tabular md:text-6xl">
         <AnimatePresence initial={false} mode="popLayout">
           <motion.span
             key={text}
@@ -43,7 +44,7 @@ export function DropTimer({ className }: { className?: string }) {
   if (!now) return <p className={cn("h-7", className)} />;
   const { d, h, m } = countdownParts(dropEndsAt(new Date(now)) - now);
   return (
-    <p className={cn("inline-flex h-7 items-center gap-2 rounded-lg bg-danger/15 px-2.5 text-xs font-semibold text-danger", className)}>
+    <p className={cn("inline-flex h-7 items-center gap-2 rounded-lg bg-event-bg/60 px-2.5 text-xs font-semibold text-[var(--plum-200)]", className)}>
       <span aria-hidden className="size-1.5 animate-pulse rounded-full bg-current" />
       This week only: ends in {d}d {h}h {m}m
     </p>
@@ -60,11 +61,11 @@ export function DropBand() {
   const parts = now ? countdownParts(dropEndsAt(new Date(now)) - now) : null;
 
   return (
-    <section ref={ref} aria-labelledby="drop-title" className="relative overflow-hidden rounded-[36px] border border-accent/25 bg-[var(--card)]">
-      <div aria-hidden className="absolute -top-1/3 right-0 h-[140%] w-2/3 bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--gold)_22%,transparent),transparent)]" />
+    <section ref={ref} aria-labelledby="drop-title" className="relative overflow-hidden rounded-[36px] border border-event/40 bg-[var(--card)]">
+      <div aria-hidden className="absolute -top-1/3 right-0 h-[140%] w-2/3 bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--event)_34%,transparent),transparent)]" />
       <div className="relative grid grid-cols-1 items-center gap-6 p-6 md:grid-cols-[1.1fr_1fr] md:p-10">
         <div>
-          <p className="text-sm font-medium text-accent">This week&apos;s drop</p>
+          <p className="font-punch text-lg text-event">This week&apos;s drop</p>
           <h2 id="drop-title" className="mt-2 font-display text-3xl md:text-5xl">
             {drop.name}
           </h2>
@@ -85,13 +86,13 @@ export function DropBand() {
           </div>
           <div className="mt-7 flex flex-wrap gap-3">
             <BuyButton box={drop} />
-            <Link href={`/box/${drop.slug}`} className={button({ variant: "outline", size: "lg" })}>
+            <Link href={`/box/${drop.slug}`} transitionTypes={FORWARD} className={button({ variant: "outline", size: "lg" })}>
               See what&apos;s inside
             </Link>
           </div>
         </div>
         <div className="grid place-items-center">
-          <Box3D material={drop.material} width={230} float={inView} tilt viewX={-14} viewY={-36} />
+          <Chest finish={drop.material} still sizes="(min-width: 768px) 420px, 80vw" className={cn("h-64 w-full max-w-md md:h-80", inView && "animate-float")} label={`${drop.name} box`} />
         </div>
       </div>
     </section>

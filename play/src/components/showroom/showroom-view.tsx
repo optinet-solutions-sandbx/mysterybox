@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { economy } from "@/config/economy";
 import { ItemArt } from "@/components/item/item-art";
 import { RarityTag } from "@/components/item/rarity-tag";
+import { FORWARD } from "@/components/shell/page-transition";
 import { button } from "@/components/ui/button";
 import { Sheet } from "@/components/ui/sheet";
 import { formatDisplayedOdds, formatOneIn, formatUsd } from "@/domain/money";
@@ -54,7 +55,7 @@ export function ShowroomView() {
               onClick={() => setCategory(c)}
               className={cn(
                 "h-10 shrink-0 rounded-pill border px-4 text-sm font-medium transition-colors",
-                category === c ? "border-transparent bg-fg text-bg" : "border-line text-muted hover:text-fg",
+                category === c ? "border-transparent bg-primary text-on-primary" : "border-line text-muted hover:text-fg",
               )}
             >
               {c === "all" ? "All" : CATEGORY_LABEL[c]}
@@ -142,7 +143,7 @@ function PieceSheet({ item, onClose }: { item: Item | null; onClose: () => void 
                   <p className="font-display font-semibold tabular">{formatDisplayedOdds(probability)}</p>
                   <p className="text-xs text-subtle">{formatOneIn(probability)}</p>
                 </div>
-                <Link href={`/box/${box.slug}`} onClick={onClose} className={button({ variant: "outline", size: "sm" })}>
+                <Link href={`/box/${box.slug}`} transitionTypes={FORWARD} onClick={onClose} className={button({ variant: "outline", size: "sm" })}>
                   View
                 </Link>
               </li>

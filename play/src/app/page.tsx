@@ -3,6 +3,7 @@ import { BoxCard } from "@/components/boxes/box-card";
 import { BoxShowcase } from "@/components/boxes/box-showcase";
 import { DropBand } from "@/components/boxes/drop-band";
 import { allBoxes } from "@/services/catalog";
+import { PageTransition } from "@/components/shell/page-transition";
 
 const sellPercent = Math.round(economy.sellBackRate * 100);
 
@@ -33,10 +34,11 @@ function HowItWorks({ className }: { className?: string }) {
 export default function BoxesPage() {
   const boxes = allBoxes();
   return (
+    <PageTransition>
     <div className="mx-auto max-w-7xl px-4 md:px-8">
       <section className="grid grid-cols-1 gap-10 pt-6 lg:grid-cols-[1fr_minmax(0,500px)] lg:items-center lg:gap-16 lg:pt-14">
-        <div className="min-w-0">
-          <h1 className="font-display text-[34px] leading-[1.08] md:text-6xl lg:text-[64px]">Every box holds a real piece.</h1>
+        <div className="first-visit-only min-w-0">
+          <h1 className="font-punch text-[46px] md:text-7xl lg:text-[88px]">Every box holds a real piece.</h1>
           <p className="mt-4 max-w-lg text-[17px] text-muted md:text-lg">
             Bags, watches, jewelry and beauty from the houses you know. Open a box, then keep the piece or sell it back for{" "}
             {sellPercent}% of its value.
@@ -46,7 +48,7 @@ export default function BoxesPage() {
         <BoxShowcase className="min-w-0" />
       </section>
 
-      <HowItWorks className="mt-14 space-y-5 lg:hidden" />
+      <HowItWorks className="first-visit-only mt-14 space-y-5 lg:hidden" />
 
       <div className="mt-16 md:mt-24">
         <DropBand />
@@ -54,7 +56,7 @@ export default function BoxesPage() {
 
       <section aria-labelledby="all-boxes" className="mt-16 md:mt-24">
         <div className="flex items-baseline justify-between">
-          <h2 id="all-boxes" className="font-display text-2xl md:text-3xl">
+          <h2 id="all-boxes" className="font-punch text-3xl md:text-5xl">
             All boxes
           </h2>
           <p className="text-sm text-muted">{boxes.length} boxes</p>
@@ -66,5 +68,6 @@ export default function BoxesPage() {
         </div>
       </section>
     </div>
+    </PageTransition>
   );
 }

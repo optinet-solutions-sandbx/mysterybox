@@ -13,13 +13,13 @@ import { bestRarity, getItem } from "@/services/catalog";
  * Colours are the dark-mode tokens' values, since images can't read CSS variables.
  */
 const C = {
-  bg: "#0b0b0d",
-  navy: "#0f1c3f",
-  ivory: "#e8e1d6",
-  muted: "#bdb6ac",
-  gold: "#c2a46e",
-  goldLight: "#f3e5c0",
-  rarity: { common: "#8d93a6", uncommon: "#63c597", rare: "#5d8dff", epic: "#a77dff", grail: "#e3c47f" },
+  bg: "#1c0a10",
+  navy: "#3d1520",
+  ivory: "#f6ecdf",
+  muted: "#cbb9b0",
+  gold: "#e8c27a",
+  goldLight: "#f9ecd0",
+  rarity: { common: "#9c8a87", uncommon: "#cfa8d1", rare: "#a86fab", epic: "#e0334d", grail: "#e8c27a" },
 } as const;
 
 const root = process.cwd();
