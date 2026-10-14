@@ -123,7 +123,7 @@ function PieceSheet({ item, onClose }: { item: Item | null; onClose: () => void 
           <ItemArt item={item} rarity={bestRarity(item.id)} showBrand={false} sizes="400px" className="rounded-3xl" />
           <h3 className="mt-4 font-display text-2xl">{item.name}</h3>
           <div className="mt-2 flex items-baseline justify-between gap-4">
-            <span className="font-display text-2xl font-semibold text-foil tabular">{formatUsd(item.value)}</span>
+            <span className="font-display text-2xl font-bold text-accent tabular">{formatUsd(item.value)}</span>
             <span className="text-sm text-muted">
               Sells back for {formatUsd(sellBackValue(item.value))} ({Math.round(economy.sellBackRate * 100)}%)
             </span>

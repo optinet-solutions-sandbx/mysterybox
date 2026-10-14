@@ -52,7 +52,7 @@ function LevelCard({ account }: { account: Account }) {
   return (
     <section aria-labelledby="level" className="rounded-[32px] border border-line/80 bg-[var(--card)] p-5 md:p-8">
       <p className="text-sm text-muted">Your level</p>
-      <h2 id="level" className="mt-1 font-display text-3xl text-foil">
+      <h2 id="level" className="mt-1 font-display text-3xl font-bold text-accent">
         {level.name}
       </h2>
       <p className="mt-1 text-sm text-muted">
@@ -138,7 +138,7 @@ function ReferralCard({ account }: { account: Account }) {
         </div>
         <div className="rounded-3xl bg-bg/40 p-4">
           <dt className="text-sm text-muted">You earned</dt>
-          <dd className="mt-1 font-display text-2xl font-semibold text-foil tabular">{formatUsd(account.referral.earned)}</dd>
+          <dd className="mt-1 font-display text-2xl font-bold text-accent tabular">{formatUsd(account.referral.earned)}</dd>
         </div>
       </dl>
     </section>

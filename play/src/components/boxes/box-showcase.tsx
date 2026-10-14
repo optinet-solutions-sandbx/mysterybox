@@ -191,7 +191,7 @@ function BoxDetails({ box }: { box: Box }) {
         </div>
         <div className="border-l border-line/80">
           <p className="text-xs text-muted">Max value</p>
-          <p className="font-display text-lg font-semibold tabular text-foil">{formatUsd(max)}</p>
+          <p className="font-display text-lg font-bold tabular text-accent">{formatUsd(max)}</p>
         </div>
       </div>
       <BuyButton box={box} className="mt-4 w-full" />

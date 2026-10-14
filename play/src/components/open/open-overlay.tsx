@@ -282,8 +282,8 @@ function OpenScene({ slug, pull }: { slug: string; pull: Pull }) {
               <span className="inline-flex h-7 items-center rounded-lg bg-fg/15 px-2.5 text-xs font-bold tracking-wide text-fg">{item.brand}</span>
             </div>
             <h2 className="mt-3 text-[26px] leading-tight font-extrabold tracking-[-0.01em] text-fg md:text-3xl">{item.name}</h2>
-            <p className="mt-1 font-display text-4xl font-semibold">
-              <CountUp to={item.value} format="usd" auto foil duration={0.9} />
+            <p className="mt-1 font-display text-4xl font-bold text-accent">
+              <CountUp to={item.value} format="usd" auto duration={0.9} />
             </p>
 
             <div className="mt-6">

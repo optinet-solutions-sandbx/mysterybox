@@ -39,7 +39,7 @@ function Wallet({ account }: { account: Account }) {
           </div>
           <div className="rounded-3xl bg-bg/40 p-4">
             <p className="font-semibold">Withdrawable</p>
-            <p className="mt-1 font-display text-2xl font-semibold text-foil tabular">{formatBalance(withdrawable)}</p>
+            <p className="mt-1 font-display text-2xl font-bold text-accent tabular">{formatBalance(withdrawable)}</p>
             <p className="mt-2 text-sm text-muted">From pieces you sold back. Cash it out, or spend it once your credit runs out.</p>
           </div>
         </div>

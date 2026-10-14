@@ -51,7 +51,7 @@ export default async function BoxPage({ params }: PageProps<"/box/[slug]">) {
             </div>
             <div className="border-l border-line/80">
               <p className="text-xs text-muted">Max value</p>
-              <p className="font-display text-lg font-semibold text-foil tabular">{formatUsd(max)}</p>
+              <p className="font-display text-lg font-bold text-accent tabular">{formatUsd(max)}</p>
             </div>
           </div>
         </div>
@@ -60,7 +60,7 @@ export default async function BoxPage({ params }: PageProps<"/box/[slug]">) {
           <h1 className="font-display text-4xl md:text-5xl">{box.name}</h1>
           <p className="mt-2 text-lg text-muted">{box.tagline}</p>
           {box.drop && <DropTimer className="mt-3" />}
-          <p className="mt-5 font-display text-3xl font-semibold text-foil tabular">{formatUsd(box.price)}</p>
+          <p className="mt-5 font-display text-3xl font-bold text-accent tabular">{formatUsd(box.price)}</p>
           <BuyButton box={box} className="mt-5 hidden w-full lg:inline-flex" />
           <p className="mt-3 text-sm text-subtle">
             Keep what you pull for up to {economy.vaultDays} days, ship it, or sell it back for{" "}
@@ -104,7 +104,7 @@ export default async function BoxPage({ params }: PageProps<"/box/[slug]">) {
         <div className="mx-auto flex max-w-xl items-center gap-4">
           <div className="min-w-0">
             <p className="truncate text-xs text-muted">{box.name}</p>
-            <p className="font-display text-lg font-semibold text-foil tabular">{formatUsd(box.price)}</p>
+            <p className="font-display text-lg font-bold text-accent tabular">{formatUsd(box.price)}</p>
           </div>
           <BuyButton box={box} size="md" className="ml-auto flex-1" />
         </div>

@@ -26,7 +26,7 @@ export function BoxCard({ box }: { box: Box }) {
       <div className="relative flex flex-1 flex-col p-4 pt-0 md:p-5 md:pt-0">
         <div className="flex items-baseline justify-between gap-3">
           <h3 className="truncate font-display text-base md:text-lg">{box.name}</h3>
-          <span className="shrink-0 font-display text-base font-semibold text-foil tabular md:text-lg">{formatUsd(box.price)}</span>
+          <span className="shrink-0 font-display text-base font-bold text-accent tabular md:text-lg">{formatUsd(box.price)}</span>
         </div>
         <p className="mt-1 text-sm text-muted">
           {formatUsdCompact(min)} to {formatUsdCompact(max)}
@@ -39,7 +39,7 @@ export function BoxCard({ box }: { box: Box }) {
               rarity={e.rarity}
               showBrand={false}
               sizes="44px"
-              className="size-11 rounded-full border-2 border-[var(--reel-edge)]"
+              className="size-11 rounded-full border-2 border-accent shadow-[0_4px_10px_-4px_var(--shadow-strong)]"
             />
           ))}
         </div>
