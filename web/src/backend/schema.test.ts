@@ -4,6 +4,9 @@ import { boxes } from "@/data/boxes";
 import { items } from "@/data/items";
 import { computeRoll } from "@/domain/fair";
 import { pickByRoll, sellBackValue } from "@/domain/odds";
+import { overviewRow } from "@/domain/analytics";
+import { catalogFromRows } from "@/services/catalog-source";
+import { playersFromRows } from "./remote-admin";
 import { as, createTestDb, rpc, signUp, sql } from "./test-db";
 
 /**
@@ -374,5 +377,44 @@ describe("player management", () => {
     await as(db, carol, () => rpc(db, "self_exclude", ["Taking a break"]));
     expect(await statusOf(carol)).toBe("self_excluded");
     await expectError(as(db, carol, () => rpc(db, "request_deposit", [1_000])), "account_not_active");
+  });
+});
+
+describe("front-end mappers read the real rows", () => {
+  it("rebuild the catalog from the database exactly as the site defines it", async () => {
+    const [items, boxRows, odds] = await Promise.all([
+      as(db, null, () => sql<Record<string, unknown>>(db, "select id, name, brand, category, value_cents, image_url, active from public.items")),
+      as(db, null, () => sql<Record<string, unknown>>(db, "select * from public.boxes where status = 'live' and id <> 'secret-draft' order by sort_order")),
+      as(db, null, () => sql<Record<string, unknown>>(db, "select box_id, item_id, position, weight from public.box_items order by box_id, position")),
+    ]);
+    const data = catalogFromRows(items, boxRows, odds);
+    expect(data.boxes.map((b) => [b.id, b.price, b.entries])).toEqual(boxes.map((b) => [b.id, b.price, b.entries]));
+    expect(new Map(data.items.map((i) => [i.id, i.value]))).toEqual(new Map(items.map((i) => [String(i.id), Number(i.value_cents)])));
+  });
+
+  it("turn the back-office rows into the same numbers the SQL reports", async () => {
+    const [overview, openings, transactions, wallets] = await as(db, admin, () =>
+      Promise.all([
+        sql<Record<string, unknown>>(db, "select * from public.admin_player_overview"),
+        sql<Record<string, unknown>>(db, "select user_id, box_id, item_id, price_cents, item_value_cents, created_at from public.openings"),
+        sql<Record<string, unknown>>(db, "select id, user_id, type, status, amount_cents, created_at from public.transactions"),
+        sql<Record<string, unknown>>(db, "select user_id, held_cents from public.wallets"),
+      ]),
+    );
+    const players = playersFromRows(
+      overview.map((r) => ({ ...r, registered_at: new Date(String(r.registered_at)).toISOString() })),
+      openings.map((r) => ({ ...r, created_at: new Date(String(r.created_at)).toISOString() })),
+      transactions.map((r) => ({ ...r, created_at: new Date(String(r.created_at)).toISOString() })),
+      wallets,
+    );
+    const a = players.find((p) => p.id === alice)!;
+    const row = overview.find((r) => r.id === alice)!;
+    const mine = overviewRow(a);
+    expect(mine.openings).toBe(Number(row.openings));
+    expect(mine.playedCents).toBe(Number(row.played_cents));
+    expect(mine.earnedCents).toBe(Number(row.earned_cents));
+    expect(mine.depositsCents).toBe(Number(row.deposits_cents));
+    expect(mine.withdrawalsCents).toBe(Number(row.withdrawals_cents));
+    expect(a.number).toBe(Number(row.player_number));
   });
 });

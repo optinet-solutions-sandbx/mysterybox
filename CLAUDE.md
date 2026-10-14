@@ -25,9 +25,6 @@ not decoration.**
   add admins from Staff & roles. Each account has its own wallet. Data is per browser until Supabase
   is wired, and the back office says so. Sample players are off unless `NEXT_PUBLIC_DEMO_PLAYERS=on`;
   "Clear test data" (Staff & roles) wipes this browser's players for a fresh run.
-- **Backend draft (2026-10-12): Supabase.** `supabase/` holds the schema, RLS and RPCs; the
-  front end's contract is `web/src/backend/contract.ts`; `supabase-api.ts` is a placeholder adapter
-  (not wired to the UI). See [docs/08-backend.md](docs/08-backend.md).
 - **Box system on the backend developer's kit (2026-10-13).** A separate developer owns the backend. The
   box system follows their Misty-style kit v1.0 (https://mys-sim.vercel.app/docs/misty/dev): an open is
   created with a sealed secret (its SHA-256 is shown), the player may add a seed, pays, spins, and the
@@ -35,6 +32,15 @@ not decoration.**
   (`web/src/box-api/`, `NEXT_PUBLIC_BACKEND=mock`); `api` points it at their server. The Supabase draft
   is superseded for the box system. Handoff, rulings and open items:
   [docs/10-box-system-handoff.md](docs/10-box-system-handoff.md). Live: https://mysterybox-seven.vercel.app.
+- **Accounts on Supabase, behind their own switch (2026-10-14).** `NEXT_PUBLIC_ACCOUNTS=supabase` (plus
+  the URL and anon key) moves **login and identity** to Supabase Auth: sign-up with the 6-digit code,
+  sign-in, roles, status, locks, tags, comments, staff and the audit log, all shared across devices.
+  Wallets, opens and credit stay on the box system's per-account storage until the kit's API is
+  live (`NEXT_PUBLIC_BACKEND`). Keep the two switches separate.
+- **Catalog from Supabase: off.** `NEXT_PUBLIC_CATALOG=supabase` would serve items, boxes and odds from the
+  database and let staff edit them in the back office (Items, Configure, Configuration). It stays off
+  until the team decides whether the catalogue lives in Supabase or behind the kit's API. Until then
+  those pages are read-only views of the built-in catalogue. See [docs/08-backend.md](docs/08-backend.md).
 - **Brand: Grail Noir** (grailnoir.com). Slogan "Life is too short. Go Noir." (a two-tier lockup:
   setup line, then a foil punchline). Logo: the **gold crown-and-mask** artwork supplied 2026-10-12,
   extracted onto transparency in `public/brand/` (mark + lockup), used through
@@ -110,6 +116,9 @@ lucide-react. Icybox runs on the same Next, Tailwind and Motion stack.
 | `store/backoffice.ts`, `store/staff-actions.ts` | Demo-player status overrides and the audit log; staff actions (`setPlayerStatus`, `setRole`, `addStaff`, `settleWithdrawal`) with the **same rules as the SQL functions**. |
 | `domain/analytics.ts`, `data/demo-players.ts` | Back-office numbers (`overviewRow`, `kpis`, `dailyMetrics`, `boxPerformance`) with the SQL's definitions; 240 deterministic demo players per UTC day, drawn with the real odds. |
 | `components/admin/`, `app/admin/` | Back office, **structured after the team's casino back office** ([docs/09-backoffice-reference.md](docs/09-backoffice-reference.md)): `AdminShell` top bar (Dashboard, Players▾, Boxes▾, Payments▾, Feed, Bonuses▾, Battles▾, user menu), `PageTitle` breadcrumb band, dashboard, players list, full **player page** `/admin/players/view?id=<player number>` (Accounts row, loyalty points, issued bonuses, status, CS/SB locks, tags, groups, payments, openings, comments), groups, box openings, payments, feed, bonuses/battles placeholders, staff & roles, audit log. Client-gated (`instant = false`); pages reading the query string wrap their view in `<Suspense>`. Avoid dynamic `[id]` admin routes: unknown params make every `usePathname` layout suspend. |
+| `services/catalog.ts`, `services/catalog-source.ts`, `components/catalog-provider.tsx` | `createCatalog(data)` over plain data. Server pages `await getCatalog()`; client components `useCatalog()`; stores use `activeCatalog()`. Never import `data/items|boxes` in UI code (mock-only code and tests may use `staticCatalog`). |
+| `backend/remote-player.ts`, `remote-admin.ts`, `remote-catalog.ts`, `server-auth.ts`, `app/api/*` | Supabase wiring (see Backend above). API routes verify the caller's role server-side; the service-role key is server-only. |
+| `components/admin/catalog-admin.tsx` | Items (`/admin/items`), box configuration (`/admin/boxes/configure?id=`; price and odds editable only as a draft, publish re-checks the weights) and Configuration (`/admin/settings`, super admin). Read-only on the mock. |
 | `domain/player-insights.ts` | Player-page numbers (`accountSummary`, `loyaltyPoints`), `playerNumber`, `maskEmail`, automatic tags and the 14 rule-based `SEGMENTS` (groups). |
 | `backend/` | `contract.ts` (methods, shapes, error codes, `PERMISSIONS` + `can()`), `supabase-api.ts` (placeholder adapter), `catalog-sql.ts` (generates `supabase/seed.sql`), `test-db.ts` + `schema.test.ts` (PGlite). |
 | `app/` | Routes. `/register`, `/sign-in`, `/account` and `/admin/*` are built (mock). Battles, deals, rewards, leaderboard and affiliates are `ComingSoon` stubs listing planned behavior. |

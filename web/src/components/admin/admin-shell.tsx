@@ -43,9 +43,10 @@ const MENU: MenuGroup[] = [
   },
   {
     label: "Boxes",
-    match: "/admin/boxes",
+    match: "/admin/boxes|/admin/items",
     items: [
       { href: "/admin/boxes", label: "Boxes & odds" },
+      { href: "/admin/items", label: "Items" },
       { href: "/admin/boxes/openings", label: "Box openings" },
     ],
   },
@@ -74,6 +75,7 @@ const MENU: MenuGroup[] = [
 const USER_MENU: MenuLink[] = [
   { href: "/admin/staff", label: "Staff & roles", permission: "staff.manage" },
   { href: "/admin/audit", label: "Audit log", permission: "audit.view" },
+  { href: "/admin/settings", label: "Configuration", permission: "settings.edit" },
 ];
 
 export function AdminShell({ children }: { children: ReactNode }) {
@@ -115,7 +117,7 @@ function TopBar() {
     };
   }, [open]);
 
-  const isActive = (g: MenuGroup) => (g.match === "/admin" ? pathname === "/admin" : pathname.startsWith(g.match));
+  const isActive = (g: MenuGroup) => (g.match === "/admin" ? pathname === "/admin" : g.match.split("|").some((m) => pathname.startsWith(m)));
   const close = () => {
     setOpen(null);
     setMobile(false);

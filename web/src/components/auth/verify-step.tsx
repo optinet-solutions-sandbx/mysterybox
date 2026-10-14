@@ -18,14 +18,18 @@ export function VerifyStep({ onVerified, onBack, backLabel }: { onVerified: () =
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [resent, setResent] = useState(false);
+  const [busy, setBusy] = useState(false);
   const id = useId();
 
   if (!pending) return null;
 
-  function submit(e: FormEvent) {
+  async function submit(e: FormEvent) {
     e.preventDefault();
     if (code.length !== 6) return setError("Enter the 6-digit code from the email.");
-    if (!verify(code)) return setError("That code doesn’t match. Check the email or send a new code.");
+    setBusy(true);
+    const ok = await verify(code);
+    setBusy(false);
+    if (!ok) return setError("That code doesn’t match. Check the email or send a new code.");
     onVerified();
   }
 
@@ -40,6 +44,7 @@ export function VerifyStep({ onVerified, onBack, backLabel }: { onVerified: () =
         setting up your account.
       </p>
 
+      {pending.code ? (
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-accent/50 bg-accent-soft px-4 py-3">
         <p className="text-sm">
           <span className="font-semibold">Prototype:</span> no email is sent. Your code is{" "}
@@ -56,6 +61,11 @@ export function VerifyStep({ onVerified, onBack, backLabel }: { onVerified: () =
           Fill it in
         </button>
       </div>
+      ) : (
+        <p className="mt-6 rounded-xl bg-accent-soft px-4 py-3 text-sm leading-relaxed">
+          The code can take a minute to arrive. Check spam too. It expires after an hour.
+        </p>
+      )}
 
       <label htmlFor={id} className="mt-6 mb-1.5 block text-sm font-semibold">
         6-digit code
@@ -83,8 +93,8 @@ export function VerifyStep({ onVerified, onBack, backLabel }: { onVerified: () =
         </p>
       )}
 
-      <Button type="submit" size="lg" className="mt-6 w-full">
-        Verify and continue
+      <Button type="submit" size="lg" disabled={busy} className="mt-6 w-full">
+        {busy ? "Checking…" : "Verify and continue"}
       </Button>
 
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm">

@@ -154,3 +154,77 @@ export const categoryLabels: Record<Category | "mixed", string> = {
   credit: "Credit",
   mixed: "Mixed",
 };
+
+// Catalog over plain data -------------------------------------------------------------------------
+// Server pages `await getCatalog()` (services/catalog-source.ts), client components `useCatalog()`
+// (components/catalog-provider.tsx), stores `activeCatalog()`. Today the data is the built-in
+// catalogue above; with NEXT_PUBLIC_CATALOG=supabase it comes from the database. Returns use the
+// box system's maths (boxStats above), so free spins count the same everywhere.
+
+export interface CatalogData {
+  items: Item[];
+  boxes: Box[];
+}
+
+export interface Catalog {
+  items: Item[];
+  boxes: Box[];
+  listBoxes(): Box[];
+  listFeaturedBoxes(): Box[];
+  getBox(slug: string): Box | undefined;
+  getItem(id: string): Item;
+  findItem(id: string): Item | undefined;
+  resolveEntries(box: Box): ResolvedEntry[];
+  boxStats(box: Box): ReturnType<typeof boxStats>;
+  topItemsIn(category: Category, limit?: number): Item[];
+  listShowcaseItems(limit?: number): Item[];
+}
+
+export function createCatalog(data: CatalogData): Catalog {
+  const byId = new Map(data.items.map((i) => [i.id, i]));
+  const bySlug = new Map(data.boxes.map((b) => [b.slug, b]));
+  const get = (id: string) => {
+    const item = byId.get(id);
+    if (!item) throw new Error(`Unknown item ${id}`);
+    return item;
+  };
+  return {
+    items: data.items,
+    boxes: data.boxes,
+    listBoxes: () => data.boxes,
+    listFeaturedBoxes: () => data.boxes.filter((b) => b.featured),
+    getBox: (slug) => bySlug.get(slug),
+    getItem: get,
+    findItem: (id) => byId.get(id),
+    resolveEntries: (box) =>
+      box.entries.map((e) => {
+        const item = get(e.itemId);
+        return { item, weight: e.weight, probability: e.weight / economy.oddsScale, rarity: rarityFor(item.value, box.price) };
+      }),
+    boxStats: (box) => boxStats(box),
+    topItemsIn: (category, limit = 5) =>
+      data.items
+        .filter((i) => i.category === category)
+        .sort((a, b) => b.value - a.value)
+        .slice(0, limit),
+    listShowcaseItems: (limit = 18) =>
+      data.items
+        .filter((i) => i.category !== "credit" && i.value >= 80_000)
+        .sort((a, b) => b.value - a.value)
+        .slice(0, limit),
+  };
+}
+
+export const staticCatalogData: CatalogData = { items, boxes };
+export const staticCatalog = createCatalog(staticCatalogData);
+
+let active: Catalog = staticCatalog;
+
+/** The catalog the page was rendered with (set by CatalogProvider); stores use it outside React. */
+export function activeCatalog(): Catalog {
+  return active;
+}
+
+export function setActiveCatalog(catalog: Catalog) {
+  active = catalog;
+}

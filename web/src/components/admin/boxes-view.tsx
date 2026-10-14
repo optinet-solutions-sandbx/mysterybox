@@ -1,10 +1,16 @@
 "use client";
 
 import { Fragment, useMemo, useState } from "react";
-import { Boxes, ChevronDown } from "lucide-react";
+import Link from "next/link";
+import { Boxes, ChevronDown, Plus } from "lucide-react";
+import { isSupabaseCatalog } from "@/backend/config";
+import { can } from "@/backend/contract";
+import { ButtonLink } from "@/components/ui/button";
+import { useCurrentUser } from "@/store/auth";
 import { formatUsd } from "@/domain/money";
 import { boxPerformance } from "@/domain/analytics";
-import { catalogBox, resolveEntries } from "@/services/catalog";
+import { catalogBox } from "@/services/catalog";
+import { useCatalog } from "@/components/catalog-provider";
 import { OddsTable } from "@/components/box/odds-table";
 import { cn } from "@/lib/cn";
 import { useBackofficeData } from "./data";
@@ -13,6 +19,8 @@ import { PageTitle, RangeControl, formatCount, formatDay, formatPct } from "./ui
 /** Configured odds and return per box, next to what actually happened in the period. */
 export function BoxesView() {
   const { players, range, boxes, scale } = useBackofficeData();
+  const { resolveEntries } = useCatalog();
+  const staff = useCurrentUser();
   const [open, setOpen] = useState<string | null>(null);
   const perf = useMemo(() => (range ? boxPerformance(players, range, boxes, (b) => catalogBox(b).maths.returnFace) : []), [players, range, boxes]);
 
@@ -30,7 +38,16 @@ export function BoxesView() {
             return by hundreds of points.
           </>
         }
-        actions={<RangeControl />}
+        actions={
+          <div className="flex flex-wrap items-center gap-3">
+            <RangeControl />
+            {isSupabaseCatalog && can(staff?.role, "catalog.manage") && (
+              <ButtonLink href="/admin/boxes/configure?new=1" size="sm">
+                <Plus className="size-4" /> New box
+              </ButtonLink>
+            )}
+          </div>
+        }
       />
       <div className="overflow-x-auto rounded-2xl border border-line bg-surface">
         <table className="w-full min-w-[880px] text-sm">
@@ -67,7 +84,10 @@ export function BoxesView() {
                     <td className={cn("px-4 py-3 text-right font-semibold tabular", b.playedCents - b.earnedCents < 0 && "text-danger")}>
                       {formatUsd(b.playedCents - b.earnedCents)}
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-4 py-3 text-right whitespace-nowrap">
+                      <Link href={`/admin/boxes/configure?id=${b.boxId}`} className="mr-4 text-sm font-semibold text-accent">
+                        Configure
+                      </Link>
                       <button
                         type="button"
                         aria-expanded={expanded}

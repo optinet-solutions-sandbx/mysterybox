@@ -3,15 +3,17 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { AlertCircle, BarChart3 } from "lucide-react";
+import { isSupabase } from "@/backend/config";
 import { formatUsd, formatUsdCompact } from "@/domain/money";
 import { dailyMetrics, inRange, kpis, overviewRow } from "@/domain/analytics";
-import { getBox, getItem } from "@/services/catalog";
-import { playerNumber } from "@/domain/player-insights";
+import { useCatalog } from "@/components/catalog-provider";
+import { numberOf } from "@/domain/player-insights";
 import { BarChart, LineChart } from "./charts";
 import { useBackofficeData } from "./data";
 import { Panel, PageTitle, RangeControl, SourceBadge, formatCount, formatDateTime, formatDay, formatPct } from "./ui";
 
 export function AdminDashboard() {
+  const { getBox, findItem } = useCatalog();
   const { players, range } = useBackofficeData();
 
   const view = useMemo(() => {
@@ -50,9 +52,11 @@ export function AdminDashboard() {
         intro={
           <>
             Sign-ups, play and money for {formatDay(range.from)} – {formatDay(range.to)}, UTC.{" "}
-            {players.length > browserCount
-              ? `Includes ${formatCount(players.length - browserCount)} sample players and ${formatCount(browserCount)} ${browserCount === 1 ? "account" : "accounts"} registered in this browser.`
-              : `${formatCount(browserCount)} ${browserCount === 1 ? "player account" : "player accounts"} registered in this browser.`}
+            {isSupabase
+              ? `${formatCount(players.length)} ${players.length === 1 ? "player" : "players"} in the database.`
+              : players.length > browserCount
+                ? `Includes ${formatCount(players.length - browserCount)} sample players and ${formatCount(browserCount)} ${browserCount === 1 ? "account" : "accounts"} registered in this browser.`
+                : `${formatCount(browserCount)} ${browserCount === 1 ? "player account" : "player accounts"} registered in this browser.`}
           </>
         }
         actions={<RangeControl />}
@@ -67,10 +71,12 @@ export function AdminDashboard() {
         <Kpi label="House net" value={formatUsdCompact(k.houseNetCents)} note={`Hold ${formatPct(k.playedCents ? k.houseNetCents / k.playedCents : null)}`} />
       </dl>
 
-      <p className="mt-4 rounded-2xl border border-dashed border-line px-5 py-3 text-sm leading-relaxed text-muted">
-        <span className="font-semibold text-fg">Prototype:</span> the back office reads accounts created in this browser. Players
-        registered on another phone or computer appear there, not here, until the shared Supabase database is connected.
-      </p>
+      {!isSupabase && (
+        <p className="mt-4 rounded-2xl border border-dashed border-line px-5 py-3 text-sm leading-relaxed text-muted">
+          <span className="font-semibold text-fg">Prototype:</span> the back office reads accounts created in this browser. Players
+          registered on another phone or computer appear there, not here, until the shared Supabase database is connected.
+        </p>
+      )}
 
       {pending.length > 0 && (
         <Link
@@ -147,7 +153,7 @@ export function AdminDashboard() {
                   {top.map(({ p, openings, played, earned }) => (
                     <tr key={p.id}>
                       <td className="px-5 py-3">
-                        <Link href={`/admin/players/view?id=${playerNumber(p.id)}`} className="font-semibold hover:text-accent">
+                        <Link href={`/admin/players/view?id=${numberOf(p)}`} className="font-semibold hover:text-accent">
                           {p.firstName} {p.lastName}
                         </Link>
                         {p.source === "browser" && <SourceBadge />}
@@ -170,7 +176,7 @@ export function AdminDashboard() {
               <li key={`${p.id}-${o.at}`} className="flex items-center justify-between gap-4 px-5 py-3 text-sm">
                 <div className="min-w-0">
                   <p className="truncate font-semibold">
-                    {p.firstName} {p.lastName[0]}. pulled {getItem(o.itemId).name}
+                    {p.firstName} {p.lastName[0]}. pulled {findItem(o.itemId)?.name ?? o.itemId}
                   </p>
                   <p className="truncate text-xs text-muted">
                     {getBox(o.boxId)?.name} · {formatDateTime(o.at)}

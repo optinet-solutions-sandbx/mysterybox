@@ -104,15 +104,20 @@ function WithdrawPanel() {
   const [dollars, setDollars] = useState("");
   const [notice, setNotice] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
 
-  function submit(e: FormEvent) {
+  async function submit(e: FormEvent) {
     e.preventDefault();
     const cents = Math.round(Number(dollars.replace(/[$,\s]/g, "")) * 100);
     if (!Number.isFinite(cents) || cents <= 0) return setNotice({ tone: "error", text: "Enter an amount in dollars, like 250." });
-    const res = requestWithdrawal(cents);
+    const res = await requestWithdrawal(cents);
     if (!res.ok) {
       return setNotice({
         tone: "error",
-        text: res.reason === "below_minimum" ? `The smallest withdrawal is ${formatUsd(economy.minWithdrawal)}.` : `You can withdraw up to ${formatUsd(balance)}.`,
+        text:
+          res.reason === "below_minimum"
+            ? `The smallest withdrawal is ${formatUsd(economy.minWithdrawal)}.`
+            : res.reason === "insufficient_funds"
+              ? `You can withdraw up to ${formatUsd(balance)}.`
+              : "The withdrawal didn't go through. Try again in a moment.",
       });
     }
     setDollars("");

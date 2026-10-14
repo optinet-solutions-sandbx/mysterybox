@@ -6,9 +6,9 @@ import { useMemo, useState } from "react";
 import { Activity, Boxes, CreditCard, Gift, Swords, UsersRound } from "lucide-react";
 import { ROLE_LABEL } from "@/backend/contract";
 import { formatUsd } from "@/domain/money";
-import { SEGMENTS, playerNumber } from "@/domain/player-insights";
+import { SEGMENTS, numberOf } from "@/domain/player-insights";
 import type { PlayerRecord } from "@/domain/analytics";
-import { getBox, getItem } from "@/services/catalog";
+import { useCatalog } from "@/components/catalog-provider";
 import { Button } from "@/components/ui/button";
 import { useBackoffice } from "@/store/backoffice";
 import { settleWithdrawal } from "@/store/staff-actions";
@@ -25,9 +25,9 @@ const playerCrumbs = [
 
 function PlayerLink({ p }: { p: PlayerRecord }) {
   return (
-    <Link href={`/admin/players/view?id=${playerNumber(p.id)}`} className="font-semibold hover:text-accent">
+    <Link href={`/admin/players/view?id=${numberOf(p)}`} className="font-semibold hover:text-accent">
       {p.firstName} {p.lastName}
-      <span className="ml-1.5 text-xs font-normal text-muted tabular">#{playerNumber(p.id)}</span>
+      <span className="ml-1.5 text-xs font-normal text-muted tabular">#{numberOf(p)}</span>
     </Link>
   );
 }
@@ -104,6 +104,7 @@ export function GroupsView() {
 // Box openings ------------------------------------------------------------------------------------
 
 export function OpeningsView() {
+  const { getBox, findItem } = useCatalog();
   const { players, boxes } = useBackofficeData();
   const params = useSearchParams();
   const setParam = useParamSetter();
@@ -112,7 +113,7 @@ export function OpeningsView() {
   const rows = useMemo(
     () =>
       players
-        .filter((p) => !playerFilter || String(playerNumber(p.id)) === playerFilter)
+        .filter((p) => !playerFilter || String(numberOf(p)) === playerFilter)
         .flatMap((p) => p.plays.map((o) => ({ p, o })))
         .filter(({ o }) => boxFilter === "all" || o.boxId === boxFilter)
         .sort((a, b) => b.o.at.localeCompare(a.o.at)),
@@ -120,7 +121,7 @@ export function OpeningsView() {
   );
   const spent = rows.reduce((s, r) => s + r.o.priceCents, 0);
   const earned = rows.reduce((s, r) => s + r.o.valueCents, 0);
-  const who = playerFilter ? players.find((p) => String(playerNumber(p.id)) === playerFilter) : null;
+  const who = playerFilter ? players.find((p) => String(numberOf(p)) === playerFilter) : null;
 
   return (
     <>
@@ -181,7 +182,7 @@ export function OpeningsView() {
                     <PlayerLink p={p} />
                   </td>
                   <td className="px-4 py-2.5">{getBox(o.boxId)?.name ?? o.boxId}</td>
-                  <td className="px-4 py-2.5 font-semibold">{getItem(o.itemId).name}</td>
+                  <td className="px-4 py-2.5 font-semibold">{findItem(o.itemId)?.name ?? o.itemId}</td>
                   <td className="px-4 py-2.5 text-right">{formatUsd(o.priceCents)}</td>
                   <td className={cn("px-4 py-2.5 text-right font-semibold", o.valueCents > o.priceCents && "text-success")}>{formatUsd(o.valueCents)}</td>
                 </tr>
@@ -300,12 +301,12 @@ export function PaymentsView() {
                     </span>
                   </td>
                   <td className="px-4 py-2.5 text-right">
-                    {m.type === "withdrawal" && m.status === "pending" && p.source === "browser" && (
+                    {m.type === "withdrawal" && m.status === "pending" && p.source !== "demo" && (
                       <span className="inline-flex gap-2">
-                        <Button size="sm" onClick={() => setMessage(settleWithdrawal(p.email, m.id, "completed").ok ? "Cashout marked as paid." : "Couldn't settle it.")}>
+                        <Button size="sm" onClick={async () => setMessage((await settleWithdrawal(p.email, m.id, "completed")).ok ? "Cashout marked as paid." : "Couldn't settle it.")}>
                           Mark paid
                         </Button>
-                        <Button size="sm" variant="secondary" onClick={() => setMessage(settleWithdrawal(p.email, m.id, "cancelled").ok ? "Cashout cancelled; funds returned." : "Couldn't settle it.")}>
+                        <Button size="sm" variant="secondary" onClick={async () => setMessage((await settleWithdrawal(p.email, m.id, "cancelled")).ok ? "Cashout cancelled; funds returned." : "Couldn't settle it.")}>
                           Cancel
                         </Button>
                       </span>
@@ -326,6 +327,7 @@ export function PaymentsView() {
 type FeedKind = "all" | "signup" | "opening" | "payment" | "staff";
 
 export function FeedView() {
+  const { getBox, findItem } = useCatalog();
   const { players } = useBackofficeData();
   const audit = useBackoffice((s) => s.audit);
   const [kind, setKind] = useState<FeedKind>("all");
@@ -335,7 +337,7 @@ export function FeedView() {
     for (const p of players) {
       out.push({ at: p.registeredAt, kind: "signup", key: `r-${p.id}`, who: p, text: "Registered" });
       for (const o of p.plays) {
-        out.push({ at: o.at, kind: "opening", key: `o-${p.id}-${o.at}-${o.itemId}`, who: p, text: `Opened ${getBox(o.boxId)?.name ?? o.boxId}: ${getItem(o.itemId).name} (${formatUsd(o.valueCents)})`, amount: -o.priceCents });
+        out.push({ at: o.at, kind: "opening", key: `o-${p.id}-${o.at}-${o.itemId}`, who: p, text: `Opened ${getBox(o.boxId)?.name ?? o.boxId}: ${findItem(o.itemId)?.name ?? o.itemId} (${formatUsd(o.valueCents)})`, amount: -o.priceCents });
       }
       for (const m of p.money) {
         const label = { deposit: "Deposit", withdrawal: "Cashout", sell_back: "Sold back a piece", adjustment: "Balance adjustment" }[m.type];
@@ -346,7 +348,7 @@ export function FeedView() {
       out.push({ at: a.createdAt, kind: "staff", key: a.id, who: null, text: `${String(a.detail.by ?? "Staff")} (${a.actorRole ? ROLE_LABEL[a.actorRole] : "system"}): ${a.action.replace(".", " ")}${a.detail.player ? ` · ${String(a.detail.player)}` : ""}` });
     }
     return out.sort((a, b) => b.at.localeCompare(a.at));
-  }, [players, audit]);
+  }, [players, audit, getBox, findItem]);
 
   const shown = events.filter((e) => kind === "all" || e.kind === kind).slice(0, 200);
 

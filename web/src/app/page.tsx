@@ -1,5 +1,5 @@
 import { formatUsd } from "@/domain/money";
-import { boxStats, getBox, getItem, listBoxes, listShowcaseItems, resolveEntries, topItemsIn } from "@/services/catalog";
+import { getCatalog } from "@/services/catalog-source";
 import { Faq } from "@/components/landing/faq";
 import { Hero } from "@/components/landing/hero";
 import { Keyhole } from "@/components/landing/keyhole";
@@ -10,14 +10,14 @@ import { TierShelf, type ShelfBox } from "@/components/landing/tier-shelf";
 import { VaultMarquee } from "@/components/landing/vault-marquee";
 import { Deferred } from "@/components/fx/deferred";
 
-const showcase = [
-  { id: "bags", label: "Bags", items: topItemsIn("bags") },
-  { id: "watches", label: "Watches", items: topItemsIn("watches") },
-  { id: "jewelry", label: "Jewelry", items: topItemsIn("jewelry") },
-  { id: "beauty", label: "Beauty", items: topItemsIn("beauty") },
-];
-
-export default function HomePage() {
+export default async function HomePage() {
+  const { boxStats, getBox, findItem, listBoxes, listShowcaseItems, resolveEntries, topItemsIn } = await getCatalog();
+  const showcase = [
+    { id: "bags", label: "Bags", items: topItemsIn("bags") },
+    { id: "watches", label: "Watches", items: topItemsIn("watches") },
+    { id: "jewelry", label: "Jewelry", items: topItemsIn("jewelry") },
+    { id: "beauty", label: "Beauty", items: topItemsIn("beauty") },
+  ];
   const byPrice = [...listBoxes()].sort((a, b) => a.price - b.price);
   const shelf: ShelfBox[] = byPrice.map((b) => {
     const { top } = boxStats(b);
@@ -30,7 +30,9 @@ export default function HomePage() {
       top: { brand: top.item.brand, name: top.item.name, value: top.item.value },
     };
   });
-  const proofBox = getBox("flap-room")!;
+  // Featured pieces fall back gracefully if the team edits the catalog.
+  const proofBox = getBox("flap-room") ?? byPrice[Math.floor(byPrice.length / 2)];
+  const ritualItem = findItem("hermes-kelly-28") ?? listShowcaseItems(1)[0];
 
   return (
     <>
@@ -39,7 +41,7 @@ export default function HomePage() {
       {/* Heavy scenes mount as you approach them; placeholders reserve their height. */}
       <Deferred placeholderClassName="h-[340vh]">
         <Ritual
-          item={getItem("hermes-kelly-28")}
+          item={ritualItem}
           priceRange={`${formatUsd(byPrice[0].price)} – ${formatUsd(byPrice[byPrice.length - 1].price)}`}
         />
       </Deferred>

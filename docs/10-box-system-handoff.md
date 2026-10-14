@@ -193,8 +193,9 @@ Until they say otherwise, these defaults stand:
 ## Not done yet (next pass)
 
 - [ ] **Back office.**
-  - Build plays from `boxApi.opens` instead of inventory: credit and free-spin outcomes, the price
-    actually paid, and what it was paid with.
+  - ~~Build plays from `boxApi.opens` instead of inventory~~: **done 2026-10-14** (`playsOf` in
+    `components/admin/data.ts`, with a test). Credit and free-spin outcomes and the price actually paid
+    now count. Still missing: what each open was paid with.
   - Show the site-credit balance on the player page.
   - Count trade-ins instead of sell-backs.
   - Show the odds page in percent, with the free-spin table.

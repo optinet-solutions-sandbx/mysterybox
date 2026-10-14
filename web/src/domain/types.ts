@@ -126,6 +126,7 @@ export interface InventoryItem {
 export type TransactionType =
   | "deposit"
   | "withdrawal"
+  | "adjustment"
   | "box_open"
   | "sell_back"
   | "shipping_request"

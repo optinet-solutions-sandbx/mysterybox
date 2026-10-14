@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
+import { isSupabase } from "@/backend/config";
+import { loadAccount } from "@/backend/remote-player";
+import { sb } from "@/backend/supabase-client";
 import { useAuth } from "@/store/auth";
 import { useBackoffice } from "@/store/backoffice";
 import { useLedgers } from "@/store/ledgers";
@@ -10,6 +13,9 @@ import { freshSnapshot, snapshotOf, useSession } from "@/store/session";
  * Loads the persisted mock stores after mount, then keeps one wallet per account: the session
  * (`useSession`) is the signed-in account's working copy, swapped on sign-in/out and mirrored
  * into `useLedgers` so the back office sees every account in this browser.
+ *
+ * With NEXT_PUBLIC_ACCOUNTS=supabase, Supabase Auth decides who is signed in; the wallet and box
+ * system state still follow that account through the same per-account storage.
  */
 export function SessionHydrator() {
   useEffect(() => {
@@ -22,13 +28,26 @@ export function SessionHydrator() {
       useSession.persist.rehydrate(),
       useLedgers.persist.rehydrate(),
       useBackoffice.persist.rehydrate(),
-    ]).then(() => {
+    ]).then(async () => {
       if (cancelled) return;
-      useAuth.getState().ensureStaff();
+      let offRemote = () => {};
+      if (isSupabase) {
+        const account = await loadAccount().catch(() => null);
+        if (cancelled) return;
+        useAuth.getState().setRemoteUser(account);
+        // The mirror is saved on every change, so it holds the account's latest state.
+        useSession.setState({ ...freshSnapshot(), ...(account ? useLedgers.getState().byEmail[account.email] : undefined) });
+        const { data } = sb().auth.onAuthStateChange((event) => {
+          if (event === "SIGNED_OUT") useAuth.getState().setRemoteUser(null);
+        });
+        offRemote = () => data.subscription.unsubscribe();
+      } else {
+        useAuth.getState().ensureStaff();
+      }
       let current = useAuth.getState().currentEmail;
 
-      // The persisted session is always the signed-in account's latest copy (it is swapped on every
-      // sign-in/out), so it wins over the mirror. This also adopts pre-existing shared sessions.
+      // Mock: the persisted session is always the signed-in account's latest copy (it is swapped on
+      // every sign-in/out), so it wins over the mirror. This also adopts pre-existing shared sessions.
       if (current) useLedgers.getState().save(current, snapshotOf(useSession.getState()));
       void useSession.getState().ensureSeeds();
 
@@ -44,6 +63,7 @@ export function SessionHydrator() {
         if (current) useLedgers.getState().save(current, snapshotOf(s));
       });
       unsubscribe = () => {
+        offRemote();
         offAuth();
         offSession();
       };

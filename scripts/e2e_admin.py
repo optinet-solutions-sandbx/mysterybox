@@ -1,6 +1,6 @@
 """Drive the back office end to end in a real browser (1440 dark, 1440 light, 390 dark).
 
-Flow per viewport: register a player -> quick-open two boxes -> request a $250 withdrawal ->
+Flow per viewport: register a player -> open two boxes on the box system -> request a $250 withdrawal ->
 /admin refuses the player -> super admin signs in -> dashboard -> Players menu -> player page
 (every reference section present; mark the cashout paid, tag, comment, CS lock) -> the player's box
 openings -> payments, feed, groups -> boxes & odds -> staff & roles: add an admin -> audit log
@@ -73,9 +73,13 @@ with sync_playwright() as p:
         pg.goto(BASE + "/boxes/first-edition"); pg.wait_for_timeout(1500)
         pg.get_by_text("Quick open").filter(visible=True).click()
         for _ in range(2):
-            pg.get_by_role("button", name=re.compile(r"^Open for")).click()
-            expect(pg.get_by_role("dialog")).to_be_visible(timeout=8000)
-            pg.get_by_role("button", name="Keep it").click()
+            # The box system (backend kit): open -> result -> keep the piece, or Done for credit.
+            btn = pg.get_by_role("button", name=re.compile(r"^Open the box"))
+            expect(btn).to_be_enabled(timeout=15000)
+            btn.click()
+            expect(pg.get_by_role("dialog")).to_be_visible(timeout=12000)
+            keep = pg.get_by_role("button", name="Keep for now")
+            (keep if keep.count() > 0 else pg.get_by_role("button", name="Done")).click()
             expect(pg.get_by_role("dialog")).to_be_hidden()
         pg.goto(BASE + "/wallet"); pg.wait_for_timeout(1200)
         vis(pg, "input[inputmode=decimal]").fill("250")

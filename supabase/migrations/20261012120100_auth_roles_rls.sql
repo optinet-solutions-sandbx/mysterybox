@@ -117,8 +117,10 @@ create policy "audit_log: super admin" on public.audit_log
   for select to authenticated using ((select public.is_super_admin()));
 
 -- Catalog: anyone (signed out too) reads live boxes and their odds; staff read drafts and edit.
+-- Items are public even when retired: inventories and history still show them. `active` only
+-- controls whether staff can put an item in a box.
 create policy "items: public read" on public.items
-  for select to anon, authenticated using (active or (select public.is_staff()));
+  for select to anon, authenticated using (true);
 create policy "items: staff write" on public.items
   for all to authenticated using ((select public.is_staff())) with check ((select public.is_staff()));
 

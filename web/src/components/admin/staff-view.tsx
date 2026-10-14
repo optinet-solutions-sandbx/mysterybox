@@ -7,7 +7,9 @@ import { isValidEmail } from "@/domain/auth";
 import { randomHex } from "@/domain/fair";
 import { Field } from "@/components/auth/fields";
 import { Button } from "@/components/ui/button";
-import { useAuth, useCurrentUser } from "@/store/auth";
+import { isSupabase } from "@/backend/config";
+import { useCurrentUser } from "@/store/auth";
+import { useStaffDirectory } from "./data";
 import { addStaff, clearTestData, setRole, type StaffActionResult } from "@/store/staff-actions";
 import { Panel, PageTitle, RoleBadge, StatusBadge, formatDate } from "./ui";
 
@@ -34,19 +36,19 @@ const ERRORS: Record<Exclude<StaffActionResult, { ok: true }>["error"], string> 
   not_found: "That account no longer exists.",
   exists: "An account already uses that email.",
   not_pending: "Nothing to settle.",
+  unavailable: "That isn't available yet. Check the server settings (docs/08-backend.md).",
 };
 
 export function StaffView() {
   const me = useCurrentUser();
-  const accounts = useAuth((s) => s.accounts);
+  const directory = useStaffDirectory();
   const [message, setMessage] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
 
-  const all = Object.values(accounts).filter((a) => a.verified);
-  const staff = all.filter((a) => a.role !== "player").sort((a, b) => a.role.localeCompare(b.role) || a.email.localeCompare(b.email));
-  const players = all.filter((a) => a.role === "player");
+  const staff = [...directory.staff].sort((a, b) => a.role.localeCompare(b.role) || a.email.localeCompare(b.email));
+  const players = directory.players;
 
-  function change(email: string, role: AppRole) {
-    const res = setRole(email, role);
+  async function change(email: string, role: AppRole) {
+    const res = await setRole(email, role);
     setMessage(res.ok ? { tone: "ok", text: `${email} is now ${ROLE_LABEL[role].toLowerCase()}.` } : { tone: "error", text: ERRORS[res.error] });
   }
 
@@ -136,7 +138,7 @@ export function StaffView() {
               </ul>
             )}
           </Panel>
-          <ClearTestData players={players.length} onDone={setMessage} />
+          {!isSupabase && <ClearTestData players={players.length} onDone={setMessage} />}
         </div>
       </div>
     </>
@@ -160,8 +162,8 @@ function ClearTestData({ players, onDone }: { players: number; onDone: (m: { ton
             </span>
             <Button
               size="sm"
-              onClick={() => {
-                const res = clearTestData();
+              onClick={async () => {
+                const res = await clearTestData();
                 setConfirming(false);
                 onDone(res.ok ? { tone: "ok", text: `Cleared ${res.removed ?? 0} player accounts. The back office starts fresh.` } : { tone: "error", text: ERRORS[res.error] });
               }}
