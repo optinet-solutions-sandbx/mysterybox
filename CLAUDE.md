@@ -286,7 +286,7 @@ node scripts/pms.mjs list                                  # tasks by column
 node scripts/pms.mjs add "<title>" --column done --desc "Done 2026-10-14. … Commit abc1234."
 node scripts/pms.mjs add "<title>" --desc "Pending since 2026-10-14. Waits on …"   # To Do
 node scripts/pms.mjs add "<title>" --assignee ramiel@optinetsolutions.com …        # someone else
-node scripts/pms.mjs done <taskId>                         # a pending task is finished
+node scripts/pms.mjs done <taskId> --desc "Done 2026-10-14. … Commit abc1234."   # a pending task is finished
 node scripts/pms.mjs report                                # today's daily report
 ```
 

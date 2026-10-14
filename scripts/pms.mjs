@@ -8,7 +8,7 @@
 //        [--desc "..."] [--assignee <email, name or id>] [--priority LOW|MEDIUM|HIGH|URGENT] [--due YYYY-MM-DD]
 //                                                   a new task (default: To Do, assigned to PMS_USER_ID);
 //                                                   --column done files it as done today
-//   node scripts/pms.mjs done <taskId>              move a task to Done (its completion date is now)
+//   node scripts/pms.mjs done <taskId> [--desc "..."]  move a task to Done (dated now), optionally rewriting its description
 //   node scripts/pms.mjs report [YYYY-MM-DD]        PMS_USER_ID's daily report (default: today, Manila time)
 
 import { existsSync, readFileSync } from "node:fs";
@@ -98,6 +98,7 @@ if (cmd === "list") {
   console.log(`${target === "done" ? "Done" : COLUMN_NAMES[target]}: ${task.id}  ${title}`);
 } else if (cmd === "done") {
   const cols = await columns();
+  if (f.desc) await api("PATCH", `/api/tasks/${f._[0]}`, { description: f.desc });
   await api("PATCH", `/api/tasks/${f._[0]}/move`, { columnId: cols.done });
   console.log(`Done: ${f._[0]}`);
 } else if (cmd === "report") {
