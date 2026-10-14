@@ -1,3 +1,4 @@
+import { brandPack } from "@/config/brand-pack";
 import { formatUsd } from "@/domain/money";
 import { getCatalog } from "@/services/catalog-source";
 import { Faq } from "@/components/landing/faq";
@@ -12,12 +13,10 @@ import { Deferred } from "@/components/fx/deferred";
 
 export default async function HomePage() {
   const { boxStats, getBox, findItem, listBoxes, listShowcaseItems, resolveEntries, topItemsIn } = await getCatalog();
-  const showcase = [
-    { id: "bags", label: "Bags", items: topItemsIn("bags") },
-    { id: "watches", label: "Watches", items: topItemsIn("watches") },
-    { id: "jewelry", label: "Jewelry", items: topItemsIn("jewelry") },
-    { id: "beauty", label: "Beauty", items: topItemsIn("beauty") },
-  ];
+  // Hero chips: the brand pack's showcase categories that have pieces (else every category that does).
+  const withItems = (cs: typeof brandPack.categories) => cs.map((c) => ({ id: c.id, label: c.label, items: topItemsIn(c.id) })).filter((c) => c.items.length > 0);
+  const picked = withItems(brandPack.categories.filter((c) => c.showcase));
+  const showcase = picked.length > 0 ? picked : withItems(brandPack.categories);
   const byPrice = [...listBoxes()].sort((a, b) => a.price - b.price);
   const shelf: ShelfBox[] = byPrice.map((b) => {
     const { top } = boxStats(b);

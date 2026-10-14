@@ -3,7 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "brands": "node scripts/brands.mjs",
+    "brand:new": "node scripts/brands.mjs --new",
+    "predev": "node scripts/brands.mjs",
     "dev": "next dev",
+    "prebuild": "node scripts/brands.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

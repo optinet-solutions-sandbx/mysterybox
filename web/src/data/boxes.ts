@@ -1,7 +1,6 @@
-import { economy } from "@/config/economy";
-import { expectedValue, normalizeWeights, priceForRtp } from "@/domain/odds";
+import { priceBox } from "@/domain/box-pricing";
+import { normalizeWeights } from "@/domain/odds";
 import type { Box } from "@/domain/types";
-import { bonusEv, CREDIT_FACE_CENTS } from "@/engine/maths";
 import { items } from "./items";
 
 type Draft = Omit<Box, "id" | "price" | "entries" | "bonus"> & {
@@ -14,14 +13,6 @@ const spinsOf = new Map(items.map((i) => [i.id, i.freeSpins ?? 0]));
 
 /** Authored weight points moved from a box's commonest credit row to its "+ free spin" rows. */
 const FREE_SPIN_POINTS = [9, 2] as const;
-/** The free-spin table's shape (the backend kit's): what a spin pays as a share of the box price, and its chance. */
-const FREE_SPIN_TABLE = [
-  [0.1, 70],
-  [0.2, 22],
-  [0.5, 6],
-  [1, 1.8],
-  [2, 0.2],
-] as const;
 
 /** Gives a box with credit rows its two free-spin rows, carved from the commonest credit row. */
 function withFreeSpins(slug: string, odds: [string, number][]): [string, number][] {
@@ -54,14 +45,8 @@ function defineBox({ odds, ...rest }: Draft): Box {
     if (v === undefined) throw new Error(`Box ${rest.slug}: unknown item ${itemId}`);
     return v;
   };
-  const spins = (itemId: string) => spinsOf.get(itemId) ?? 0;
-  const prePrice = priceForRtp(expectedValue(entries.map((e) => ({ value: value(e.itemId), weight: e.weight }))), economy.targetRtp);
-  const bonus = entries.some((e) => spins(e.itemId) > 0)
-    ? FREE_SPIN_TABLE.map(([share, percent]) => ({ credits: Math.max(1, Math.round((prePrice / 100) * share)), percent }))
-    : [];
-  const spinCents = bonusEv(bonus) * CREDIT_FACE_CENTS;
-  const ev = expectedValue(entries.map((e) => ({ value: value(e.itemId) + spins(e.itemId) * spinCents, weight: e.weight })));
-  return { ...rest, id: rest.slug, price: priceForRtp(ev, economy.targetRtp), entries, bonus };
+  const { price, bonus } = priceBox(entries.map((e) => ({ value: value(e.itemId), freeSpins: spinsOf.get(e.itemId) ?? 0, weight: e.weight })));
+  return { ...rest, id: rest.slug, price, entries, bonus };
 }
 
 export const boxes: Box[] = [

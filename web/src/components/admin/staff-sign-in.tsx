@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { LogoMark } from "@/components/brand/logo-mark";
+import { brand } from "@/config/brand";
 import { Field, PasswordField } from "@/components/auth/fields";
 import { Button } from "@/components/ui/button";
 import { useAuth, type Account } from "@/store/auth";
@@ -38,7 +39,7 @@ export function StaffSignIn({ signedInPlayer }: { signedInPlayer: Account | null
         <div className="mb-8 flex items-center gap-3">
           <LogoMark className="w-12" sizes="48px" />
           <div>
-            <p className="font-display text-sm font-semibold tracking-[0.12em] text-foil">GRAIL NOIR</p>
+            <p className="font-display text-sm font-semibold tracking-[0.12em] uppercase text-foil">{brand.name}</p>
             <h1 className="font-display text-2xl font-semibold">Back office</h1>
           </div>
         </div>
@@ -58,7 +59,7 @@ export function StaffSignIn({ signedInPlayer }: { signedInPlayer: Account | null
           </div>
         ) : (
           <form onSubmit={submit} noValidate className="rounded-2xl border border-line bg-surface p-6 sm:p-8">
-            <p className="text-sm text-muted">For Grail Noir staff. Admins and super admins only.</p>
+            <p className="text-sm text-muted">For {brand.name} staff. Admins and super admins only.</p>
             <div className="mt-6 grid gap-5">
               <Field
                 label="Work email"

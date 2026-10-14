@@ -37,16 +37,23 @@ not decoration.**
   sign-in, roles, status, locks, tags, comments, staff and the audit log, all shared across devices.
   Wallets, opens and credit stay on the box system's per-account storage until the kit's API is
   live (`NEXT_PUBLIC_BACKEND`). Keep the two switches separate.
-- **Catalog from Supabase: off.** `NEXT_PUBLIC_CATALOG=supabase` would serve items, boxes and odds from the
-  database and let staff edit them in the back office (Items, Configure, Configuration). It stays off
-  until the team decides whether the catalogue lives in Supabase or behind the kit's API. Until then
-  those pages are read-only views of the built-in catalogue. See [docs/08-backend.md](docs/08-backend.md).
+- **Catalogue in Supabase, edited in the back office (decided and LIVE 2026-10-14).**
+  `NEXT_PUBLIC_CATALOG=supabase` serves items, boxes and odds from the database; staff add items (photo
+  upload, trimmed in the browser, to the `catalog` bucket), build boxes, price them and publish at
+  `/admin/items` and `/admin/boxes/configure`. A live box's price, free-spin table and odds are frozen by
+  the database. Without the switch those pages are read-only views of the built-in catalogue (`data/`).
+  Non-developer guide: [docs/11-white-label.md](docs/11-white-label.md).
+- **White-label: brand packs.** Everything brand- or niche-specific lives in `web/public/brands/<id>/`
+  (`brand.json` + logo and icon files), chosen by `NEXT_PUBLIC_BRAND` (default `grailnoir`): name and
+  copy, logo, colours for both modes, font pair, product categories. `npm run brand:new -- <id> "Name"`
+  scaffolds one; `npm run brands` (also before dev/build) validates them and writes
+  `src/config/brands.generated.ts`. Never hard-code a brand string, colour value, logo path or category
+  list in a component.
 - **Brand: Grail Noir** (grailnoir.com). Slogan "Life is too short. Go Noir." (a two-tier lockup:
   setup line, then a foil punchline). Logo: the **gold crown-and-mask** artwork supplied 2026-10-12,
-  extracted onto transparency in `public/brand/` (mark + lockup), used through
-  `components/brand/logo-mark.tsx`, with a traced silhouette for ink on light box finishes. App icons
-  are `app/icon.png` and `app/apple-icon.png`. Palette from the "Royal Blue
-  Luxury" board: obsidian, navy, indigo, sapphire, champagne gold, ivory.
+  extracted onto transparency in its brand pack `public/brands/grailnoir/` (mark, lockup, icons, traced
+  silhouette for ink on light box finishes), used through `components/brand/logo-mark.tsx`. Palette from
+  the "Royal Blue Luxury" board: obsidian, navy, indigo, sapphire, champagne gold, ivory.
 - **Light and dark mode.** The `[data-theme]` attribute on `<html>` is set before first paint by
   `themeBootScript` (`lib/theme.ts`): the saved choice wins, otherwise the system preference.
   `ThemeToggle` sits in the header. Every surface, glow, shadow, marble and foil stop is a token that
@@ -72,6 +79,8 @@ npx eslint             # lint (React Compiler rules: no mutation during render, 
 npx next build         # production build; every route must prerender
 npx vitest run src/backend   # Supabase migrations + RLS + RPCs in PGlite (no Docker needed)
 WRITE_SEED=1 npx vitest run src/backend/catalog-seed.test.ts   # regenerate supabase/seed.sql after editing data/
+npm run brands         # check the brand packs and regenerate src/config/brands.generated.ts (runs before dev/build)
+npm run brand:new -- <id> "Name"   # start a new brand pack in public/brands/<id>/
 ```
 
 ## Stack
@@ -93,8 +102,9 @@ lucide-react. Icybox runs on the same Next, Tailwind and Motion stack.
 
 | Path | Role |
 |---|---|
-| `config/brand.ts` | Every brand string: name, domain, tagline and `taglineLines`, descriptor, box side line, entity, age. |
-| `components/brand/logo-mark.tsx` | `LogoMark` (foil or solid) plus `LOGO_PATH` / `LOGO_VIEWBOX` for inline SVG use (keyhole, coin). |
+| `config/brand-pack.ts`, `config/brands.generated.ts`, `scripts/brands.mjs`, `app/fonts.ts` | The active brand pack (`NEXT_PUBLIC_BRAND`): `brandPack`, `brandAsset()`, `categoryLabel()`, `productCategories`, `themeCss()` (injected in the layout after `globals.css`, whose values are fallbacks), `textureUrl()`; the font-pair registry (inscription, editorial, modern). |
+| `config/brand.ts` | Every brand string (name, domain, tagline and `taglineLines`, descriptor, box side line, entity, age), derived from the brand pack. |
+| `components/brand/logo-mark.tsx` | `LogoMark` (foil, or solid: the pack's silhouette or a mask of the mark), `LOGO_SRC`, `LOGO_SIZE`, `LOCKUP_SIZE`, `logoHeightAt()`. |
 | `lib/theme.ts`, `components/layout/theme-toggle.tsx` | Light/dark boot script, storage key, toggle. |
 | `config/economy.ts` | Mock economy: target RTP (90%), sell-back rate (90%), starting balance ($10k), top-ups, odds scale (100,000). |
 | `config/media.ts` | `referenceImage()` / `NEXT_PUBLIC_REFERENCE_IMAGES`, the switch for the third-party photos (see Rules). |
@@ -116,9 +126,10 @@ lucide-react. Icybox runs on the same Next, Tailwind and Motion stack.
 | `store/backoffice.ts`, `store/staff-actions.ts` | Demo-player status overrides and the audit log; staff actions (`setPlayerStatus`, `setRole`, `addStaff`, `settleWithdrawal`) with the **same rules as the SQL functions**. |
 | `domain/analytics.ts`, `data/demo-players.ts` | Back-office numbers (`overviewRow`, `kpis`, `dailyMetrics`, `boxPerformance`) with the SQL's definitions; 240 deterministic demo players per UTC day, drawn with the real odds. |
 | `components/admin/`, `app/admin/` | Back office, **structured after the team's casino back office** ([docs/09-backoffice-reference.md](docs/09-backoffice-reference.md)): `AdminShell` top bar (Dashboard, Players▾, Boxes▾, Payments▾, Feed, Bonuses▾, Battles▾, user menu), `PageTitle` breadcrumb band, dashboard, players list, full **player page** `/admin/players/view?id=<player number>` (Accounts row, loyalty points, issued bonuses, status, CS/SB locks, tags, groups, payments, openings, comments), groups, box openings, payments, feed, bonuses/battles placeholders, staff & roles, audit log. Client-gated (`instant = false`); pages reading the query string wrap their view in `<Suspense>`. Avoid dynamic `[id]` admin routes: unknown params make every `usePathname` layout suspend. |
-| `services/catalog.ts`, `services/catalog-source.ts`, `components/catalog-provider.tsx` | `createCatalog(data)` over plain data. Server pages `await getCatalog()`; client components `useCatalog()`; stores use `activeCatalog()`. Never import `data/items|boxes` in UI code (mock-only code and tests may use `staticCatalog`). |
+| `services/catalog.ts`, `services/catalog-source.ts`, `services/catalog-rows.ts`, `components/catalog-provider.tsx` | `createCatalog(data)` over plain data; every module function (`getBox`, `catalogBox`, `outcomeArt`…) reads the **active** catalogue, which `getCatalog()` (server) and `CatalogProvider` (client, before children render) set. Server pages `await getCatalog()`; client components `useCatalog()`. `catalog-rows.ts` maps database rows for the site and the back office. Never import `data/items|boxes` in UI code (mock-only code and tests may use `staticCatalog`). |
+| `domain/box-pricing.ts`, `lib/product-photo.ts` | `priceBox` / `freeSpinTable`: one pricing rule for `data/boxes.ts` and the back-office box editor. `prepareProductPhoto`: trims, scales and encodes an uploaded product photo in the browser. |
 | `backend/remote-player.ts`, `remote-admin.ts`, `remote-catalog.ts`, `server-auth.ts`, `app/api/*` | Supabase wiring (see Backend above). API routes verify the caller's role server-side; the service-role key is server-only. |
-| `components/admin/catalog-admin.tsx` | Items (`/admin/items`), box configuration (`/admin/boxes/configure?id=`; price and odds editable only as a draft, publish re-checks the weights) and Configuration (`/admin/settings`, super admin). Read-only on the mock. |
+| `components/admin/catalog-admin.tsx` | Items (`/admin/items`: photo upload, free spins for credit), box configuration (`/admin/boxes/configure?id=` or `?new=1`; price and odds editable only as a draft, "Scale weights", "Use the target price", the box system's own maths; publish re-checks the weights) and Configuration (`/admin/settings`, super admin). Read-only without `NEXT_PUBLIC_CATALOG=supabase`. |
 | `domain/player-insights.ts` | Player-page numbers (`accountSummary`, `loyaltyPoints`), `playerNumber`, `maskEmail`, automatic tags and the 14 rule-based `SEGMENTS` (groups). |
 | `backend/` | `contract.ts` (methods, shapes, error codes, `PERMISSIONS` + `can()`), `supabase-api.ts` (placeholder adapter), `catalog-sql.ts` (generates `supabase/seed.sql`), `test-db.ts` + `schema.test.ts` (PGlite). |
 | `app/` | Routes. `/register`, `/sign-in`, `/account` and `/admin/*` are built (mock). Battles, deals, rewards, leaderboard and affiliates are `ComingSoon` stubs listing planned behavior. |
@@ -153,7 +164,8 @@ anything moves; the browser only animates and verifies it.**
    Box sizes come from `BOX_WIDTH` (`tile` for catalog and shelf, `stage` for hero, ritual and box
    page); product photos are trimmed and drawn at equal visual area (`imageAspect`, `fitToArea`). No tracked-caps label above every heading, and no accenting a single
    word in a headline.
-4. **Brand strings come from `config/brand.ts`. Money is integer cents** (`formatUsd` at the edge).
+4. **Brand strings come from `config/brand.ts`, categories from the brand pack (`categoryLabel`,
+   `productCategories`), logo paths from `logo-mark.tsx`. Money is integer cents** (`formatUsd` at the edge).
 5. **Odds are authored as integer weights summing to `economy.oddsScale`** (via `defineBox`; the catalog
    tests enforce the sum and the RTP band) and served in the kit's format as percents
    (`percent = weight / 1000`, in stored order). Player screens use `formatPercent` (enough digits, never
@@ -240,8 +252,12 @@ Lighthouse on the live site, mobile home: 25 → 84 (blocking 39,970 ms → 260 
    withdrawal, then as super admin pays it out, suspends the player, adds an admin and checks the
    audit log; the new admin finds Staff & roles locked; the suspended player can't sign in; the
    super admin clears the test data. Runs at 1440 (both themes) and 390.
-5. Report results per flow with evidence, and say plainly what was not tested (e.g. nothing runs
-   against a live Supabase project yet).
+5. **Catalogue editing:** build with `NEXT_PUBLIC_ACCOUNTS=supabase NEXT_PUBLIC_CATALOG=supabase`, then
+   sign in to `/admin` with a temporary admin made with the service key. Add an item with a photo, build,
+   price and publish a box, check the public box page, then delete everything it created: box, odds,
+   item, photo, audit rows and the admin. **A brand change:** `npm run brand:new` a throwaway pack, run
+   `NEXT_PUBLIC_BRAND=<id> npx next dev`, look at it, delete the pack and run `npm run brands`.
+6. Report results per flow with evidence, and say plainly what was not tested.
 
 ## Docs
 
@@ -249,4 +265,5 @@ Lighthouse on the live site, mobile home: 25 → 84 (blocking 39,970 ms → 260 
 design system, motion spec, architecture, compliance UX, backend (schema, roles, endpoint
 contract, open questions), and the icybox and MISTY reference teardowns. The box system's handoff (what
 changed on 2026-10-13, rulings, open items) is [docs/10-box-system-handoff.md](docs/10-box-system-handoff.md);
-its spec and plan are in `docs/superpowers/`.
+its spec and plan are in `docs/superpowers/`. Running the site without a developer (products in the back
+office, brand packs, new niches): [docs/11-white-label.md](docs/11-white-label.md).

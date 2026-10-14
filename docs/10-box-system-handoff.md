@@ -212,8 +212,8 @@ Until they say otherwise, these defaults stand:
 - [ ] **The deferred minor issues** listed above.
 - [ ] **Lighthouse** on https://mysterybox-seven.vercel.app, mobile and desktop (CLAUDE.md performance
   rules).
-- [ ] **A logo warning.** The e2e runs logged a console warning that the `/brand/grail-noir-mark.webp`
-  preload went unused. That component wasn't touched; compare against `1b0811b`.
+- [ ] **A logo warning.** The e2e runs logged a console warning that the header logo's preload
+  (`/brands/grailnoir/mark.webp` since the brand packs, 2026-10-14) went unused. That component wasn't touched; compare against `1b0811b`.
 - [ ] **When their API is live:**
   - set `NEXT_PUBLIC_BACKEND=api`;
   - provide the bearer token;

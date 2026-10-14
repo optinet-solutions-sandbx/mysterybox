@@ -254,7 +254,7 @@ export function Box3D({
         <div className={cn(s.face, s.bottom)} />
         <div className={cn(s.face, s.right)}>
           <div className="absolute flex flex-col" style={{ top: h * 0.3, left: d * 0.12, gap: h * 0.035 }}>
-            {brand.sideline.split(" ").map((word) => (
+            {brand.sideline.split(" ").filter(Boolean).map((word) => (
               <span key={word} className={s.caption} style={{ fontSize: Math.max(6, h * 0.055) }}>
                 {word}
               </span>

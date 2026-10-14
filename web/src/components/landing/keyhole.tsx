@@ -5,7 +5,7 @@ import { useRef } from "react";
 import { brand } from "@/config/brand";
 import { ButtonLink } from "@/components/ui/button";
 import { GoldDust } from "@/components/fx/gold-dust";
-import { LOGO_SRC } from "@/components/brand/logo-mark";
+import { LOGO_SRC, logoHeightAt } from "@/components/brand/logo-mark";
 
 /** One outline: a r=40 circle at (800, 488) flowing into a flared slot down to y=620. */
 const KEYHOLE = "M782 523.7 A40 40 0 1 1 818 523.7 L840 620 L760 620 Z";
@@ -85,7 +85,7 @@ export function Keyhole() {
             <rect x="40" y="40" width="1520" height="920" fill="none" stroke="url(#kh-foil)" strokeOpacity="0.5" strokeWidth="1.5" mask="url(#kh-mask)" />
             <path d={KEYHOLE} fill="none" stroke="url(#kh-foil)" strokeWidth="3" />
             <ellipse cx="800" cy="535" rx="92" ry="128" fill="none" stroke="url(#kh-foil)" strokeWidth="2" mask="url(#kh-mask)" />
-            <image href={LOGO_SRC} x="650" y="120" width="300" height="199" />
+            <image href={LOGO_SRC} x="650" y={Math.round(220 - logoHeightAt(300) / 2)} width="300" height={logoHeightAt(300)} />
             <text x="800" y="370" textAnchor="middle" fill="#c2a46e" style={{ font: "400 20px var(--font-body)", letterSpacing: "0.4em" }}>
               {brand.tagline.toUpperCase()}
             </text>

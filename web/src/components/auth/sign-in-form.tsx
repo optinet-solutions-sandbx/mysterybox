@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState, type FormEvent } from "react";
+import { brand } from "@/config/brand";
 import { isValidEmail } from "@/domain/auth";
 import { useAuth, useAuthHydrated, useCurrentUser } from "@/store/auth";
 import { scrollToElement } from "@/components/fx/smooth-scroll";
@@ -113,7 +114,7 @@ export function SignInForm() {
       </Button>
 
       <p className="mt-6 border-t border-line pt-6 text-center text-sm">
-        New to Grail Noir?{" "}
+        New to {brand.name}?{" "}
         <Link href={withNext("/register", next)} className="font-semibold text-accent underline-offset-4 hover:underline">
           Create an account
         </Link>

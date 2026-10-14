@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useId, useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { ArrowDown, ArrowUp, Boxes, Package, Plus, Settings2, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Boxes, ImageUp, Package, Plus, Scale, Settings2, Trash2 } from "lucide-react";
 import { isSupabaseCatalog as isSupabase } from "@/backend/config";
 import { can, type BoxStatus } from "@/backend/contract";
 import {
+  itemDraftOf,
   loadBoxesAdmin,
   loadItemsAdmin,
   loadSettings,
@@ -14,15 +15,19 @@ import {
   saveItem,
   saveSetting,
   setBoxStatus,
+  uploadItemPhoto,
   type AdminBox,
   type ItemDraft,
   type SettingRow,
 } from "@/backend/remote-catalog";
+import { CREDIT_CATEGORY, MIXED_CATEGORY, categoryLabel, productCategories } from "@/config/brand-pack";
 import { economy } from "@/config/economy";
+import { freeSpinTable, priceBox } from "@/domain/box-pricing";
 import { formatUsd } from "@/domain/money";
-import { expectedValue, priceForRtp } from "@/domain/odds";
-import { CATEGORIES, type BoxEntry, type BoxMaterial, type Category, type Item } from "@/domain/types";
-import { categoryLabels } from "@/services/catalog";
+import { normalizeWeights } from "@/domain/odds";
+import type { BonusRow, BoxEntry, BoxMaterial, Item } from "@/domain/types";
+import { createCatalog } from "@/services/catalog";
+import { prepareProductPhoto } from "@/lib/product-photo";
 import { useCatalog } from "@/components/catalog-provider";
 import { ItemArt } from "@/components/item/item-art";
 import { Button } from "@/components/ui/button";
@@ -31,9 +36,13 @@ import { cn } from "@/lib/cn";
 import { PageTitle, Panel, formatCount, formatPct } from "./ui";
 
 /**
- * Items, box configuration and economy settings. With Supabase these save to the database and
- * revalidate the site's catalog; on the browser mock they show the built-in catalog read-only.
+ * Items, box configuration and economy settings. With NEXT_PUBLIC_CATALOG=supabase these save to
+ * the database and revalidate the site's catalog, so staff add and change products without a
+ * release; otherwise they show the built-in catalog read-only. Categories come from the brand pack.
  */
+
+const ITEM_CATEGORIES = [...productCategories, CREDIT_CATEGORY];
+const BOX_CATEGORIES = [MIXED_CATEGORY, ...productCategories];
 
 const boxesCrumbs = [
   { label: "Dashboard", href: "/admin" },
@@ -81,7 +90,7 @@ export function ItemsView() {
   const staff = useCurrentUser();
   const [items, setItems] = useState<(Item & { active: boolean })[] | null>(isSupabase ? null : catalog.items.map((i) => ({ ...i, active: true })));
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<Category | "all">("all");
+  const [category, setCategory] = useState("all");
   const [editing, setEditing] = useState<ItemDraft | null>(null);
   const [isNew, setIsNew] = useState(false);
   const [message, setMessage] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
@@ -119,7 +128,8 @@ export function ItemsView() {
       await reload();
       router.refresh();
     } catch (e) {
-      setMessage({ tone: "error", text: e instanceof Error ? e.message : "Couldn't save the item." });
+      const text = e instanceof Error ? e.message : "Couldn't save the item.";
+      setMessage({ tone: "error", text: text.includes("duplicate key") ? `An item with the ID ${draft.id} already exists. Change the name or edit that item.` : text });
     }
   }
 
@@ -135,7 +145,7 @@ export function ItemsView() {
             <Button
               onClick={() => {
                 setIsNew(true);
-                setEditing({ id: "", name: "", brand: "", category: "bags", value: 0, imageUrl: "", active: true });
+                setEditing({ id: "", name: "", brand: "", category: productCategories[0], value: 0, imageUrl: "", imageAspect: null, freeSpins: 0, active: true });
               }}
             >
               <Plus className="size-4" /> Add item
@@ -143,7 +153,7 @@ export function ItemsView() {
           )
         }
       />
-      <MockNotice>This is the built-in catalogue the box system uses. Editing switches on once the team decides where the catalogue lives (Supabase or the backend kit&rsquo;s API).</MockNotice>
+      <MockNotice>This is the built-in catalogue. Editing switches on with the database catalogue (NEXT_PUBLIC_CATALOG=supabase, see docs/11-white-label.md).</MockNotice>
       {message && (
         <p role="status" className={cn("mb-4 text-sm font-semibold", message.tone === "error" ? "text-danger" : "text-success")}>
           {message.text}
@@ -153,11 +163,11 @@ export function ItemsView() {
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <input aria-label="Search items" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search brand, name or ID" className={cn(input, "max-w-72 rounded-pill")} />
-        <select aria-label="Category" value={category} onChange={(e) => setCategory(e.target.value as Category | "all")} className={cn(input, "w-auto rounded-pill")}>
+        <select aria-label="Category" value={category} onChange={(e) => setCategory(e.target.value)} className={cn(input, "w-auto rounded-pill")}>
           <option value="all">All categories</option>
-          {CATEGORIES.map((c) => (
+          {ITEM_CATEGORIES.map((c) => (
             <option key={c} value={c}>
-              {categoryLabels[c]}
+              {categoryLabel(c)}
             </option>
           ))}
         </select>
@@ -190,7 +200,7 @@ export function ItemsView() {
                 <tr key={i.id}>
                   <td className="px-4 py-2.5">
                     <div className="flex items-center gap-3">
-                      <ItemArt item={catalog.findItem(i.id) ?? i} rarity="common" showBrand={false} sizes="40px" className="size-10 shrink-0 rounded-lg" />
+                      <ItemArt item={i} rarity="common" showBrand={false} sizes="40px" className="size-10 shrink-0 rounded-lg" />
                       <div className="min-w-0">
                         <p className="text-xs text-muted">{i.brand}</p>
                         <p className="truncate font-semibold">{i.name}</p>
@@ -198,7 +208,10 @@ export function ItemsView() {
                     </div>
                   </td>
                   <td className="px-4 py-2.5 font-mono text-xs text-muted">{i.id}</td>
-                  <td className="px-4 py-2.5">{categoryLabels[i.category]}</td>
+                  <td className="px-4 py-2.5">
+                    {categoryLabel(i.category)}
+                    {i.freeSpins ? <span className="text-muted"> · {i.freeSpins} free spin{i.freeSpins > 1 ? "s" : ""}</span> : null}
+                  </td>
                   <td className="px-4 py-2.5 text-right font-semibold">{formatUsd(i.value)}</td>
                   <td className="px-4 py-2.5 text-right">{inBoxes.get(i.id) ?? 0}</td>
                   <td className="px-4 py-2.5">
@@ -210,7 +223,7 @@ export function ItemsView() {
                         type="button"
                         onClick={() => {
                           setIsNew(false);
-                          setEditing({ id: i.id, name: i.name, brand: i.brand, category: i.category, value: i.value, imageUrl: i.image ?? "", active: i.active });
+                          setEditing(itemDraftOf(i));
                         }}
                         className="text-sm font-semibold text-accent"
                       >
@@ -231,49 +244,103 @@ export function ItemsView() {
 function ItemForm({ draft, isNew, onSave, onCancel }: { draft: ItemDraft; isNew: boolean; onSave: (d: ItemDraft) => void; onCancel: () => void }) {
   const [d, setD] = useState(draft);
   const [value, setValue] = useState(draft.value ? dollars(draft.value) : "");
+  const [photo, setPhoto] = useState<{ busy: boolean; note: string | null; error: boolean }>({ busy: false, note: null, error: false });
   const id = isNew ? slugify(`${d.brand} ${d.name}`) : d.id;
+  const credit = d.category === CREDIT_CATEGORY;
+  const preview: Item = { id: id || "preview", name: d.name || "New item", brand: d.brand, category: d.category, value: toCents(value) || 0, ...(d.imageUrl ? { image: d.imageUrl, imageAspect: d.imageAspect ?? undefined } : {}) };
+
+  async function upload(file: File | undefined) {
+    if (!file) return;
+    setPhoto({ busy: true, note: "Preparing and uploading…", error: false });
+    try {
+      const prepared = await prepareProductPhoto(file);
+      const url = await uploadItemPhoto(id, prepared.photo);
+      setD((x) => ({ ...x, imageUrl: url, imageAspect: prepared.aspect }));
+      setPhoto({
+        busy: false,
+        error: false,
+        note: prepared.transparent
+          ? `Uploaded and trimmed to ${prepared.width}×${prepared.height}. Save to use it.`
+          : "Uploaded. This photo has a solid background; pieces look best as cut-outs on a transparent background (PNG or WebP).",
+      });
+    } catch (e) {
+      setPhoto({ busy: false, error: true, note: e instanceof Error ? e.message : "The upload didn't go through." });
+    }
+  }
+
   function submit(e: FormEvent) {
     e.preventDefault();
-    onSave({ ...d, id, value: toCents(value) });
+    onSave({ ...d, id, value: toCents(value), freeSpins: credit ? d.freeSpins : 0 });
   }
   return (
     <Panel title={isNew ? "Add an item" : `Edit ${draft.brand} ${draft.name}`} className="mb-6">
-      <form onSubmit={submit} className="grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-3">
-        <Labeled label="Brand">{(i) => <input id={i} className={input} value={d.brand} onChange={(e) => setD({ ...d, brand: e.target.value })} />}</Labeled>
-        <Labeled label="Name">{(i) => <input id={i} className={input} value={d.name} onChange={(e) => setD({ ...d, name: e.target.value })} />}</Labeled>
-        <Labeled label="Category">
-          {(i) => (
-            <select id={i} className={input} value={d.category} onChange={(e) => setD({ ...d, category: e.target.value as Category })}>
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {categoryLabels[c]}
-                </option>
-              ))}
-            </select>
-          )}
-        </Labeled>
-        <Labeled label="Listed value (USD)">{(i) => <input id={i} inputMode="decimal" className={input} value={value} onChange={(e) => setValue(e.target.value)} placeholder="1250.00" />}</Labeled>
-        <Labeled label="Photo URL (optional)" className="lg:col-span-2">
-          {(i) => <input id={i} className={input} value={d.imageUrl} onChange={(e) => setD({ ...d, imageUrl: e.target.value })} placeholder="https://… (transparent PNG or WebP)" />}
-        </Labeled>
-        <div className="flex flex-wrap items-center gap-4 sm:col-span-2 lg:col-span-3">
-          <label className="flex items-center gap-2 text-sm font-semibold">
-            <input type="checkbox" checked={d.active} onChange={(e) => setD({ ...d, active: e.target.checked })} className="size-4 accent-accent" />
-            Active (can go into boxes)
+      <form onSubmit={submit} className="grid gap-5 p-5 lg:grid-cols-[180px_minmax(0,1fr)]">
+        <div className="grid content-start gap-3">
+          <ItemArt item={preview} rarity="rare" sizes="180px" className="aspect-square w-full max-w-[180px] rounded-2xl" />
+          <label className={cn("inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-pill border border-line px-4 text-sm font-semibold hover:border-accent", photo.busy && "pointer-events-none opacity-60")}>
+            <ImageUp className="size-4" />
+            {d.imageUrl ? "Replace photo" : "Upload photo"}
+            <input type="file" accept="image/png,image/webp,image/jpeg,image/avif" className="sr-only" disabled={photo.busy} onChange={(e) => upload(e.target.files?.[0])} />
           </label>
-          <span className="font-mono text-xs text-muted">ID: {id || "—"}</span>
-          <span className="flex gap-2 sm:ml-auto">
-            <Button type="submit">{isNew ? "Add item" : "Save changes"}</Button>
-            <Button variant="secondary" onClick={onCancel}>
-              Cancel
-            </Button>
-          </span>
+          {d.imageUrl && !photo.busy && (
+            <button type="button" onClick={() => setD({ ...d, imageUrl: "", imageAspect: null })} className="text-sm font-semibold text-muted hover:text-fg">
+              Use the line drawing instead
+            </button>
+          )}
+          {photo.note && <p className={cn("text-xs leading-relaxed", photo.error ? "text-danger" : "text-muted")}>{photo.note}</p>}
         </div>
-        {!isNew && (
-          <p className="text-xs leading-relaxed text-muted sm:col-span-2 lg:col-span-3">
-            Changing a value changes the return of every box that contains this item. Check Boxes & odds after saving.
+
+        <div className="grid content-start gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <Labeled label="Brand">{(i) => <input id={i} className={input} value={d.brand} onChange={(e) => setD({ ...d, brand: e.target.value })} />}</Labeled>
+          <Labeled label="Name">{(i) => <input id={i} className={input} value={d.name} onChange={(e) => setD({ ...d, name: e.target.value })} />}</Labeled>
+          <Labeled label="Category">
+            {(i) => (
+              <select id={i} className={input} value={d.category} onChange={(e) => setD({ ...d, category: e.target.value })}>
+                {ITEM_CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {categoryLabel(c)}
+                  </option>
+                ))}
+              </select>
+            )}
+          </Labeled>
+          <Labeled label={credit ? "Credit amount (USD)" : "Listed value (USD)"}>
+            {(i) => <input id={i} inputMode="decimal" className={input} value={value} onChange={(e) => setValue(e.target.value)} placeholder="1250.00" />}
+          </Labeled>
+          {credit && (
+            <Labeled label="Free spins included">
+              {(i) => (
+                <select id={i} className={input} value={d.freeSpins} onChange={(e) => setD({ ...d, freeSpins: Number(e.target.value) })}>
+                  {[0, 1, 2, 3].map((n) => (
+                    <option key={n} value={n}>
+                      {n === 0 ? "None" : `${n} free spin${n > 1 ? "s" : ""}`}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </Labeled>
+          )}
+          <div className="flex flex-wrap items-center gap-4 sm:col-span-2 xl:col-span-3">
+            <label className="flex items-center gap-2 text-sm font-semibold">
+              <input type="checkbox" checked={d.active} onChange={(e) => setD({ ...d, active: e.target.checked })} className="size-4 accent-accent" />
+              Active (can go into boxes)
+            </label>
+            <span className="font-mono text-xs text-muted">ID: {id || "—"}</span>
+            <span className="flex gap-2 sm:ml-auto">
+              <Button type="submit" disabled={photo.busy}>
+                {isNew ? "Add item" : "Save changes"}
+              </Button>
+              <Button variant="secondary" onClick={onCancel}>
+                Cancel
+              </Button>
+            </span>
+          </div>
+          <p className="text-xs leading-relaxed text-muted sm:col-span-2 xl:col-span-3">
+            {isNew
+              ? "Without a photo the site shows the category's line drawing. The ID is made from the brand and name and can't change later."
+              : "Changing a value changes the return of every box that contains this item. Check Boxes & odds after saving."}
           </p>
-        )}
+        </div>
       </form>
     </Panel>
   );
@@ -282,7 +349,6 @@ function ItemForm({ draft, isNew, onSave, onCancel }: { draft: ItemDraft; isNew:
 // Box configuration --------------------------------------------------------------------------------
 
 const MATERIALS: BoxMaterial[] = ["obsidian", "navy", "sapphire", "ivory", "gold"];
-const BOX_CATEGORIES = ["mixed", ...CATEGORIES.filter((c) => c !== "credit")] as const;
 
 export function BoxConfigView() {
   const params = useSearchParams();
@@ -335,6 +401,7 @@ export function BoxConfigView() {
       original={original}
       creating={creating}
       items={items}
+      sortOrder={boxes.length}
       editable={editable}
       message={message}
       onMessage={setMessage}
@@ -351,6 +418,7 @@ function BoxEditor({
   original,
   creating,
   items,
+  sortOrder,
   editable,
   message,
   onMessage,
@@ -359,6 +427,7 @@ function BoxEditor({
   original: AdminBox;
   creating: boolean;
   items: (Item & { active: boolean })[];
+  sortOrder: number;
   editable: boolean;
   message: { tone: "ok" | "error"; text: string } | null;
   onMessage: (m: { tone: "ok" | "error"; text: string } | null) => void;
@@ -374,8 +443,18 @@ function BoxEditor({
 
   const total = entries.reduce((s, e) => s + (Number.isFinite(e.weight) ? e.weight : 0), 0);
   const priceCents = toCents(price) || 0;
-  const ev = expectedValue(entries.map((e) => ({ value: itemById.get(e.itemId)?.value ?? 0, weight: e.weight })));
-  const configuredRtp = priceCents > 0 && total === economy.oddsScale ? ev / priceCents : null;
+  const complete = total === economy.oddsScale && entries.every((e) => itemById.has(e.itemId));
+
+  // Free spins: a box with free-spin outcomes needs a free-spin table, scaled to its price
+  // (the same rule as the built-in boxes, domain/box-pricing). Kept as saved until the price changes.
+  const hasSpins = entries.some((e) => (itemById.get(e.itemId)?.freeSpins ?? 0) > 0);
+  const [savedBonus, setSavedBonus] = useState<BonusRow[] | null>(original.bonus.length ? original.bonus : null);
+  const bonus = !hasSpins ? [] : (savedBonus ?? (priceCents > 0 ? freeSpinTable(priceCents) : []));
+
+  // The same maths the site and the box system use (engine/maths via services/catalog).
+  const draftCatalog = useMemo(() => createCatalog({ items, boxes: [] }), [items]);
+  const maths = complete && priceCents > 0 ? draftCatalog.catalogBox({ ...box, price: priceCents, entries, bonus }).maths : null;
+  const target = complete ? priceBox(entries.map((e) => ({ value: itemById.get(e.itemId)!.value, freeSpins: itemById.get(e.itemId)!.freeSpins ?? 0, weight: e.weight }))) : null;
   const usedIds = new Set(entries.map((e) => e.itemId));
   const addable = items.filter((i) => i.active && !usedIds.has(i.id)).sort((a, b) => a.value - b.value);
 
@@ -385,13 +464,20 @@ function BoxEditor({
     const id = creating ? slugify(box.name) : box.id;
     setBusy(true);
     try {
-      await saveBox({ ...box, id, slug: creating ? id : box.slug, price: priceCents }, creating, draft ? entries : null);
+      await saveBox({ ...box, id, slug: creating ? id : box.slug, price: priceCents, bonus }, creating, draft ? entries : null, sortOrder);
       if (publishAfter) await setBoxStatus(id, "live");
       onMessage({ tone: "ok", text: publishAfter ? `${box.name} is live. The site shows its new odds now.` : `${box.name} saved as a draft.` });
       await onSaved(id);
     } catch (e) {
       const text = e instanceof Error ? e.message : String(e);
-      onMessage({ tone: "error", text: text.includes("odds_do_not_sum") ? `The weights must add up to exactly ${formatCount(economy.oddsScale)} before the box can go live.` : text });
+      onMessage({
+        tone: "error",
+        text: text.includes("odds_do_not_sum")
+          ? `The weights must add up to exactly ${formatCount(economy.oddsScale)} before the box can go live.`
+          : text.includes("duplicate key")
+            ? `A box with the ID ${id} already exists. Choose another name.`
+            : text,
+      });
     } finally {
       setBusy(false);
     }
@@ -451,7 +537,7 @@ function BoxEditor({
           )
         }
       />
-      <MockNotice>These are the built-in boxes. Creating boxes and changing prices and odds switches on with the catalogue decision (docs/08-backend.md).</MockNotice>
+      <MockNotice>These are the built-in boxes. Creating boxes and changing prices and odds switches on with the database catalogue (NEXT_PUBLIC_CATALOG=supabase, see docs/11-white-label.md).</MockNotice>
       {message && (
         <p role="status" className={cn("mb-4 text-sm font-semibold", message.tone === "error" ? "text-danger" : "text-success")}>
           {message.text}
@@ -548,6 +634,11 @@ function BoxEditor({
                   </option>
                 ))}
               </select>
+              {entries.length > 0 && total !== economy.oddsScale && entries.every((e) => e.weight > 0) && (
+                <Button size="sm" variant="secondary" onClick={() => setEntries(balanced(entries))}>
+                  <Scale className="size-4" /> Scale weights to {formatCount(economy.oddsScale)}
+                </Button>
+              )}
               <p className="text-xs text-muted">The draw walks items in this order; keep it stable once a box is live.</p>
             </div>
           )}
@@ -564,10 +655,10 @@ function BoxEditor({
               <div className="grid grid-cols-2 gap-3">
                 <Labeled label="Category">
                   {(i) => (
-                    <select id={i} disabled={!editable} className={input} value={box.category} onChange={(e) => setBox({ ...box, category: e.target.value as AdminBox["category"] })}>
+                    <select id={i} disabled={!editable} className={input} value={box.category} onChange={(e) => setBox({ ...box, category: e.target.value })}>
                       {BOX_CATEGORIES.map((c) => (
                         <option key={c} value={c}>
-                          {categoryLabels[c]}
+                          {categoryLabel(c)}
                         </option>
                       ))}
                     </select>
@@ -586,7 +677,19 @@ function BoxEditor({
                 </Labeled>
               </div>
               <Labeled label="Price (USD)">
-                {(i) => <input id={i} inputMode="decimal" disabled={!oddsEditable && !creating} className={input} value={price} onChange={(e) => setPrice(e.target.value)} />}
+                {(i) => (
+                  <input
+                    id={i}
+                    inputMode="decimal"
+                    disabled={!oddsEditable && !creating}
+                    className={input}
+                    value={price}
+                    onChange={(e) => {
+                      setPrice(e.target.value);
+                      setSavedBonus(null);
+                    }}
+                  />
+                )}
               </Labeled>
               <label className="flex items-center gap-2 text-sm font-semibold">
                 <input type="checkbox" disabled={!editable} checked={box.featured ?? false} onChange={(e) => setBox({ ...box, featured: e.target.checked })} className="size-4 accent-accent" />
@@ -598,20 +701,33 @@ function BoxEditor({
           <Panel title="Return">
             <dl className="grid gap-2 p-4 text-sm">
               <div className="flex justify-between">
-                <dt className="text-muted">Expected value</dt>
-                <dd className="font-semibold tabular">{formatUsd(Math.round(ev))}</dd>
+                <dt className="text-muted">Pays back per open</dt>
+                <dd className="font-semibold tabular">{maths ? formatUsd(Math.round(maths.payFaceCents)) : "—"}</dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-muted">Configured return</dt>
-                <dd className={cn("font-semibold tabular", configuredRtp !== null && configuredRtp > economy.targetRtp + 1e-9 && "text-danger")}>{formatPct(configuredRtp)}</dd>
+                <dd className={cn("font-semibold tabular", maths && maths.returnFace > economy.targetRtp + 1e-9 && "text-danger")}>{formatPct(maths?.returnFace ?? null)}</dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-muted">Price at {Math.round(economy.targetRtp * 100)}% target</dt>
-                <dd className="font-semibold tabular">{total === economy.oddsScale ? formatUsd(priceForRtp(ev)) : "—"}</dd>
+                <dd className="font-semibold tabular">{target ? formatUsd(target.price) : "—"}</dd>
               </div>
             </dl>
-            {oddsEditable && total === economy.oddsScale && (
-              <button type="button" onClick={() => setPrice(dollars(priceForRtp(ev)))} className="mx-4 mb-4 text-sm font-semibold text-accent">
+            {hasSpins && bonus.length > 0 && (
+              <p className="border-t border-line px-4 py-3 text-xs leading-relaxed text-muted">
+                One free spin pays {bonus.map((b) => `${formatCount(b.credits)} credit (${b.percent}%)`).join(", ")}.
+              </p>
+            )}
+            {!complete && <p className="border-t border-line px-4 py-3 text-xs text-muted">The return shows once the weights add up to {formatCount(economy.oddsScale)}.</p>}
+            {oddsEditable && target && target.price !== priceCents && (
+              <button
+                type="button"
+                onClick={() => {
+                  setPrice(dollars(target.price));
+                  setSavedBonus(target.bonus.length ? target.bonus : null);
+                }}
+                className="mx-4 mb-4 text-sm font-semibold text-accent"
+              >
                 Use the target price
               </button>
             )}
@@ -633,6 +749,16 @@ function BoxEditor({
       </div>
     </>
   );
+}
+
+/** Scales the weights so they add up to the odds scale exactly, keeping their proportions. */
+function balanced(entries: BoxEntry[]): BoxEntry[] {
+  try {
+    const weights = normalizeWeights(entries.map((e) => e.weight));
+    return entries.map((e, i) => ({ ...e, weight: weights[i] }));
+  } catch {
+    return entries;
+  }
 }
 
 function swap<T>(list: T[], a: number, b: number): T[] {

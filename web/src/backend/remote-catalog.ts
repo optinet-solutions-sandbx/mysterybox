@@ -1,8 +1,8 @@
 "use client";
 
 import type { Box, BoxEntry, Category, Item } from "@/domain/types";
+import { boxFromRow, itemFromRow } from "@/services/catalog-rows";
 import type { BoxStatus } from "./contract";
-import { staticCatalog } from "@/services/catalog";
 import { accessToken, check, rpc, sb } from "./supabase-client";
 
 /**
@@ -19,6 +19,10 @@ export interface ItemDraft {
   category: Category;
   value: number;
   imageUrl: string;
+  /** Width / height of the photo (set by the upload, which trims transparent edges). */
+  imageAspect: number | null;
+  /** Credit items only. */
+  freeSpins: number;
   active: boolean;
 }
 
@@ -32,15 +36,22 @@ export async function revalidateCatalog() {
 
 export async function loadItemsAdmin(): Promise<(Item & { active: boolean })[]> {
   const rows = check<Row[]>(await sb().from("items").select("*").order("value_cents"));
-  return rows.map((r) => ({
-    id: String(r.id),
-    name: String(r.name),
-    brand: String(r.brand),
-    category: r.category as Category,
-    value: Number(r.value_cents),
-    image: (r.image_url as string | null) ?? undefined,
-    active: Boolean(r.active),
-  }));
+  return rows.map((r) => ({ ...itemFromRow(r), active: Boolean(r.active) }));
+}
+
+/** An item as an editable draft. */
+export function itemDraftOf(item: Item & { active: boolean }): ItemDraft {
+  return {
+    id: item.id,
+    name: item.name,
+    brand: item.brand,
+    category: item.category,
+    value: item.value,
+    imageUrl: item.image ?? "",
+    imageAspect: item.imageAspect ?? null,
+    freeSpins: item.freeSpins ?? 0,
+    active: item.active,
+  };
 }
 
 export async function saveItem(draft: ItemDraft, isNew: boolean) {
@@ -50,6 +61,8 @@ export async function saveItem(draft: ItemDraft, isNew: boolean) {
     category: draft.category,
     value_cents: Math.round(draft.value),
     image_url: draft.imageUrl.trim() || null,
+    image_aspect: draft.imageUrl.trim() && draft.imageAspect ? Math.round(draft.imageAspect * 1000) / 1000 : null,
+    free_spins: draft.category === "credit" ? Math.max(0, Math.round(draft.freeSpins)) : 0,
     active: draft.active,
   };
   if (isNew) check(await sb().from("items").insert({ id: draft.id, ...row }));
@@ -63,27 +76,14 @@ export async function loadBoxesAdmin(): Promise<AdminBox[]> {
     sb().from("boxes").select("*").order("sort_order").then((r) => check<Row[]>(r)),
     sb().from("box_items").select("box_id,item_id,position,weight").order("position").then((r) => check<Row[]>(r)),
   ]);
-  return boxes.map((r) => ({
-    id: String(r.id),
-    slug: String(r.slug),
-    name: String(r.name),
-    tagline: String(r.tagline ?? ""),
-    category: r.category as Box["category"],
-    price: Number(r.price_cents),
-    material: r.material as Box["material"],
-    badge: (r.badge as Box["badge"]) ?? undefined,
-    featured: Boolean(r.featured),
-    status: r.status as BoxStatus,
-    bonus: staticCatalog.getBox(String(r.slug))?.bonus ?? [],
-    entries: odds.filter((o) => o.box_id === r.id).map((o) => ({ itemId: String(o.item_id), weight: Number(o.weight) })),
-  }));
+  return boxes.map((r) => ({ ...boxFromRow(r, odds), status: r.status as BoxStatus }));
 }
 
 /**
  * Saves a box. Price and odds can only change while the box is a draft (the database freezes the
  * odds of a live box); publishing is a separate step that re-checks the weights.
  */
-export async function saveBox(box: AdminBox, isNew: boolean, entries: BoxEntry[] | null) {
+export async function saveBox(box: AdminBox, isNew: boolean, entries: BoxEntry[] | null, sortOrder = 0) {
   const details = {
     name: box.name.trim(),
     tagline: box.tagline.trim(),
@@ -91,9 +91,10 @@ export async function saveBox(box: AdminBox, isNew: boolean, entries: BoxEntry[]
     material: box.material,
     badge: box.badge ?? null,
     featured: box.featured ?? false,
-    price_cents: Math.round(box.price),
+    // Price and free-spin table are frozen while live (the database refuses a change).
+    ...(entries ? { price_cents: Math.round(box.price), bonus: box.bonus } : {}),
   };
-  if (isNew) check(await sb().from("boxes").insert({ id: box.id, slug: box.slug, status: "draft", ...details }));
+  if (isNew) check(await sb().from("boxes").insert({ id: box.id, slug: box.slug, status: "draft", sort_order: sortOrder, ...details }));
   else check(await sb().from("boxes").update(details).eq("id", box.id));
   if (entries) {
     check(await sb().from("box_items").delete().eq("box_id", box.id));
@@ -102,6 +103,19 @@ export async function saveBox(box: AdminBox, isNew: boolean, entries: BoxEntry[]
     }
   }
   await revalidateCatalog();
+}
+
+/**
+ * Uploads a prepared product photo (lib/product-photo) to the public "catalog" bucket and returns
+ * its URL. Each upload gets a new name, so a replaced photo never shows a cached old one.
+ */
+export async function uploadItemPhoto(itemId: string, photo: Blob): Promise<string> {
+  const ext = photo.type === "image/webp" ? "webp" : "png";
+  const path = `items/${itemId || "new"}-${Date.now().toString(36)}.${ext}`;
+  const bucket = sb().storage.from("catalog");
+  const { error } = await bucket.upload(path, photo, { contentType: photo.type, cacheControl: "31536000", upsert: false });
+  if (error) throw new Error(error.message);
+  return bucket.getPublicUrl(path).data.publicUrl;
 }
 
 export async function setBoxStatus(boxId: string, status: BoxStatus) {

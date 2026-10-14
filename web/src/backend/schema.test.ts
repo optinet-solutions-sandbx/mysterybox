@@ -5,6 +5,7 @@ import { items } from "@/data/items";
 import { computeRoll } from "@/domain/fair";
 import { pickByRoll, sellBackValue } from "@/domain/odds";
 import { overviewRow } from "@/domain/analytics";
+import { createCatalog, staticCatalog } from "@/services/catalog";
 import { catalogFromRows } from "@/services/catalog-source";
 import { playersFromRows } from "./remote-admin";
 import { as, createTestDb, rpc, signUp, sql } from "./test-db";
@@ -332,6 +333,39 @@ describe("odds integrity", () => {
   });
 });
 
+describe("catalogue editing", () => {
+  it("takes any brand-pack category, but keeps credit for site credit only", async () => {
+    await as(db, admin, () =>
+      sql(db, "insert into public.items (id, name, brand, category, value_cents) values ('nike-dunk-low', 'Dunk Low', 'Nike', 'sneakers', 12000)"),
+    );
+    await expectError(as(db, admin, () => sql(db, "update public.items set category = 'Not Valid!' where id = 'nike-dunk-low'")), "items_category_format");
+    await expectError(as(db, admin, () => sql(db, "update public.items set free_spins = 1 where id = 'nike-dunk-low'")), "items_free_spins_credit");
+    await expectError(
+      as(db, admin, () => sql(db, "insert into public.boxes (id, slug, name, category, price_cents) values ('cred', 'cred', 'Credit box', 'credit', 100)")),
+      "boxes_category_format",
+    );
+    await as(db, admin, () => sql(db, "insert into public.boxes (id, slug, name, category, price_cents) values ('sneaker-drop', 'sneaker-drop', 'Sneaker Drop', 'sneakers', 4900)"));
+    await expectError(as(db, bob, () => sql(db, "insert into public.items (id, name, brand, category, value_cents) values ('x', 'x', 'x', 'bags', 1)")), "row-level security");
+  });
+
+  it("freezes a live box's price and free-spin table, and lets drafts change them", async () => {
+    await expectError(as(db, admin, () => sql(db, "update public.boxes set price_cents = price_cents + 100 where id = 'first-edition'")), "price_frozen");
+    await expectError(as(db, admin, () => sql(db, `update public.boxes set bonus = '[]' where id = 'first-edition'`)), "price_frozen");
+    await as(db, admin, () => sql(db, "update public.boxes set name = 'The First Edition' where id = 'first-edition'"));
+    await as(db, admin, () => sql(db, `update public.boxes set price_cents = 5900, bonus = '[{"credits":6,"percent":100}]' where id = 'sneaker-drop'`));
+    const [row] = await sql<{ price_cents: string; bonus: unknown }>(db, "select price_cents, bonus from public.boxes where id = 'sneaker-drop'");
+    expect([Number(row.price_cents), row.bonus]).toEqual([5900, [{ credits: 6, percent: 100 }]]);
+  });
+
+  it("stores product photos in a public bucket that only staff can write", async () => {
+    const [bucket] = await sql<{ public: boolean }>(db, "select public from storage.buckets where id = 'catalog'");
+    expect(bucket.public).toBe(true);
+    await as(db, admin, () => sql(db, "insert into storage.objects (bucket_id, name) values ('catalog', 'items/nike-dunk-low.webp')"));
+    await expectError(as(db, bob, () => sql(db, "insert into storage.objects (bucket_id, name) values ('catalog', 'items/evil.webp')")), "row-level security");
+    await expectError(as(db, null, () => sql(db, "insert into storage.objects (bucket_id, name) values ('catalog', 'items/evil.webp')")), /row-level security|permission denied/);
+  });
+});
+
 describe("player management", () => {
   const statusOf = async (id: string) => (await sql<{ status: string }>(db, "select status from public.profiles where id = $1", [id]))[0].status;
 
@@ -383,13 +417,20 @@ describe("player management", () => {
 describe("front-end mappers read the real rows", () => {
   it("rebuild the catalog from the database exactly as the site defines it", async () => {
     const [items, boxRows, odds] = await Promise.all([
-      as(db, null, () => sql<Record<string, unknown>>(db, "select id, name, brand, category, value_cents, image_url, active from public.items")),
+      as(db, null, () => sql<Record<string, unknown>>(db, "select * from public.items")),
       as(db, null, () => sql<Record<string, unknown>>(db, "select * from public.boxes where status = 'live' and id <> 'secret-draft' order by sort_order")),
       as(db, null, () => sql<Record<string, unknown>>(db, "select box_id, item_id, position, weight from public.box_items order by box_id, position")),
     ]);
     const data = catalogFromRows(items, boxRows, odds);
     expect(data.boxes.map((b) => [b.id, b.price, b.entries])).toEqual(boxes.map((b) => [b.id, b.price, b.entries]));
     expect(new Map(data.items.map((i) => [i.id, i.value]))).toEqual(new Map(items.map((i) => [String(i.id), Number(i.value_cents)])));
+    // Free spins and free-spin tables come from the database, and give the same box maths.
+    expect(data.boxes.map((b) => b.bonus)).toEqual(boxes.map((b) => b.bonus));
+    const fromDb = createCatalog(data);
+    for (const b of boxes) {
+      expect(fromDb.catalogBox(fromDb.getBox(b.slug)!).maths).toEqual(staticCatalog.catalogBox(b).maths);
+      expect(fromDb.catalogBox(fromDb.getBox(b.slug)!).outcomes).toEqual(staticCatalog.catalogBox(b).outcomes);
+    }
   });
 
   it("turn the back-office rows into the same numbers the SQL reports", async () => {

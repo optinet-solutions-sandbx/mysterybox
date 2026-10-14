@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ChevronDown, ExternalLink, Lock, LogOut, Menu, X } from "lucide-react";
 import { can, ROLE_LABEL, type Permission } from "@/backend/contract";
 import { LogoMark } from "@/components/brand/logo-mark";
+import { brand } from "@/config/brand";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { useAuth, useAuthHydrated, useCurrentUser } from "@/store/auth";
 import { cn } from "@/lib/cn";
@@ -133,7 +134,7 @@ function TopBar() {
       <div className="mx-auto flex h-14 w-full max-w-[1600px] items-center gap-2 px-4 sm:px-6 lg:px-8">
         <Link href="/admin" onClick={close} className="mr-4 flex shrink-0 items-center gap-2.5">
           <LogoMark className="w-9" sizes="36px" />
-          <span className="font-display text-sm font-semibold tracking-[0.12em] text-foil">GRAIL NOIR</span>
+          <span className="font-display text-sm font-semibold tracking-[0.12em] uppercase text-foil">{brand.name}</span>
         </Link>
 
         <nav aria-label="Back office" className="hidden items-center gap-0.5 lg:flex">

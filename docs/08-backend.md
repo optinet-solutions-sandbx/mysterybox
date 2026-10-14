@@ -15,8 +15,12 @@ an open, the back office, a CS lock that blocks sign-in, and cleanup.
 - **Accounts:** wired to Supabase behind `NEXT_PUBLIC_ACCOUNTS=supabase`. That covers sign-up with the
   6-digit code, sign-in, roles, status, locks, tags, comments, staff and the audit log.
 - **Box system and wallets:** stay on the kit (`NEXT_PUBLIC_BACKEND`).
-- **Database-served catalogue and staff editing:** written, but off behind `NEXT_PUBLIC_CATALOG=supabase`
-  until the team decides where the catalogue lives.
+- **Catalogue:** decided 2026-10-14, it lives in Supabase. `NEXT_PUBLIC_CATALOG=supabase` serves items,
+  boxes and odds from the database, and staff add and edit them in the back office (photo upload to the
+  `catalog` storage bucket, free spins, price freeze while live). Migration `20261014120000` made
+  categories text (brand packs define them), so a new niche needs no migration. The live database was
+  checked to give the same tables and maths as the built-in catalogue. How to use it:
+  [11-white-label.md](11-white-label.md).
 - **SQL you won't use:** `open_box` and the wallet RPCs in this schema predate the kit. Its recipe and
   free spins win, so don't use them for opens.
 - **Verification:** the schema is tested in PGlite, and the row mappers are tested against real
@@ -205,7 +209,8 @@ npx supabase gen types typescript --local > web/src/backend/database.types.ts
    From the **Connect** button, also send the **Session pooler** connection string with the
    database password.
 2. **Schema:** apply it with `npx supabase db push --db-url "<pooler connection string>"`, then
-   load the catalog with `psql "<connection string>" -f supabase/seed.sql`.
+   load the catalog with `psql "<connection string>" -f supabase/seed.sql` (skip the seed for a brand
+   that starts with its own products).
 3. **Auth settings** (Dashboard → Authentication):
    - **Confirm email** on.
    - **Email templates → Confirm signup:** paste `supabase/templates/confirmation.html`. It sends
@@ -216,6 +221,8 @@ npx supabase gen types typescript --local > web/src/backend/database.types.ts
      test you can switch Confirm email off: `/register` then signs people straight in.
 4. **Vercel env (Production):**
    - `NEXT_PUBLIC_ACCOUNTS=supabase`;
+   - `NEXT_PUBLIC_CATALOG=supabase` (catalogue from the database, editable in the back office);
+   - `NEXT_PUBLIC_BRAND` when the project runs a brand pack other than `grailnoir`;
    - `NEXT_PUBLIC_SUPABASE_URL`;
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`;
    - `SUPABASE_SERVICE_ROLE_KEY` (server only).

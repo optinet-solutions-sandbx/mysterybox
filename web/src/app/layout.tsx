@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { Cinzel, Geist_Mono, Jost } from "next/font/google";
 import { brand } from "@/config/brand";
+import { brandAsset, brandPack, themeCss } from "@/config/brand-pack";
+import { fontVariables } from "./fonts";
 import { AgeGate } from "@/components/layout/age-gate";
 import { PrototypeBanner } from "@/components/layout/prototype-banner";
 import { SessionHydrator } from "@/components/layout/session-hydrator";
@@ -15,22 +16,17 @@ import { loadCatalogData } from "@/services/catalog-source";
 import "lenis/dist/lenis.css";
 import "./globals.css";
 
-// Cinzel: inscriptional capitals from the brand board. Jost: geometric text face.
-// Geist Mono only for genuinely technical strings (seed hashes).
-const display = Cinzel({ variable: "--font-display-face", subsets: ["latin"] });
-const body = Jost({ variable: "--font-body", subsets: ["latin"], style: ["normal", "italic"] });
-const numeric = Geist_Mono({ variable: "--font-numeric", subsets: ["latin"], preload: false });
-
 export const metadata: Metadata = {
   title: { default: `${brand.name} — ${brand.tagline}`, template: `%s · ${brand.name}` },
   description: brand.description,
+  icons: { icon: brandAsset(brandPack.logo.icon), apple: brandAsset(brandPack.logo.appleIcon) },
   robots: { index: false, follow: false },
 };
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#0b0b0d" },
-    { media: "(prefers-color-scheme: light)", color: "#f6f2ea" },
+    { media: "(prefers-color-scheme: dark)", color: brandPack.themeColor.dark },
+    { media: "(prefers-color-scheme: light)", color: brandPack.themeColor.light },
   ],
 };
 
@@ -41,10 +37,12 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       data-theme="dark"
       suppressHydrationWarning
-      className={`${display.variable} ${body.variable} ${numeric.variable} h-full antialiased`}
+      className={`${fontVariables} h-full antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
+        {/* The brand pack's colours; globals.css holds the same tokens as fallbacks. */}
+        <style dangerouslySetInnerHTML={{ __html: themeCss() }} />
       </head>
       <body className="flex min-h-full flex-col">
         <CatalogProvider data={catalog}>

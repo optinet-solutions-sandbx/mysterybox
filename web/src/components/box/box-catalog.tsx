@@ -2,12 +2,12 @@
 
 import { LayoutGroup, motion } from "motion/react";
 import { useState } from "react";
-import type { Box, Category, Item } from "@/domain/types";
-import { categoryLabels } from "@/services/catalog";
+import { categoryLabel } from "@/config/brand-pack";
+import type { Box, Item } from "@/domain/types";
 import { cn } from "@/lib/cn";
 import { BoxCard } from "./box-card";
 
-type Filter = Category | "mixed" | "all";
+type Filter = string;
 type Sort = "featured" | "price-asc" | "price-desc";
 
 const sorts: { id: Sort; label: string }[] = [
@@ -43,7 +43,7 @@ export function BoxCatalog({ boxes }: { boxes: { box: Box; top: Item }[] }) {
               className={cn("relative rounded-pill px-4 py-2 text-sm transition-colors", filter === f ? "text-on-accent" : "text-muted hover:text-fg")}
             >
               {filter === f && <motion.span layoutId="catalog-filter" className="absolute inset-0 -z-10 rounded-pill bg-foil" transition={{ type: "spring", stiffness: 400, damping: 34 }} />}
-              {f === "all" ? "All" : categoryLabels[f]}
+              {f === "all" ? "All" : categoryLabel(f)}
             </button>
           ))}
         </div>

@@ -8,54 +8,36 @@ import { boxMaths, type BoxMaths, type OutcomeKind } from "@/engine/maths";
 export type { OutcomeKind } from "@/engine/maths";
 
 /**
- * Catalog read API. Today it reads static mock modules; swap the bodies for the real
- * platform API without changing callers. Kept synchronous so pages prerender.
+ * Catalog read API. Every function reads the active catalog: the built-in data (data/items,
+ * data/boxes) or, with NEXT_PUBLIC_CATALOG=supabase, the database copy that staff edit in the back
+ * office. Server pages `await getCatalog()` (services/catalog-source), client components
+ * `useCatalog()` (components/catalog-provider), other code calls these functions. Kept synchronous
+ * so pages prerender.
  */
 
-const itemById = new Map(items.map((i) => [i.id, i]));
-const boxBySlug = new Map(boxes.map((b) => [b.slug, b]));
-
 export function listBoxes(): Box[] {
-  return boxes;
+  return active.listBoxes();
 }
 
 export function listFeaturedBoxes(): Box[] {
-  return boxes.filter((b) => b.featured);
+  return active.listFeaturedBoxes();
 }
 
 export function getBox(slug: string): Box | undefined {
-  return boxBySlug.get(slug);
+  return active.getBox(slug);
 }
 
 export function getItem(id: string): Item {
-  const item = itemById.get(id);
-  if (!item) throw new Error(`Unknown item ${id}`);
-  return item;
+  return active.getItem(id);
 }
 
 /** Entries joined with items, in authored order (the order the roll ranges use). */
 export function resolveEntries(box: Box): ResolvedEntry[] {
-  return box.entries.map((e) => {
-    const item = getItem(e.itemId);
-    return {
-      item,
-      weight: e.weight,
-      probability: e.weight / economy.oddsScale,
-      rarity: rarityFor(item.value, box.price),
-    };
-  });
+  return active.resolveEntries(box);
 }
 
-export function boxStats(box: Box) {
-  const entries = resolveEntries(box);
-  const { maths } = catalogBox(box);
-  const byValue = [...entries].sort((a, b) => b.item.value - a.item.value);
-  return {
-    ev: maths.payFaceCents,
-    rtp: maths.returnFace,
-    top: byValue[0],
-    floor: byValue[byValue.length - 1],
-  };
+export function boxStats(box: Box): BoxStats {
+  return active.boxStats(box);
 }
 
 /** One row of a box's odds table in the backend kit's format (`Outcome` in their API). */
@@ -85,85 +67,42 @@ export interface CatalogBox {
 
 /** Our entries as the kit's outcomes, in authored order (the order the bands walk). */
 export function boxOutcomes(box: Box): CatalogOutcome[] {
-  return box.entries.map((e) => {
-    const item = getItem(e.itemId);
-    const credit = item.category === "credit";
-    return {
-      id: item.id,
-      label: credit ? item.name : `${item.brand} ${item.name}`,
-      rarity: rarityFor(item.value, box.price),
-      kind: credit ? (item.freeSpins ? "bonus" : "credit") : "item",
-      credits: credit ? item.value / 100 : 0,
-      freeSpins: item.freeSpins ?? 0,
-      valueCents: credit ? null : item.value,
-      percent: e.weight / (economy.oddsScale / 100),
-    };
-  });
+  return active.boxOutcomes(box);
 }
-
-const catalogCache = new Map<string, CatalogBox>();
 
 /** Synchronous, so Server Components can prerender from it; the live flow goes through box-api. */
 export function catalogBox(box: Box): CatalogBox {
-  const cached = catalogCache.get(box.slug);
-  if (cached) return cached;
-  const outcomes = boxOutcomes(box);
-  const result = {
-    slug: box.slug,
-    name: box.name,
-    tagline: box.tagline,
-    priceCents: box.price,
-    outcomes,
-    bonus: box.bonus,
-    maths: boxMaths({ priceCents: box.price, outcomes, bonus: box.bonus }),
-  };
-  catalogCache.set(box.slug, result);
-  return result;
+  return active.catalogBox(box);
 }
-
-const unknownPiece: Item = { id: "unknown", name: "Site credit", brand: "Credit", category: "credit", value: 0 };
 
 /** Photo or drawing for an outcome id. Unknown ids (e.g. from a live API) get the credit coin, never a throw. */
 export function outcomeArt(id: string): Item {
-  return itemById.get(id) ?? unknownPiece;
+  return active.outcomeArt(id);
 }
 
 /** Most valuable items of one category, for hero/showcase use. */
 export function topItemsIn(category: Category, limit = 5): Item[] {
-  return items
-    .filter((i) => i.category === category)
-    .sort((a, b) => b.value - a.value)
-    .slice(0, limit);
+  return active.topItemsIn(category, limit);
 }
 
-/** Distinct non-credit items worth showing off (landing marquee etc.). */
+/** The most valuable pieces (no credit), for the landing marquee etc. */
 export function listShowcaseItems(limit = 18): Item[] {
-  return items
-    .filter((i) => i.category !== "credit" && i.value >= 80_000)
-    .sort((a, b) => b.value - a.value)
-    .slice(0, limit);
+  return active.listShowcaseItems(limit);
 }
-
-export const categoryLabels: Record<Category | "mixed", string> = {
-  bags: "Bags",
-  watches: "Watches",
-  jewelry: "Jewelry",
-  eyewear: "Eyewear",
-  beauty: "Beauty",
-  accessories: "Accessories",
-  credit: "Credit",
-  mixed: "Mixed",
-};
 
 // Catalog over plain data -------------------------------------------------------------------------
-// Server pages `await getCatalog()` (services/catalog-source.ts), client components `useCatalog()`
-// (components/catalog-provider.tsx), stores `activeCatalog()`. Today the data is the built-in
-// catalogue above; with NEXT_PUBLIC_CATALOG=supabase it comes from the database. Returns use the
-// box system's maths (boxStats above), so free spins count the same everywhere.
+// Returns use the box system's maths (engine/maths), so free spins count the same everywhere.
 
 export interface CatalogData {
   items: Item[];
   boxes: Box[];
+}
+
+export interface BoxStats {
+  ev: number;
+  rtp: number;
+  top: ResolvedEntry;
+  floor: ResolvedEntry;
 }
 
 export interface Catalog {
@@ -175,43 +114,85 @@ export interface Catalog {
   getItem(id: string): Item;
   findItem(id: string): Item | undefined;
   resolveEntries(box: Box): ResolvedEntry[];
-  boxStats(box: Box): ReturnType<typeof boxStats>;
+  boxStats(box: Box): BoxStats;
+  boxOutcomes(box: Box): CatalogOutcome[];
+  catalogBox(box: Box): CatalogBox;
+  outcomeArt(id: string): Item;
   topItemsIn(category: Category, limit?: number): Item[];
   listShowcaseItems(limit?: number): Item[];
 }
 
+const unknownPiece: Item = { id: "unknown", name: "Site credit", brand: "Credit", category: "credit", value: 0 };
+
 export function createCatalog(data: CatalogData): Catalog {
   const byId = new Map(data.items.map((i) => [i.id, i]));
   const bySlug = new Map(data.boxes.map((b) => [b.slug, b]));
-  const get = (id: string) => {
+  // Keyed by the box object, so an edited copy (back-office draft) is never served a stale table.
+  const tables = new WeakMap<Box, CatalogBox>();
+
+  const getItem = (id: string) => {
     const item = byId.get(id);
     if (!item) throw new Error(`Unknown item ${id}`);
     return item;
   };
+  const resolveEntries = (box: Box): ResolvedEntry[] =>
+    box.entries.map((e) => {
+      const item = getItem(e.itemId);
+      return { item, weight: e.weight, probability: e.weight / economy.oddsScale, rarity: rarityFor(item.value, box.price) };
+    });
+  const boxOutcomes = (box: Box): CatalogOutcome[] =>
+    box.entries.map((e) => {
+      const item = getItem(e.itemId);
+      const credit = item.category === "credit";
+      return {
+        id: item.id,
+        label: credit ? item.name : `${item.brand} ${item.name}`,
+        rarity: rarityFor(item.value, box.price),
+        kind: credit ? (item.freeSpins ? "bonus" : "credit") : "item",
+        credits: credit ? item.value / 100 : 0,
+        freeSpins: item.freeSpins ?? 0,
+        valueCents: credit ? null : item.value,
+        percent: e.weight / (economy.oddsScale / 100),
+      };
+    });
+  const catalogBox = (box: Box): CatalogBox => {
+    const cached = tables.get(box);
+    if (cached) return cached;
+    const outcomes = boxOutcomes(box);
+    const result = {
+      slug: box.slug,
+      name: box.name,
+      tagline: box.tagline,
+      priceCents: box.price,
+      outcomes,
+      bonus: box.bonus,
+      maths: boxMaths({ priceCents: box.price, outcomes, bonus: box.bonus }),
+    };
+    tables.set(box, result);
+    return result;
+  };
+  const byValue = (xs: Item[]) => [...xs].sort((a, b) => b.value - a.value);
+
   return {
     items: data.items,
     boxes: data.boxes,
     listBoxes: () => data.boxes,
     listFeaturedBoxes: () => data.boxes.filter((b) => b.featured),
     getBox: (slug) => bySlug.get(slug),
-    getItem: get,
+    getItem,
     findItem: (id) => byId.get(id),
-    resolveEntries: (box) =>
-      box.entries.map((e) => {
-        const item = get(e.itemId);
-        return { item, weight: e.weight, probability: e.weight / economy.oddsScale, rarity: rarityFor(item.value, box.price) };
-      }),
-    boxStats: (box) => boxStats(box),
-    topItemsIn: (category, limit = 5) =>
-      data.items
-        .filter((i) => i.category === category)
-        .sort((a, b) => b.value - a.value)
-        .slice(0, limit),
-    listShowcaseItems: (limit = 18) =>
-      data.items
-        .filter((i) => i.category !== "credit" && i.value >= 80_000)
-        .sort((a, b) => b.value - a.value)
-        .slice(0, limit),
+    resolveEntries,
+    boxStats: (box) => {
+      const entries = resolveEntries(box);
+      const { maths } = catalogBox(box);
+      const ranked = [...entries].sort((a, b) => b.item.value - a.item.value);
+      return { ev: maths.payFaceCents, rtp: maths.returnFace, top: ranked[0], floor: ranked[ranked.length - 1] };
+    },
+    boxOutcomes,
+    catalogBox,
+    outcomeArt: (id) => byId.get(id) ?? unknownPiece,
+    topItemsIn: (category, limit = 5) => byValue(data.items.filter((i) => i.category === category)).slice(0, limit),
+    listShowcaseItems: (limit = 18) => byValue(data.items.filter((i) => i.category !== "credit")).slice(0, limit),
   };
 }
 
@@ -220,7 +201,7 @@ export const staticCatalog = createCatalog(staticCatalogData);
 
 let active: Catalog = staticCatalog;
 
-/** The catalog the page was rendered with (set by CatalogProvider); stores use it outside React. */
+/** The catalog the page was rendered with; code outside React reads it through the functions above. */
 export function activeCatalog(): Catalog {
   return active;
 }

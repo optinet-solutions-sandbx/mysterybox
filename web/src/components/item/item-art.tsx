@@ -1,7 +1,8 @@
 import Image from "next/image";
 import { useId, type CSSProperties } from "react";
-import type { Category, Item, Rarity } from "@/domain/types";
-import { LOGO_SRC } from "@/components/brand/logo-mark";
+import { brandPack } from "@/config/brand-pack";
+import type { Item, Rarity } from "@/domain/types";
+import { LOGO_SRC, logoHeightAt } from "@/components/brand/logo-mark";
 import { cn } from "@/lib/cn";
 import { drawings, type ArtKey } from "./item-drawings";
 
@@ -21,15 +22,11 @@ function fitToArea(aspect: number) {
   return { width: `${w.toFixed(1)}%`, height: `${h.toFixed(1)}%` };
 }
 
-const byCategory: Record<Category, ArtKey> = {
-  bags: "bag-top",
-  watches: "watch",
-  jewelry: "ring",
-  eyewear: "sunglasses",
-  beauty: "perfume",
-  accessories: "scarf",
-  credit: "coin",
-};
+// Drawing per category from the brand pack; credit is the coin.
+const byCategory = new Map<string, ArtKey>([
+  ...brandPack.categories.map((c) => [c.id, (c.drawing ?? "card") as ArtKey] as const),
+  ["credit", "coin"],
+]);
 
 /**
  * Item visual. Uses `item.image` (licensed cut-out photo) when present; otherwise a gold
@@ -54,7 +51,7 @@ export function ItemArt({
   const id = useId();
   const tone = rarity ? `var(--rarity-${rarity})` : "var(--glow)";
   const style = { "--tone": tone, "--art-fill": "rgb(194 164 110 / 0.07)" } as CSSProperties;
-  const art = item.art ?? byCategory[item.category];
+  const art = item.art ?? byCategory.get(item.category) ?? "card";
 
   return (
     <div
@@ -88,7 +85,7 @@ export function ItemArt({
             {art === "coin" ? (
               <>
                 {drawings.coin}
-                <image href={LOGO_SRC} x="32" y="38" width="36" height="23.9" />
+                <image href={LOGO_SRC} x="32" y={50 - logoHeightAt(36) / 2} width="36" height={logoHeightAt(36)} />
               </>
             ) : (
               drawings[art]

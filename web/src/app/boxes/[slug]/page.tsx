@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { boxStats, catalogBox, categoryLabels, getBox, listBoxes, resolveEntries } from "@/services/catalog";
+import { categoryLabel } from "@/config/brand-pack";
+import { getCatalog } from "@/services/catalog-source";
 import { BoxStage } from "@/components/box/box-stage";
 import { InsideGrid } from "@/components/box/inside-grid";
 import { BoxOdds } from "@/components/box/box-odds";
@@ -9,16 +10,17 @@ import { HowItWorksStrip } from "@/components/box/how-it-works-strip";
 /** Every slug is prerendered by generateStaticParams, so a blocking navigation is effectively instant. */
 export const instant = false;
 
-export function generateStaticParams() {
-  return listBoxes().map((b) => ({ slug: b.slug }));
+export async function generateStaticParams() {
+  return (await getCatalog()).listBoxes().map((b) => ({ slug: b.slug }));
 }
 
 export async function generateMetadata({ params }: PageProps<"/boxes/[slug]">): Promise<Metadata> {
-  const box = getBox((await params).slug);
+  const box = (await getCatalog()).getBox((await params).slug);
   return box ? { title: box.name, description: box.tagline } : {};
 }
 
 export default async function BoxPage({ params }: PageProps<"/boxes/[slug]">) {
+  const { boxStats, catalogBox, getBox, resolveEntries } = await getCatalog();
   const box = getBox((await params).slug);
   if (!box) notFound();
 
@@ -31,7 +33,7 @@ export default async function BoxPage({ params }: PageProps<"/boxes/[slug]">) {
         box={box}
         entries={entries}
         catalog={catalogBox(box)}
-        categoryLabel={categoryLabels[box.category]}
+        categoryLabel={categoryLabel(box.category)}
         stats={{ rtp: stats.rtp, topName: stats.top.item.name, topValue: stats.top.item.value, topProbability: stats.top.probability }}
       />
 

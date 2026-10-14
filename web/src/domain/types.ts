@@ -1,16 +1,11 @@
 /** Money is always integer cents. Format only at the edge (see domain/money.ts). */
 export type Cents = number;
 
-export const CATEGORIES = [
-  "bags",
-  "watches",
-  "jewelry",
-  "eyewear",
-  "beauty",
-  "accessories",
-  "credit",
-] as const;
-export type Category = (typeof CATEGORIES)[number];
+/**
+ * A category id. Product categories come from the brand pack (public/brands/<id>/brand.json);
+ * "credit" (site credit outcomes) is built in, and boxes may also be "mixed".
+ */
+export type Category = string;
 
 /** Rarity is relative to the box price (see rarityFor), not an absolute value tier. */
 export const RARITIES = ["common", "uncommon", "rare", "epic", "legendary"] as const;
@@ -76,7 +71,8 @@ export interface Box {
   slug: string;
   name: string;
   tagline: string;
-  category: Category | "mixed";
+  /** A brand-pack category, or "mixed" for boxes that span several. */
+  category: Category;
   price: Cents;
   entries: BoxEntry[];
   badge?: "new" | "hot" | "limited";
