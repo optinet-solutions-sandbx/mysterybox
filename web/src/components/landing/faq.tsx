@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { useState, type ReactNode } from "react";
-import { economy } from "@/config/economy";
+import { tradeInEnabled, tradeInRate } from "@/config/features";
 
 const faqs: { q: string; a: ReactNode }[] = [
   {
@@ -16,7 +16,9 @@ const faqs: { q: string; a: ReactNode }[] = [
   },
   {
     q: "What happens to pieces I don’t want?",
-    a: `Sell them back instantly for ${Math.round(economy.sellBackRate * 100)}% of their listed value in site credit, or keep them in your inventory for later.`,
+    a: tradeInEnabled
+      ? `Trade them in for ${tradeInRate} of their listed value in site credit, which buys boxes and can't be withdrawn, or keep them in your inventory for later.`
+      : "Keep them in your inventory and have them shipped when you're ready.",
   },
   {
     q: "How does shipping work?",

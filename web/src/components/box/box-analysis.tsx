@@ -63,7 +63,7 @@ export function BoxAnalysis({ box, last }: { box: CatalogBox; last: OpenResolved
               </tr>
             </tfoot>
           </table>
-          <p className="mt-3 text-xs text-subtle">Credit counts at $1 per credit; a free spin counts at its table&rsquo;s average ({formatCredit(Number(maths.bonusEvCredits.toFixed(2)))}).</p>
+          <p className="mt-3 text-xs text-subtle">Credit counts at $1 per credit; a bonus open counts at its table&rsquo;s average ({formatCredit(Number(maths.bonusEvCredits.toFixed(2)))}).</p>
         </Section>
 
         <Section title="How this result was decided">
@@ -77,7 +77,7 @@ export function BoxAnalysis({ box, last }: { box: CatalogBox; last: OpenResolved
             )}
             {last.bonusSpins.length > 0 && (
               <li>
-                It carried {last.bonusSpins.length === 1 ? "a free spin" : `${last.bonusSpins.length} free spins`}: {last.bonusSpins.map((b) => `+${formatCredit(b.credits)}`).join(", ")}.
+                It carried {last.bonusSpins.length === 1 ? "a bonus open" : `${last.bonusSpins.length} bonus opens`}: {last.bonusSpins.map((b) => `+${formatCredit(b.credits)}`).join(", ")}.
               </li>
             )}
             <li>It is worth {worth}.</li>
@@ -142,7 +142,7 @@ function FairCheck({ box, last }: { box: CatalogBox; last: OpenResolved }) {
         </Button>
         {state && (
           <p role="status" className={ok ? "font-semibold text-success" : "font-semibold text-danger"}>
-            {ok ? "Matches: your browser got the same roll, outcome and free spins." : `Doesn't match: ${state.local.reason ?? state.api?.reason ?? "the results differ"}`}
+            {ok ? "Matches: your browser got the same roll, outcome and bonus opens." : `Doesn't match: ${state.local.reason ?? state.api?.reason ?? "the results differ"}`}
           </p>
         )}
       </div>

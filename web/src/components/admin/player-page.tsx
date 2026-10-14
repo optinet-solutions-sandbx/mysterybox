@@ -440,7 +440,7 @@ function Tags({ playerRef, auto }: { playerRef: { id: string; email?: string; na
   );
 }
 
-const moneyLabel = { deposit: "Deposit", withdrawal: "Cashout", sell_back: "Sell-back", adjustment: "Adjustment" } as const;
+const moneyLabel = { deposit: "Deposit", withdrawal: "Cashout", sell_back: "Trade-in", adjustment: "Adjustment" } as const;
 
 function Payments({ p }: { p: PlayerRecord }) {
   const [message, setMessage] = useState<string | null>(null);

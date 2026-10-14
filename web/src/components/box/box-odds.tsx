@@ -68,8 +68,8 @@ export function BoxOdds({ box }: { box: CatalogBox }) {
 
       {box.bonus.length > 0 && (
         <div className="mt-6">
-          <h3 className="text-sm font-semibold">What a free spin pays</h3>
-          <p className="mt-1 text-sm text-muted">A free spin is one more roll with the same secret and your seed, on this small table. It pays site credit only.</p>
+          <h3 className="text-sm font-semibold">What a bonus open pays</h3>
+          <p className="mt-1 text-sm text-muted">A bonus open is one more roll with the same secret and your seed, on this small table. It pays site credit only.</p>
           <div className="mt-3 overflow-hidden rounded-2xl border border-line">
             <table className="w-full table-fixed text-left text-xs sm:text-sm">
               <thead className="bg-surface-2 font-semibold">

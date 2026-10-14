@@ -1,4 +1,4 @@
-import type { BonusRow, Box, BoxMaterial, Item } from "@/domain/types";
+import { ITEM_CONDITIONS, type BonusRow, type Box, type BoxMaterial, type Item, type ItemCondition } from "@/domain/types";
 import { staticCatalog, type CatalogData } from "./catalog";
 
 /**
@@ -16,6 +16,8 @@ export function itemFromRow(r: Row): Item {
   const image = url && !url.startsWith("/reference/") ? url : known?.image;
   const aspect = r.image_aspect == null ? known?.imageAspect : Number(r.image_aspect);
   const spins = Number(r.free_spins ?? 0);
+  const text = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : undefined);
+  const condition = typeof r.condition === "string" && r.condition in ITEM_CONDITIONS ? (r.condition as ItemCondition) : undefined;
   return {
     id: String(r.id),
     name: String(r.name),
@@ -26,6 +28,9 @@ export function itemFromRow(r: Row): Item {
     ...(image && aspect ? { imageAspect: aspect } : {}),
     ...(known?.art ? { art: known.art } : {}),
     ...(spins > 0 ? { freeSpins: spins } : {}),
+    ...(text(r.reference) ? { reference: text(r.reference) } : {}),
+    ...(condition ? { condition } : {}),
+    ...(text(r.authentication) ? { authentication: text(r.authentication) } : {}),
   };
 }
 

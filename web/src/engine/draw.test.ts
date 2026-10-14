@@ -102,10 +102,10 @@ describe("engine: the backend kit's draw recipe", () => {
     expect((await verifyOpen({ ...base, bonusCredits: [v.spins[1].bonusIfFreeSpin], bonusHash: await bonusHash(slug, bonus) })).ok).toBe(true);
     const paidWrong = await verifyOpen({ ...base, bonusCredits: [v.spins[1].bonusIfFreeSpin + 1] });
     expect(paidWrong.ok).toBe(false);
-    expect(paidWrong.reason).toMatch(/free spin/i);
+    expect(paidWrong.reason).toMatch(/bonus open/i);
     const otherTable = await verifyOpen({ ...base, bonusHash: "0".repeat(64) });
     expect(otherTable.ok).toBe(false);
-    expect(otherTable.reason).toMatch(/free-spin table/i);
+    expect(otherTable.reason).toMatch(/bonus-open table/i);
   });
 
   it("rejects an open whose pinned table hash isn't the table being checked", async () => {

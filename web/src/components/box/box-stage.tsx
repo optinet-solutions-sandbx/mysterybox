@@ -164,7 +164,7 @@ function Stage({ box, entries, catalog, categoryLabel, stats }: StageProps) {
                   </Link>
                 </div>
                 <p className="mt-1 text-xs text-muted">
-                  The secret that decides your next open is already chosen. This is its seal; the secret is shown after the spin so you can check it.
+                  The secret that decides your next open is already chosen. This is its seal; the secret is shown after the draw so you can check it.
                 </p>
                 <dl className="mt-3 grid gap-1 font-mono text-[11px] text-muted">
                   <div className="flex min-w-0 gap-2">

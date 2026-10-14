@@ -3,12 +3,13 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useRef } from "react";
 import type { OpenResolved } from "@/box-api";
-import { economy } from "@/config/economy";
+import { tradeInEnabled, tradeInRate } from "@/config/features";
 import { formatCredit } from "@/domain/money";
 import { outcomeArt } from "@/services/catalog";
 import { Button } from "@/components/ui/button";
 import { useDialog } from "@/components/ui/modal";
 import { CountUp } from "@/components/fx/count-up";
+import { Authenticity } from "@/components/item/authenticity";
 import { ItemArt } from "@/components/item/item-art";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -90,13 +91,14 @@ export function ResultOverlay({
               <h2 id="reveal-title" className="mt-1 font-display text-3xl leading-tight sm:text-4xl">
                 {piece ? outcomeArt(result.outcome.id).name : result.outcome.label}
               </h2>
+              {piece && <Authenticity item={outcomeArt(result.outcome.id)} full className="mx-auto mt-2 max-w-xs [&_p]:justify-center" />}
               <p className="mt-3 font-display text-3xl text-foil">
                 {piece ? <CountUp to={result.outcome.valueCents ?? 0} format="usd" auto duration={quick ? 0.6 : 1.2} foil /> : formatCredit(result.outcome.credits)}
               </p>
             </motion.div>
 
             {spins > 0 && (
-              <ol className="mt-5 w-full max-w-xs space-y-2" aria-label="Free spins">
+              <ol className="mt-5 w-full max-w-xs space-y-2" aria-label="Bonus opens">
                 {result.bonusSpins.map((b, i) => (
                   <motion.li
                     key={b.nonce}
@@ -105,7 +107,7 @@ export function ResultOverlay({
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: reduce ? 0 : 0.5 + (i + 1) * step, duration: 0.4, ease: EASE }}
                   >
-                    <span className="text-muted">Free spin {i + 1}</span>
+                    <span className="text-muted">Bonus open {i + 1}</span>
                     <span className="font-semibold tabular">+{formatCredit(b.credits)}</span>
                   </motion.li>
                 ))}
@@ -132,9 +134,11 @@ export function ResultOverlay({
                   <Button size="lg" onClick={onShip} disabled={busy}>
                     Ship it
                   </Button>
-                  <Button size="lg" variant="secondary" onClick={onTradeIn} disabled={busy}>
-                    Trade in for {formatCredit(piece.itemAward.tradeInCredits)}
-                  </Button>
+                  {tradeInEnabled && (
+                    <Button size="lg" variant="secondary" onClick={onTradeIn} disabled={busy}>
+                      Trade in for {formatCredit(piece.itemAward.tradeInCredits)}
+                    </Button>
+                  )}
                   <Button variant="ghost" onClick={onKeep} disabled={busy} data-autofocus>
                     Keep for now
                   </Button>
@@ -149,7 +153,9 @@ export function ResultOverlay({
               </Button>
               <p className="mt-2 text-xs text-subtle">
                 {piece
-                  ? `Pieces wait in your inventory until you ship them or trade them in. Trade-ins pay ${Math.round(economy.sellBackRate * 100)}% of listed value as site credit, which buys boxes and can't be withdrawn.`
+                  ? tradeInEnabled
+                    ? `Pieces wait in your inventory until you ship them or trade them in. Trade-ins pay ${tradeInRate} of listed value as site credit, which buys boxes and can't be withdrawn.`
+                    : "Pieces wait in your inventory until you ship them."
                   : "Site credit buys boxes and can't be withdrawn."}
               </p>
             </motion.div>

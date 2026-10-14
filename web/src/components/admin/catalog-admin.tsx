@@ -25,7 +25,7 @@ import { economy } from "@/config/economy";
 import { freeSpinTable, priceBox } from "@/domain/box-pricing";
 import { formatUsd } from "@/domain/money";
 import { normalizeWeights } from "@/domain/odds";
-import type { BonusRow, BoxEntry, BoxMaterial, Item } from "@/domain/types";
+import { ITEM_CONDITIONS, type BonusRow, type BoxEntry, type BoxMaterial, type Item, type ItemCondition } from "@/domain/types";
 import { createCatalog } from "@/services/catalog";
 import { prepareProductPhoto } from "@/lib/product-photo";
 import { useCatalog } from "@/components/catalog-provider";
@@ -139,13 +139,13 @@ export function ItemsView() {
         crumbs={boxesCrumbs}
         icon={Package}
         title="Items"
-        intro="Every piece a box can contain: name, brand, category and the listed value that drives odds, returns and sell-back."
+        intro="Every piece a box can contain: name, brand, category and the listed value that drives odds, returns and trade-ins."
         actions={
           editable && (
             <Button
               onClick={() => {
                 setIsNew(true);
-                setEditing({ id: "", name: "", brand: "", category: productCategories[0], value: 0, imageUrl: "", imageAspect: null, freeSpins: 0, active: true });
+                setEditing({ id: "", name: "", brand: "", category: productCategories[0], value: 0, imageUrl: "", imageAspect: null, freeSpins: 0, reference: "", condition: "", authentication: "", active: true });
               }}
             >
               <Plus className="size-4" /> Add item
@@ -210,7 +210,7 @@ export function ItemsView() {
                   <td className="px-4 py-2.5 font-mono text-xs text-muted">{i.id}</td>
                   <td className="px-4 py-2.5">
                     {categoryLabel(i.category)}
-                    {i.freeSpins ? <span className="text-muted"> · {i.freeSpins} free spin{i.freeSpins > 1 ? "s" : ""}</span> : null}
+                    {i.freeSpins ? <span className="text-muted"> · {i.freeSpins} bonus open{i.freeSpins > 1 ? "s" : ""}</span> : null}
                   </td>
                   <td className="px-4 py-2.5 text-right font-semibold">{formatUsd(i.value)}</td>
                   <td className="px-4 py-2.5 text-right">{inBoxes.get(i.id) ?? 0}</td>
@@ -308,18 +308,41 @@ function ItemForm({ draft, isNew, onSave, onCancel }: { draft: ItemDraft; isNew:
             {(i) => <input id={i} inputMode="decimal" className={input} value={value} onChange={(e) => setValue(e.target.value)} placeholder="1250.00" />}
           </Labeled>
           {credit && (
-            <Labeled label="Free spins included">
+            <Labeled label="Bonus opens included">
               {(i) => (
                 <select id={i} className={input} value={d.freeSpins} onChange={(e) => setD({ ...d, freeSpins: Number(e.target.value) })}>
                   {[0, 1, 2, 3].map((n) => (
                     <option key={n} value={n}>
-                      {n === 0 ? "None" : `${n} free spin${n > 1 ? "s" : ""}`}
+                      {n === 0 ? "None" : `${n} bonus open${n > 1 ? "s" : ""}`}
                     </option>
                   ))}
                 </select>
               )}
             </Labeled>
           )}
+          <p className="border-t border-line pt-4 text-xs font-semibold text-muted sm:col-span-2 xl:col-span-3">
+            Authenticity, shown to buyers only when filled in. Enter what you can back up.
+          </p>
+          <Labeled label="Reference">
+            {(i) => <input id={i} className={input} value={d.reference} maxLength={60} onChange={(e) => setD({ ...d, reference: e.target.value })} placeholder="126200" />}
+          </Labeled>
+          <Labeled label="Condition">
+            {(i) => (
+              <select id={i} className={input} value={d.condition} onChange={(e) => setD({ ...d, condition: e.target.value as ItemCondition | "" })}>
+                <option value="">Not stated</option>
+                {(Object.keys(ITEM_CONDITIONS) as ItemCondition[]).map((c) => (
+                  <option key={c} value={c}>
+                    {ITEM_CONDITIONS[c]}
+                  </option>
+                ))}
+              </select>
+            )}
+          </Labeled>
+          <Labeled label="Authentication">
+            {(i) => (
+              <input id={i} className={input} value={d.authentication} maxLength={160} onChange={(e) => setD({ ...d, authentication: e.target.value })} placeholder="Entrupy report 4471, original papers" />
+            )}
+          </Labeled>
           <div className="flex flex-wrap items-center gap-4 sm:col-span-2 xl:col-span-3">
             <label className="flex items-center gap-2 text-sm font-semibold">
               <input type="checkbox" checked={d.active} onChange={(e) => setD({ ...d, active: e.target.checked })} className="size-4 accent-accent" />
@@ -715,7 +738,7 @@ function BoxEditor({
             </dl>
             {hasSpins && bonus.length > 0 && (
               <p className="border-t border-line px-4 py-3 text-xs leading-relaxed text-muted">
-                One free spin pays {bonus.map((b) => `${formatCount(b.credits)} credit (${b.percent}%)`).join(", ")}.
+                One bonus open pays {bonus.map((b) => `${formatCount(b.credits)} credit (${b.percent}%)`).join(", ")}.
               </p>
             )}
             {!complete && <p className="border-t border-line px-4 py-3 text-xs text-muted">The return shows once the weights add up to {formatCount(economy.oddsScale)}.</p>}
@@ -774,7 +797,7 @@ const SETTINGS: { key: string; label: string; help: string; kind: "cents" | "mod
   { key: "min_withdrawal_cents", label: "Smallest withdrawal", help: "Players can't request less than this.", kind: "cents" },
   { key: "max_deposit_cents", label: "Largest single deposit", help: "Per request.", kind: "cents" },
   { key: "starting_balance_cents", label: "Starting balance", help: "Credited to every new account. Keep $0 for real money.", kind: "cents" },
-  { key: "sell_back_rate", label: "Sell-back rate", help: "Shown to players across the site, so it changes with a release (docs/07-compliance-ux.md).", kind: "fixed" },
+  { key: "sell_back_rate", label: "Trade-in rate", help: "Shown to players across the site, so it changes with a release (docs/07-compliance-ux.md).", kind: "fixed" },
 ];
 
 export function SettingsView() {

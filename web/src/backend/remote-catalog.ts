@@ -1,6 +1,6 @@
 "use client";
 
-import type { Box, BoxEntry, Category, Item } from "@/domain/types";
+import type { Box, BoxEntry, Category, Item, ItemCondition } from "@/domain/types";
 import { boxFromRow, itemFromRow } from "@/services/catalog-rows";
 import type { BoxStatus } from "./contract";
 import { accessToken, check, rpc, sb } from "./supabase-client";
@@ -23,6 +23,10 @@ export interface ItemDraft {
   imageAspect: number | null;
   /** Credit items only. */
   freeSpins: number;
+  /** Authenticity details shown to buyers; empty = not shown. */
+  reference: string;
+  condition: ItemCondition | "";
+  authentication: string;
   active: boolean;
 }
 
@@ -50,6 +54,9 @@ export function itemDraftOf(item: Item & { active: boolean }): ItemDraft {
     imageUrl: item.image ?? "",
     imageAspect: item.imageAspect ?? null,
     freeSpins: item.freeSpins ?? 0,
+    reference: item.reference ?? "",
+    condition: item.condition ?? "",
+    authentication: item.authentication ?? "",
     active: item.active,
   };
 }
@@ -63,6 +70,9 @@ export async function saveItem(draft: ItemDraft, isNew: boolean) {
     image_url: draft.imageUrl.trim() || null,
     image_aspect: draft.imageUrl.trim() && draft.imageAspect ? Math.round(draft.imageAspect * 1000) / 1000 : null,
     free_spins: draft.category === "credit" ? Math.max(0, Math.round(draft.freeSpins)) : 0,
+    reference: draft.reference.trim() || null,
+    condition: draft.condition || null,
+    authentication: draft.authentication.trim() || null,
     active: draft.active,
   };
   if (isNew) check(await sb().from("items").insert({ id: draft.id, ...row }));

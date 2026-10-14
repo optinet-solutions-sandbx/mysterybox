@@ -28,7 +28,7 @@ export async function loadCatalogData(): Promise<CatalogData> {
   cacheLife("hours");
   if (!isSupabaseCatalog) return staticCatalogData;
   const [itemRows, boxRows, oddsRows] = await Promise.all([
-    rest("items?select=id,name,brand,category,value_cents,image_url,image_aspect,free_spins&order=value_cents"),
+    rest("items?select=id,name,brand,category,value_cents,image_url,image_aspect,free_spins,reference,condition,authentication&order=value_cents"),
     rest("boxes?select=id,slug,name,tagline,category,material,badge,featured,price_cents,bonus&status=eq.live&order=sort_order,price_cents"),
     rest("box_items?select=box_id,item_id,position,weight&order=box_id,position"),
   ]);

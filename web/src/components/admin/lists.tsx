@@ -340,7 +340,7 @@ export function FeedView() {
         out.push({ at: o.at, kind: "opening", key: `o-${p.id}-${o.at}-${o.itemId}`, who: p, text: `Opened ${getBox(o.boxId)?.name ?? o.boxId}: ${findItem(o.itemId)?.name ?? o.itemId} (${formatUsd(o.valueCents)})`, amount: -o.priceCents });
       }
       for (const m of p.money) {
-        const label = { deposit: "Deposit", withdrawal: "Cashout", sell_back: "Sold back a piece", adjustment: "Balance adjustment" }[m.type];
+        const label = { deposit: "Deposit", withdrawal: "Cashout", sell_back: "Traded in a piece", adjustment: "Balance adjustment" }[m.type];
         out.push({ at: m.at, kind: "payment", key: m.id, who: p, text: m.status === "completed" ? label : `${label} (${m.status})`, amount: m.amountCents });
       }
     }

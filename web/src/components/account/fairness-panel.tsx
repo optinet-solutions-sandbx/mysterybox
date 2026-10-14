@@ -57,7 +57,7 @@ export function FairnessPanel() {
     <div className="grid gap-8 lg:grid-cols-2">
       <section className="rounded-card bg-surface p-6 ring-1 ring-line">
         <h2 className="text-lg font-semibold">Your recent opens</h2>
-        <p className="mt-1 text-sm text-muted">Every open has its own secret. Once the spin is done, the secret is shown here so you can check the result.</p>
+        <p className="mt-1 text-sm text-muted">Every open has its own secret. Once the draw is done, the secret is shown here so you can check the result.</p>
         {resolved.length === 0 ? (
           <p className="mt-6 text-sm text-subtle">No opens yet. Open a box, then come back to check it.</p>
         ) : (
@@ -189,7 +189,7 @@ function Verifier({ defaults }: { defaults: Inputs | null }) {
               {outcome ? `${outcome.label} · ${outcome.kind === "item" ? formatUsd(outcome.valueCents ?? 0) : formatCredit(outcome.credits)}` : result.local.outcomeId}
             </Row>
             {result.local.bonusSpins.length > 0 && (
-              <Row label="Free spins">{result.local.bonusSpins.map((b) => `spin ${b.nonce}: +${formatCredit(b.credits)}`).join(" · ")}</Row>
+              <Row label="Bonus opens">{result.local.bonusSpins.map((b) => `draw ${b.nonce}: +${formatCredit(b.credits)}`).join(" · ")}</Row>
             )}
           </dl>
         </>

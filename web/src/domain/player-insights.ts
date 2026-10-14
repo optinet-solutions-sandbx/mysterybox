@@ -158,7 +158,7 @@ export const SEGMENTS: Segment[] = [
   },
   {
     id: "sellers",
-    label: "Sells back (5+ sales)",
+    label: "Trades in (5+ pieces)",
     description: "Sold pieces back five times or more.",
     test: (p) => p.money.filter((m) => m.type === "sell_back" && m.status === "completed").length >= 5,
   },

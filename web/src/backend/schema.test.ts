@@ -357,6 +357,15 @@ describe("catalogue editing", () => {
     expect([Number(row.price_cents), row.bonus]).toEqual([5900, [{ credits: 6, percent: 100 }]]);
   });
 
+  it("keeps authenticity details per product, which the site reads", async () => {
+    await as(db, admin, () =>
+      sql(db, "update public.items set reference = '126200', condition = 'unworn', authentication = 'Entrupy report 4471' where id = 'nike-dunk-low'"),
+    );
+    await expectError(as(db, admin, () => sql(db, "update public.items set condition = 'like new' where id = 'nike-dunk-low'")), "items_condition_check");
+    const rows = await as(db, null, () => sql<Record<string, unknown>>(db, "select * from public.items where id = 'nike-dunk-low'"));
+    expect(catalogFromRows(rows, [], []).items[0]).toMatchObject({ reference: "126200", condition: "unworn", authentication: "Entrupy report 4471" });
+  });
+
   it("stores product photos in a public bucket that only staff can write", async () => {
     const [bucket] = await sql<{ public: boolean }>(db, "select public from storage.buckets where id = 'catalog'");
     expect(bucket.public).toBe(true);

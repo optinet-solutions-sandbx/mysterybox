@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { tradeInEnabled } from "@/config/features";
 import { formatUsd } from "@/domain/money";
 import { getCatalog } from "@/services/catalog-source";
 import { Faq } from "@/components/landing/faq";
@@ -16,7 +17,7 @@ export default async function HowItWorksPage() {
     <>
       <PageHeader
         title="How it works"
-        intro="Choose a box, open it, then keep the piece or sell it back. Odds, values and verification are all public."
+        intro={tradeInEnabled ? "Choose a box, open it, then ship the piece or trade it in. Odds, values and verification are all public." : "Choose a box, open it, then ship the piece home. Odds, values and verification are all public."}
       />
       <Ritual
         item={findItem("cartier-love") ?? listShowcaseItems(1)[0]}

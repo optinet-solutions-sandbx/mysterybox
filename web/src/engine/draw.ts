@@ -153,14 +153,14 @@ export async function verifyOpen(q: VerifyInput): Promise<VerifyResult> {
     return { ok: false, ...result, reason: "This odds table isn't the one pinned on the open." };
   }
   if (q.bonusHash !== undefined && (await bonusHash(q.slug, q.bonus)) !== q.bonusHash) {
-    return { ok: false, ...result, reason: "This free-spin table isn't the one pinned on the open." };
+    return { ok: false, ...result, reason: "This bonus-open table isn't the one pinned on the open." };
   }
   if (q.outcomeId !== undefined && outcome.id !== q.outcomeId) {
     return { ok: false, ...result, reason: "The roll lands on a different outcome." };
   }
   const recomputed = bonusSpins.map((b) => b.credits);
   if (q.bonusCredits !== undefined && (q.bonusCredits.length !== recomputed.length || q.bonusCredits.some((c, i) => c !== recomputed[i]))) {
-    return { ok: false, ...result, reason: "The free spins paid differently than the roll says." };
+    return { ok: false, ...result, reason: "The bonus opens paid differently than the roll says." };
   }
   return { ok: true, ...result, reason: null };
 }

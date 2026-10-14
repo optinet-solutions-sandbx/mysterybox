@@ -5,6 +5,7 @@ import { motion, useReducedMotion } from "motion/react";
 import type { ResolvedEntry } from "@/domain/types";
 import { formatDisplayedOdds, formatUsd } from "@/domain/money";
 import { economy } from "@/config/economy";
+import { tradeInEnabled } from "@/config/features";
 import { CountUp } from "@/components/fx/count-up";
 import { ItemArt } from "@/components/item/item-art";
 
@@ -44,12 +45,21 @@ export function OddsProof({
                 <CountUp to={Math.round(rtp * 100)} format="percent" foil />
               </dd>
             </div>
-            <div>
-              <dt className="text-sm text-subtle">Sell-back rate</dt>
-              <dd className="mt-1 font-display text-4xl text-foil">
-                <CountUp to={Math.round(economy.sellBackRate * 100)} format="percent" foil />
-              </dd>
-            </div>
+            {tradeInEnabled ? (
+              <div>
+                <dt className="text-sm text-subtle">Trade-in rate</dt>
+                <dd className="mt-1 font-display text-4xl text-foil">
+                  <CountUp to={Math.round(economy.sellBackRate * 100)} format="percent" foil />
+                </dd>
+              </div>
+            ) : (
+              <div>
+                <dt className="text-sm text-subtle">Outcomes in this box</dt>
+                <dd className="mt-1 font-display text-4xl text-foil">
+                  <CountUp to={entries.length} foil />
+                </dd>
+              </div>
+            )}
             <div>
               <dt className="text-sm text-subtle">Possible results per opening</dt>
               <dd className="mt-1 font-display text-4xl text-foil">

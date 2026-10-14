@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { brand } from "@/config/brand";
+import { tradeInEnabled } from "@/config/features";
 import { Container, PageHeader } from "@/components/ui/layout";
 
 const pages: Record<string, { title: string; summary: string; outline: string[] }> = {
   terms: {
     title: "Terms of service",
     summary: "The agreement between the player and the operator.",
-    outline: ["Eligibility (age, permitted states)", "Accounts and verification", "Boxes, odds and sell-back", "Shipping and title transfer", "Prohibited conduct", "Disputes and governing law"],
+    outline: ["Eligibility (age, permitted states)", "Accounts and verification", tradeInEnabled ? "Boxes, odds and trade-in" : "Boxes and odds", "Shipping and title transfer", "Prohibited conduct", "Disputes and governing law"],
   },
   privacy: {
     title: "Privacy policy",
@@ -17,7 +18,7 @@ const pages: Record<string, { title: string; summary: string; outline: string[] 
   "odds-disclosure": {
     title: "Odds disclosure",
     summary: "How odds, values and return-to-player are calculated and published.",
-    outline: ["Where odds are shown", "How listed values are set and updated", "Return-to-player definition", "Sell-back rate", "Verification (provably fair)"],
+    outline: ["Where odds are shown", "How listed values are set and updated", "Return-to-player definition", ...(tradeInEnabled ? ["Trade-in rate"] : []), "Verification (provably fair)"],
   },
   "responsible-play": {
     title: "Responsible play",

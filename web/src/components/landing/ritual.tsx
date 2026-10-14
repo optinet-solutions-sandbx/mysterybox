@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import type { Item } from "@/domain/types";
 import { formatUsd } from "@/domain/money";
 import { economy } from "@/config/economy";
+import { tradeInEnabled, tradeInRate } from "@/config/features";
 import { BOX_WIDTH, Box3D } from "@/components/box3d/box-3d";
 import { ItemArt } from "@/components/item/item-art";
 import { cn } from "@/lib/cn";
@@ -22,8 +23,10 @@ const steps = [
   },
   {
     numeral: "III",
-    title: "Keep it or sell it back",
-    body: `Have the piece shipped to you, or sell it back instantly for ${Math.round(economy.sellBackRate * 100)}% of its value in credit.`,
+    title: tradeInEnabled ? "Ship it or trade it in" : "Ship it home",
+    body: tradeInEnabled
+      ? `Have the piece shipped to you, or trade it in for ${tradeInRate} of its value in site credit.`
+      : "Have the piece shipped to you, or keep it in your inventory until you're ready.",
   },
 ];
 
@@ -100,10 +103,19 @@ export function Ritual({ item, priceRange }: { item: Item; priceRange: string })
               className="absolute inset-x-0 bottom-[2%] flex justify-center gap-3"
               style={reduce ? undefined : { opacity: choices, y: choicesY }}
             >
-              <span className="rounded-pill border border-line bg-surface/90 px-5 py-2.5 text-sm backdrop-blur">Ship it to me</span>
-              <span className="rounded-pill bg-foil px-5 py-2.5 text-sm text-on-accent">
-                Sell back · {formatUsd(Math.floor(item.value * economy.sellBackRate))}
-              </span>
+              {tradeInEnabled ? (
+                <>
+                  <span className="rounded-pill border border-line bg-surface/90 px-5 py-2.5 text-sm backdrop-blur">Ship it to me</span>
+                  <span className="rounded-pill bg-foil px-5 py-2.5 text-sm text-on-accent">
+                    Trade in · {formatUsd(Math.floor(item.value * economy.sellBackRate))}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="rounded-pill border border-line bg-surface/90 px-5 py-2.5 text-sm backdrop-blur">Keep it for now</span>
+                  <span className="rounded-pill bg-foil px-5 py-2.5 text-sm text-on-accent">Ship it to me</span>
+                </>
+              )}
             </motion.div>
           </div>
         </div>

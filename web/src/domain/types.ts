@@ -35,6 +35,15 @@ export type ItemArtKey =
   | "card"
   | "coin";
 
+/** A product's condition as buyers read it; staff set it per product (back office → Items). */
+export const ITEM_CONDITIONS = {
+  new: "New",
+  unworn: "Unworn",
+  "pre-owned-excellent": "Pre-owned, excellent",
+  "pre-owned-good": "Pre-owned, good",
+} as const;
+export type ItemCondition = keyof typeof ITEM_CONDITIONS;
+
 /** Box leather/finish, one per tier. */
 export type BoxMaterial = "navy" | "obsidian" | "sapphire" | "ivory" | "gold";
 
@@ -50,8 +59,13 @@ export interface Item {
   /** Width/height of the trimmed photo; used to give every piece the same visual size. */
   imageAspect?: number;
   art?: ItemArtKey;
-  /** Credit items only: free spins this outcome carries (the backend kit's bonus rows). */
+  /** Credit items only: bonus opens this outcome carries (the backend kit's "free spins"). */
   freeSpins?: number;
+  /** Authenticity details staff entered; shown only when set. The maker's reference or model number. */
+  reference?: string;
+  condition?: ItemCondition;
+  /** How the product was authenticated, as staff wrote it (e.g. "Entrupy report 4471"). */
+  authentication?: string;
 }
 
 export interface BoxEntry {

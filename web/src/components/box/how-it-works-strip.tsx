@@ -1,4 +1,4 @@
-import { economy } from "@/config/economy";
+import { tradeInEnabled, tradeInRate } from "@/config/features";
 
 export const steps = [
   {
@@ -13,8 +13,10 @@ export const steps = [
   },
   {
     numeral: "III",
-    title: "Ship it or trade it in",
-    body: `Have the piece shipped to you, or trade it in for ${Math.round(economy.sellBackRate * 100)}% of its value in site credit, which buys boxes and can’t be withdrawn.`,
+    title: tradeInEnabled ? "Ship it or trade it in" : "Ship it home",
+    body: tradeInEnabled
+      ? `Have the piece shipped to you, or trade it in for ${tradeInRate} of its value in site credit, which buys boxes and can’t be withdrawn.`
+      : "Have the piece shipped to you, or keep it in your inventory until you’re ready.",
   },
 ];
 

@@ -1,12 +1,13 @@
 import type { ReactNode } from "react";
 import { Eye, PackageCheck, ShieldCheck } from "lucide-react";
 import { brand } from "@/config/brand";
+import { tradeInEnabled, tradeInRate } from "@/config/features";
 import { LogoMark } from "@/components/brand/logo-mark";
 import { Container } from "@/components/ui/layout";
 
 const reasons = [
   { icon: Eye, text: "Every box shows its odds before you open it." },
-  { icon: PackageCheck, text: "Keep the piece, ship it home, or sell it back for 90% of its value." },
+  { icon: PackageCheck, text: tradeInEnabled ? `Keep the piece, ship it home, or trade it in for ${tradeInRate} of its value in credit.` : "Keep the piece or ship it home." },
   { icon: ShieldCheck, text: "Every roll can be checked on the provably fair page." },
 ];
 

@@ -17,8 +17,8 @@ const catalog: Item[] = [
   // Credit plus free spins (the backend kit's bonus rows): each free spin is one more roll, with the
   // same seeds, on the box's small free-spin table.
   ...[2, 5, 10, 25, 50, 100].flatMap((n): Item[] => [
-    { id: `credit-${n}-fs1`, name: `$${n} Site Credit + Free Spin`, brand: "Credit", category: "credit", value: n * 100, freeSpins: 1 },
-    { id: `credit-${n}-fs2`, name: `$${n} Site Credit + 2 Free Spins`, brand: "Credit", category: "credit", value: n * 100, freeSpins: 2 },
+    { id: `credit-${n}-fs1`, name: `$${n} Site Credit + Bonus Open`, brand: "Credit", category: "credit", value: n * 100, freeSpins: 1 },
+    { id: `credit-${n}-fs2`, name: `$${n} Site Credit + 2 Bonus Opens`, brand: "Credit", category: "credit", value: n * 100, freeSpins: 2 },
   ]),
 
   // Beauty & fragrance

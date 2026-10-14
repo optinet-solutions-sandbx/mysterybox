@@ -106,6 +106,7 @@ lucide-react. Icybox runs on the same Next, Tailwind and Motion stack.
 | `config/brand.ts` | Every brand string (name, domain, tagline and `taglineLines`, descriptor, box side line, entity, age), derived from the brand pack. |
 | `components/brand/logo-mark.tsx` | `LogoMark` (foil, or solid: the pack's silhouette or a mask of the mark), `LOGO_SRC`, `LOGO_SIZE`, `LOCKUP_SIZE`, `logoHeightAt()`. |
 | `lib/theme.ts`, `components/layout/theme-toggle.tsx` | Light/dark boot script, storage key, toggle. |
+| `config/features.ts` | Product switches read at build time: `tradeInEnabled` (`NEXT_PUBLIC_TRADE_IN`, default on) and `tradeInRate`. |
 | `config/economy.ts` | Mock economy: target RTP (90%), sell-back rate (90%), starting balance ($10k), top-ups, odds scale (100,000). |
 | `config/media.ts` | `referenceImage()` / `NEXT_PUBLIC_REFERENCE_IMAGES`, the switch for the third-party photos (see Rules). |
 | `domain/` | **Pure, unit-tested logic.** Types, money (incl. `formatPercent`, `formatOneIn`, `formatCredit`), odds (normalize, price, `pickByRoll`, `rollRanges`, rarity, sell-back, `tradeInCredits`), the legacy HMAC rolls, reel strip building. |
@@ -120,7 +121,7 @@ lucide-react. Icybox runs on the same Next, Tailwind and Motion stack.
 | `components/fx/` | `SmoothScroll` (Lenis; `lockScroll`, `scrollToElement`), `Cursor` (gold ring, `data-cursor` / `data-cursor-label`), `LineReveal`, `RollingNumber`, `CountUp`, `GoldDust`. |
 | `components/landing/` | `Hero` (load sequence + looping box), `VaultMarquee` (scroll-velocity strip), `Ritual` (pinned, scroll opens the box), `TierShelf` (spotlit shelf, rolling prices), `OddsProof`, `Modes`, `Faq`, `Keyhole` (pinned zoom finale). |
 | `components/box/` | `BoxStage` (core loop on the box API: seal + Your seed → Open → shake → lid → the outcome rises → `ResultOverlay`; "Sign in to open" when signed out), `useBoxOpen` + `open-flow.ts` (prepare, resume, open) + `guards.ts` (one action at a time), `BoxOdds` ("Box content and odds" + free-spin table), `BoxAnalysis` (maths, how decided, "Check this open"), `SessionCounters`, `OddsAtAGlance`, `HowItWorksStrip`, `BoxCard`, `BoxCatalog`, `InsideGrid`, `Reel` (idle contents strip only), `OddsTable` (back-office odds in weights, used by `/admin/boxes`). |
-| `components/item/` | `ItemArt` (photo if `item.image`, else the gold-line drawing from `item-drawings.tsx`), `RarityTag`. |
+| `components/item/` | `ItemArt` (photo if `item.image`, else the gold-line drawing from `item-drawings.tsx`), `RarityTag`, `Authenticity` (the reference, condition and authentication staff entered; nothing when empty). |
 | `components/layout/` | Header (transparent, then glass; hides on scroll down), footer, prototype banner, age gate, `SessionHydrator`. |
 | `store/ledgers.ts`, `components/layout/session-hydrator.tsx` | One wallet per account: `useSession` is the signed-in account's working copy, swapped on sign-in/out and mirrored into `useLedgers` (`grailnoir-ledgers`). The hydrator guards against Strict Mode's double effect (a stale run must not subscribe). |
 | `store/backoffice.ts`, `store/staff-actions.ts` | Demo-player status overrides and the audit log; staff actions (`setPlayerStatus`, `setRole`, `addStaff`, `settleWithdrawal`) with the **same rules as the SQL functions**. |
@@ -183,7 +184,10 @@ anything moves; the browser only animates and verifies it.**
 8. **Compliance copy** ([docs/07-compliance-ux.md](docs/07-compliance-ux.md)): no "win", "profit",
    "investment" or "guaranteed". No fake live feeds or testimonials. Odds are always reachable from a
    box. Keep the 18+ and responsible-play lines. State the trade-in rate wherever trade-in is offered,
-   and that site credit buys boxes and can't be withdrawn.
+   and that site credit buys boxes and can't be withdrawn. No slot-machine words on player screens:
+   "bonus open" (not "free spin"), "draw" or "open" (not "spin"), "trade in" (not "sell back"); code
+   and API names stay as the kit has them. Trade-in copy follows `tradeInEnabled` (`config/features.ts`,
+   `NEXT_PUBLIC_TRADE_IN`), so every new mention of trade-in needs its "off" wording too.
 9. **Third-party product photos are live by the team's choice** (2026-10-09, at their risk).
    `web/public/reference/misty/` holds 52 cut-outs taken from themistybox.com (a competitor; the
    copyright belongs to MISTY and/or the brands), with sources in `SOURCES.md`. Replace them with

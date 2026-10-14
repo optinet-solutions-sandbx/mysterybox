@@ -24,10 +24,14 @@ catalogue.
    uploads it, so every piece shows at the same visual size. Use a **cut-out on a transparent
    background**; the form warns you if the photo has a solid background. Without a photo the site
    shows the category's line drawing.
-3. **Save.** The item ID is made from the brand and name and can't change later.
-4. **Credit outcomes** use the category *Credit*: the value is the credit amount, and you can add
-   free spins (one free spin replays the box for credit).
-5. **Retire** an item by unticking *Active*. Players who own it still see it; it can't go into new
+3. **Authenticity (optional):** reference number, condition (New, Unworn, Pre-owned excellent or
+   good) and how it was authenticated ("Entrupy report 4471", "original box and papers"). Buyers see
+   them on the box page, the opening result and their inventory, only when filled in. Enter only what
+   you can back up; they describe the product, not one physical piece.
+4. **Save.** The item ID is made from the brand and name and can't change later.
+5. **Credit outcomes** use the category *Credit*: the value is the credit amount, and you can add
+   bonus opens (one bonus open is one more roll of the box's small credit table).
+6. **Retire** an item by unticking *Active*. Players who own it still see it; it can't go into new
    boxes.
 
 Changing an item's value changes the return of every box that contains it. Check those boxes after
@@ -42,10 +46,10 @@ saving.
    your proportions and fixes the total.
 3. **Price:** the Return panel shows what the box pays back per open and its return. **Use the target
    price** sets the price for the target return (90% today, `config/economy.ts`). If the box has
-   free-spin outcomes, its free-spin table is created from the price automatically.
+   bonus-open outcomes, their credit table is created from the price automatically.
 4. **Create draft** saves without showing it. **Save and publish** puts it on the site; the database
    re-checks that the weights add up.
-5. **A live box's price, free-spin table and odds are frozen** (the database refuses changes), so
+5. **A live box's price, bonus-open table and odds are frozen** (the database refuses changes), so
    what players see always matches what the draw uses. To change them: **Unpublish to edit**,
    change, publish again. **Retire** removes a box from the site but keeps its history.
 
@@ -109,6 +113,7 @@ Grail Noir:
 | `NEXT_PUBLIC_CATALOG` | `supabase` or empty | Catalogue from the database with back-office editing, or the built-in catalogue (read-only). |
 | `NEXT_PUBLIC_ACCOUNTS` | `supabase` or empty | Accounts on Supabase, or in the browser (mock). |
 | `NEXT_PUBLIC_BACKEND` | `mock` or `api` | The box system: in the browser, or the backend developer's server. |
+| `NEXT_PUBLIC_TRADE_IN` | `on` (default) / `off` | Trade-in for site credit. `off` hides it wherever players see it: pieces are kept or shipped, and the copy says so. The box system's API keeps offering trade-in until the backend developer turns it off too. |
 | `NEXT_PUBLIC_REFERENCE_IMAGES` | `on` / `off` | The borrowed product photos of the built-in catalogue (CLAUDE.md rule 9). Photos uploaded in the back office are not affected. |
 | `NEXT_PUBLIC_SHOW_ANALYSIS`, `NEXT_PUBLIC_DEMO_PLAYERS` | `on` / `off` | Box-page maths section; generated sample players in the back office. |
 

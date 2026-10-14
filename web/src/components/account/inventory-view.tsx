@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { boxApi } from "@/box-api";
-import { economy } from "@/config/economy";
+import { tradeInEnabled, tradeInRate } from "@/config/features";
 import type { InventoryItem, InventoryStatus } from "@/domain/types";
 import { formatCredit, formatUsd } from "@/domain/money";
 import { rarityFor, tradeInCredits } from "@/domain/odds";
@@ -10,6 +10,7 @@ import { getBox, getItem } from "@/services/catalog";
 import { useAuthHydrated, useCurrentUser } from "@/store/auth";
 import { useSession, useSessionHydrated } from "@/store/session";
 import { AuthPrompt } from "@/components/auth/auth-prompt";
+import { Authenticity } from "@/components/item/authenticity";
 import { ItemArt } from "@/components/item/item-art";
 import { RarityTag } from "@/components/item/rarity-tag";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -25,7 +26,7 @@ const tabStatuses: Record<Tab, InventoryStatus[]> = {
 
 const statusLabel: Record<InventoryStatus, string> = {
   held: "In inventory",
-  sold: "Sold back",
+  sold: "Traded in",
   shipping_pending: "Shipping requested",
   shipping_processing: "Preparing shipment",
   shipped: "Shipped",
@@ -42,7 +43,7 @@ export function InventoryView() {
   const [message, setMessage] = useState<string | null>(null);
 
   if (!hydrated || !authHydrated) return <div className="h-64 animate-pulse rounded-card bg-surface" />;
-  if (!user) return <AuthPrompt title="Sign in to see your pieces" body="Every piece you open lands here, ready to ship home or trade in for site credit." />;
+  if (!user) return <AuthPrompt title="Sign in to see your pieces" body={tradeInEnabled ? "Every piece you open lands here, ready to ship home or trade in for site credit." : "Every piece you open lands here, ready to ship home."} />;
 
   const held = inventory.filter((i) => i.status === "held");
   const heldValue = held.reduce((sum, i) => sum + getItem(i.itemId).value, 0);
@@ -56,7 +57,7 @@ export function InventoryView() {
           <p className="text-sm text-muted">Value in inventory</p>
           <p className="font-display text-4xl text-foil tabular">{formatUsd(heldValue)}</p>
         </div>
-        {held.length > 0 && (
+        {tradeInEnabled && held.length > 0 && (
           <Button
             variant="secondary"
             disabled={busy}
@@ -76,6 +77,8 @@ export function InventoryView() {
       <div className="mb-6 flex gap-2" role="tablist" aria-label="Inventory">
         {(Object.keys(tabStatuses) as Tab[]).map((t) => {
           const count = inventory.filter((i) => tabStatuses[t].includes(i.status)).length;
+          // Without trade-in the tab only stays for pieces traded in before the switch.
+          if (t === "sold" && !tradeInEnabled && count === 0) return null;
           return (
             <button
               key={t}
@@ -94,9 +97,11 @@ export function InventoryView() {
         })}
       </div>
 
-      <p className="mb-2 text-sm text-muted">
-        Trade-ins pay {Math.round(economy.sellBackRate * 100)}% of listed value as site credit, which buys boxes and can&rsquo;t be withdrawn.
-      </p>
+      {tradeInEnabled && (
+        <p className="mb-2 text-sm text-muted">
+          Trade-ins pay {tradeInRate} of listed value as site credit, which buys boxes and can&rsquo;t be withdrawn.
+        </p>
+      )}
       <p role="status" aria-live="polite" className="mb-4 min-h-5 text-sm text-success">
         {message}
       </p>
@@ -137,6 +142,7 @@ function InventoryCard({ inv, onMessage }: { inv: InventoryItem; onMessage: (m: 
         </div>
         <p className="mt-3 text-xs text-muted">{item.brand}</p>
         <p className="font-medium">{item.name}</p>
+        <Authenticity item={item} full className="mt-1" />
         <p className="mt-1 font-display text-foil tabular">{formatUsd(item.value)}</p>
         <p className="mt-1 text-xs text-subtle">
           From {box?.name ?? "a box"} · {new Date(inv.acquiredAt).toLocaleDateString("en-US")}
@@ -144,6 +150,7 @@ function InventoryCard({ inv, onMessage }: { inv: InventoryItem; onMessage: (m: 
         <div className="mt-auto grid gap-2 pt-4">
           {inv.status === "held" && (
             <>
+              {tradeInEnabled && (
               <Button
                 size="sm"
                 variant="secondary"
@@ -154,6 +161,7 @@ function InventoryCard({ inv, onMessage }: { inv: InventoryItem; onMessage: (m: 
               >
                 Trade in · <span className="font-display tabular">{formatCredit(tradeInCredits(item.value))}</span>
               </Button>
+              )}
               <Button
                 size="sm"
                 onClick={() => {

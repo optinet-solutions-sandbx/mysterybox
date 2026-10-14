@@ -1,5 +1,6 @@
 import type { ResolvedEntry } from "@/domain/types";
 import { formatPercent, formatUsd } from "@/domain/money";
+import { Authenticity } from "@/components/item/authenticity";
 import { ItemArt } from "@/components/item/item-art";
 import { RarityTag } from "@/components/item/rarity-tag";
 
@@ -27,6 +28,7 @@ export function InsideGrid({ entries }: { entries: ResolvedEntry[] }) {
             </div>
             <p className="truncate pt-1 text-xs font-semibold tracking-wide text-muted">{e.item.brand}</p>
             <p className="line-clamp-2 min-h-10 text-sm leading-snug font-medium">{e.item.name}</p>
+            <Authenticity item={e.item} />
             <p className="font-display text-lg font-semibold text-foil tabular">{formatUsd(e.item.value)}</p>
           </div>
         </li>
