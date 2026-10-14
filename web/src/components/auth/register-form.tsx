@@ -55,9 +55,11 @@ export function RegisterForm() {
     const res = await register({ ...input, marketing });
     setBusy(false);
     if (!res.ok) {
-      setErrors({ email: "An account already uses this email.", exists: true });
+      if (res.error === "exists") setErrors({ email: "An account already uses this email.", exists: true });
+      else setErrors({ email: res.message ?? "We couldn't create the account. Try again in a moment." });
       return;
     }
+    if (res.signedIn) return router.push(next);
     if (formRef.current) scrollToElement(formRef.current, -120);
     setStep("verify");
   }

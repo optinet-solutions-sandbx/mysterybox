@@ -79,13 +79,13 @@ Anything below the fold isn't visible.
 | Dashboard | `/admin`: KPI band, daily charts, top players, latest openings | Built |
 | Players ▾ | `/admin/players`, Groups (`/admin/players/groups`), Locked players, Withdrawal pending | Built |
 | Player page | `/admin/players/view?id=<player number>` | Built |
-| Games ▾ | **Boxes ▾**: Boxes & odds, Box openings (`/admin/boxes/openings`) | Built |
+| Games ▾ | **Boxes ▾**: Boxes & odds (with **Configure** and **New box**), **Items** (`/admin/items`), Box openings (`/admin/boxes/openings`) | Built (editing needs Supabase) |
 | Payments ▾ | `/admin/payments`: all, deposits, cashouts, pending; mark paid or cancel | Built (provider is a placeholder) |
 | Feed ▾ | `/admin/feed`: sign-ups, openings, payments, staff actions | Built |
 | Bonuses ▾ | `/admin/bonuses`: issued bonuses, loyalty points | Placeholder (needs the Rewards design) |
 | Tournaments ▾ | **Battles ▾** (`/admin/battles`) | Placeholder |
 | Language ▾ | — | Not needed yet (English only) |
-| User ▾ | Staff & roles, Audit log (super admin), View site, Sign out | Built |
+| User ▾ | Staff & roles, Audit log, **Configuration** (`/admin/settings`; super admin), View site, Sign out | Built (editing needs Supabase) |
 
 ### Player page sections
 

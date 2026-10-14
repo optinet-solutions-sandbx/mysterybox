@@ -1,8 +1,10 @@
 # 08 · Backend: schema, roles and the front-end contract
 
-**Status: initial draft, 2026-10-12.** It's ready for the sync with John (see the last section).
-The schema runs and is tested in an in-process Postgres. It has **not** been deployed to a Supabase
-project. The UI still runs on the browser mock, so nothing calls Supabase yet.
+**Status, 2026-10-14:** the app is **wired to Supabase** and switches over as soon as
+`NEXT_PUBLIC_BACKEND=supabase` and the project keys are set (see "Connecting Supabase" below).
+Until then it runs on the browser mock. The schema is tested in an in-process Postgres. The
+supabase-js wiring is typed and its row mappers are tested against real Postgres output, but it
+has **not run against a live project yet**. The first cloud connection is the real test.
 
 ## What exists
 
@@ -18,7 +20,12 @@ project. The UI still runs on the browser mock, so nothing calls Supabase yet.
 | `supabase/seed.sql` | The catalog, **generated** from `web/src/data` so ids, prices, weights and draw order match the site. |
 | `supabase/snippets/bootstrap_super_admin.sql` | Makes the first super admin. |
 | `web/src/backend/contract.ts` | The contract in TypeScript: every interaction, its request and response shapes, error codes, and the permission matrix. |
-| `web/src/backend/supabase-api.ts` | **Placeholder** adapter implementing the contract with supabase-js. Not wired to the UI and not run against a live project. |
+| `web/src/backend/config.ts` | `backendMode`: `supabase` when `NEXT_PUBLIC_BACKEND=supabase` and the URL and anon key are set, otherwise `mock`. |
+| `web/src/backend/supabase-client.ts`, `remote-player.ts`, `remote-admin.ts`, `remote-catalog.ts` | **The live wiring.** Supabase Auth (sign-up, 6-digit code, password sign-in), the player's wallet, inventory, ledger and seeds, the back office's data and actions, and catalog management. They fill the same stores and shapes as the mock, so the screens don't change. |
+| `web/src/services/catalog-source.ts` | The site's catalog (items, live boxes, odds), loaded server-side from Supabase and cached under the `catalog` tag. `/api/catalog/revalidate` (staff only) refreshes it after back-office edits. |
+| `web/src/app/api/admin/staff` | Super admins add staff. This uses the service-role key on the server only. |
+| `scripts/provision_staff.mjs` | Creates or updates the team's super admins from a private JSON file (never committed). |
+| `web/src/backend/supabase-api.ts` | The original contract adapter, kept as reference. The app uses the `remote-*` modules. |
 | `web/src/backend/schema.test.ts` | 20 tests that run the migrations and seed in PGlite (Postgres 17) as anon, player, admin and super admin. |
 | `web/.env.example` | `NEXT_PUBLIC_BACKEND`, Supabase URL and keys, `SUPABASE_SERVICE_ROLE_KEY` (server only), `NEXT_PUBLIC_DEMO_PLAYERS`. |
 | `web/src/config/staff.ts` | The team's super admins for the **mock** (salted hashes only). With Supabase they become auth users promoted by `bootstrap_super_admin.sql` / `admin_set_role`. |
@@ -171,6 +178,45 @@ npx supabase start            # local stack; Studio at http://127.0.0.1:54323
 npx supabase db reset         # applies migrations + seed.sql
 npx supabase gen types typescript --local > web/src/backend/database.types.ts
 ```
+
+## Connecting Supabase (checklist)
+
+1. **Project:** create one at supabase.com. From **Project Settings → API**, send:
+   - the Project URL;
+   - the `anon` key;
+   - the `service_role` key.
+
+   From the **Connect** button, also send the **Session pooler** connection string with the
+   database password.
+2. **Schema:** apply it with `npx supabase db push --db-url "<pooler connection string>"`, then
+   load the catalog with `psql "<connection string>" -f supabase/seed.sql`.
+3. **Auth settings** (Dashboard → Authentication):
+   - **Confirm email** on.
+   - **Email templates → Confirm signup:** paste `supabase/templates/confirmation.html`. It sends
+     the 6-digit `{{ .Token }}` that `/register` asks for.
+   - Minimum password length 8, letters and digits.
+   - **SMTP:** the built-in sender only reaches the project's team members, at a few emails an
+     hour. Add an email provider such as Resend or Postmark before players test. For a team-only
+     test you can switch Confirm email off: `/register` then signs people straight in.
+4. **Vercel env (Production):**
+   - `NEXT_PUBLIC_BACKEND=supabase`;
+   - `NEXT_PUBLIC_SUPABASE_URL`;
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`;
+   - `SUPABASE_SERVICE_ROLE_KEY` (server only).
+
+   Then redeploy.
+5. **Team super admins:**
+   `SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… node scripts/provision_staff.mjs team.json`.
+6. **Verify on the live URL:**
+   - register a new player, enter the code, deposit (demo mode), open a box, sell back;
+   - request a withdrawal; a super admin pays it out, locks the player and adds an item;
+   - the item and the new odds appear on the site.
+
+What changes in Supabase mode:
+- Players sign in on any device and see the same account.
+- The back office sees everyone.
+- Box openings are decided on the server (`open_box`), so the live server seed never reaches the browser.
+- "Clear test data" is off; delete test users in Supabase instead.
 
 ## For the sync with John
 

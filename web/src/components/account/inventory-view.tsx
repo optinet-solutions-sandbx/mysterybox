@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { InventoryItem, InventoryStatus } from "@/domain/types";
 import { formatUsd } from "@/domain/money";
 import { rarityFor, sellBackValue } from "@/domain/odds";
-import { getBox, getItem } from "@/services/catalog";
+import { useCatalog } from "@/components/catalog-provider";
 import { useAuthHydrated, useCurrentUser } from "@/store/auth";
 import { useSession, useSessionHydrated } from "@/store/session";
 import { AuthPrompt } from "@/components/auth/auth-prompt";
@@ -30,6 +30,7 @@ const statusLabel: Record<InventoryStatus, string> = {
 };
 
 export function InventoryView() {
+  const { findItem } = useCatalog();
   const hydrated = useSessionHydrated();
   const authHydrated = useAuthHydrated();
   const user = useCurrentUser();
@@ -42,8 +43,8 @@ export function InventoryView() {
   if (!user) return <AuthPrompt title="Sign in to see your pieces" body="Everything you open lands here, ready to keep, ship home or sell back." />;
 
   const held = inventory.filter((i) => i.status === "held");
-  const heldValue = held.reduce((sum, i) => sum + getItem(i.itemId).value, 0);
-  const sellAllValue = held.reduce((sum, i) => sum + sellBackValue(getItem(i.itemId).value), 0);
+  const heldValue = held.reduce((sum, i) => sum + (findItem(i.itemId)?.value ?? 0), 0);
+  const sellAllValue = held.reduce((sum, i) => sum + sellBackValue(findItem(i.itemId)?.value ?? 0), 0);
   const visible = inventory.filter((i) => tabStatuses[tab].includes(i.status));
 
   return (
@@ -56,9 +57,10 @@ export function InventoryView() {
         {held.length > 0 && (
           <Button
             variant="secondary"
-            onClick={() => {
-              const credited = sellBack(held.map((i) => i.uid));
-              setMessage(`Sold ${held.length} items for ${formatUsd(credited)}.`);
+            onClick={async () => {
+              const count = held.length;
+              const credited = await sellBack(held.map((i) => i.uid));
+              setMessage(`Sold ${count} items for ${formatUsd(credited)}.`);
             }}
           >
             Sell all for <span className="font-display tabular">{formatUsd(sellAllValue)}</span>
@@ -114,6 +116,7 @@ function InventoryCard({ inv, onMessage }: { inv: InventoryItem; onMessage: (m: 
   const sellBack = useSession((s) => s.sellBack);
   const requestShipping = useSession((s) => s.requestShipping);
   const cancelShipping = useSession((s) => s.cancelShipping);
+  const { getItem, getBox } = useCatalog();
   const item = getItem(inv.itemId);
   const box = getBox(inv.boxId);
   const rarity = rarityFor(item.value, box?.price ?? item.value);
@@ -138,7 +141,7 @@ function InventoryCard({ inv, onMessage }: { inv: InventoryItem; onMessage: (m: 
               <Button
                 size="sm"
                 variant="secondary"
-                onClick={() => onMessage(`Sold back for ${formatUsd(sellBack([inv.uid]))}.`)}
+                onClick={async () => onMessage(`Sold back for ${formatUsd(await sellBack([inv.uid]))}.`)}
               >
                 Sell back · <span className="font-display tabular">{formatUsd(sellBackValue(item.value))}</span>
               </Button>

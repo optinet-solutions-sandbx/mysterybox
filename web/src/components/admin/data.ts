@@ -1,12 +1,14 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
+import { isSupabase } from "@/backend/config";
+import { useRemoteBackoffice } from "@/backend/remote-admin";
 import { create } from "zustand";
 import { economy } from "@/config/economy";
 import { buildDemoPlayers } from "@/data/demo-players";
-import { boxes } from "@/data/boxes";
 import { presetRange, type MoneyEvent, type PlayerRecord, type RangePreset } from "@/domain/analytics";
-import { getBox, getItem } from "@/services/catalog";
+import { useCatalog } from "@/components/catalog-provider";
+import type { Catalog } from "@/services/catalog";
 import { useAuth, type Account } from "@/store/auth";
 import { useBackoffice } from "@/store/backoffice";
 import { useLedgers } from "@/store/ledgers";
@@ -34,13 +36,13 @@ export const useRangePreset = create<{ preset: RangePreset; setPreset(p: RangePr
 }));
 
 /** An account registered in this browser, as the back office sees it. */
-export function browserRecord(account: Account, snap: SessionSnapshot): PlayerRecord {
+export function browserRecord(account: Account, snap: SessionSnapshot, catalog: Catalog): PlayerRecord {
   const plays = [...snap.inventory]
     .sort((a, b) => a.acquiredAt.localeCompare(b.acquiredAt))
     .map((inv) => {
-      const box = getBox(inv.boxId);
-      const item = getItem(inv.itemId);
-      return { at: inv.acquiredAt, boxId: inv.boxId, priceCents: box?.price ?? 0, itemId: inv.itemId, valueCents: item.value };
+      const box = catalog.getBox(inv.boxId);
+      const item = catalog.findItem(inv.itemId);
+      return { at: inv.acquiredAt, boxId: inv.boxId, priceCents: box?.price ?? 0, itemId: inv.itemId, valueCents: item?.value ?? 0 };
     });
   const money: MoneyEvent[] = snap.transactions
     .filter((t) => t.type === "deposit" || t.type === "withdrawal" || t.type === "sell_back")
@@ -79,23 +81,65 @@ export function browserRecord(account: Account, snap: SessionSnapshot): PlayerRe
  */
 export function useBackofficeData() {
   const today = useToday();
+  const catalog = useCatalog();
   const accounts = useAuth((s) => s.accounts);
   const ledgers = useLedgers((s) => s.byEmail);
   const demoStatus = useBackoffice((s) => s.demoStatus);
   const preset = useRangePreset((s) => s.preset);
 
   const demo = useMemo(() => (today && DEMO_PLAYERS_ENABLED ? buildDemoPlayers({ today }) : []), [today]);
+  const remote = useRemoteBackoffice();
+  useEffect(() => {
+    if (isSupabase && !remote.loaded && !remote.loading && !remote.error) void remote.load();
+  }, [remote]);
 
   const players = useMemo(() => {
+    if (isSupabase) return remote.players;
     const browser = Object.values(accounts)
       .filter((a) => a.role === "player" && a.verified)
-      .map((a) => browserRecord(a, ledgers[a.email] ?? freshSnapshot()));
+      .map((a) => browserRecord(a, ledgers[a.email] ?? freshSnapshot(), catalog));
     const generated = demo.map((p) => (demoStatus[p.id] ? { ...p, status: demoStatus[p.id] } : p));
     return [...browser, ...generated];
-  }, [accounts, ledgers, demo, demoStatus]);
+  }, [accounts, ledgers, demo, demoStatus, catalog, remote.players]);
 
   const earliest = useMemo(() => players.reduce((min, p) => (p.registeredAt < min ? p.registeredAt : min), today ?? "9999").slice(0, 10), [players, today]);
-  const range = today ? presetRange(preset, today, earliest) : null;
+  // Supabase: hold the pages on their skeletons until the first load lands.
+  const range = today && (!isSupabase || remote.loaded) ? presetRange(preset, today, earliest) : null;
 
-  return { today, players, range, preset, boxes, scale: economy.oddsScale };
+  return { today, players, range, preset, boxes: catalog.boxes, scale: economy.oddsScale, loadError: remote.error };
+}
+
+/** Staff and promotable players: this browser's accounts (mock) or the database (Supabase). */
+export function useStaffDirectory(): { staff: Account[]; players: Account[] } {
+  const accounts = useAuth((s) => s.accounts);
+  const remote = useRemoteBackoffice();
+  useEffect(() => {
+    if (isSupabase && !remote.loaded && !remote.loading && !remote.error) void remote.load();
+  }, [remote]);
+  return useMemo(() => {
+    if (!isSupabase) {
+      const all = Object.values(accounts).filter((a) => a.verified);
+      return { staff: all.filter((a) => a.role !== "player"), players: all.filter((a) => a.role === "player") };
+    }
+    return {
+      staff: remote.staff,
+      players: remote.players.map(
+        (p): Account => ({
+          id: p.id,
+          email: p.email,
+          firstName: p.firstName,
+          lastName: p.lastName,
+          dial: p.phoneDial ?? "+1",
+          phone: p.phoneNumber ?? "",
+          passwordHash: "",
+          salt: "",
+          marketing: p.marketingOptIn,
+          verified: true,
+          createdAt: p.registeredAt,
+          role: "player",
+          status: p.status,
+        }),
+      ),
+    };
+  }, [accounts, remote.staff, remote.players]);
 }

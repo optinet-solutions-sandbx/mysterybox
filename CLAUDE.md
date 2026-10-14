@@ -25,9 +25,13 @@ not decoration.**
   add admins from Staff & roles. Each account has its own wallet. Data is per browser until Supabase
   is wired, and the back office says so. Sample players are off unless `NEXT_PUBLIC_DEMO_PLAYERS=on`;
   "Clear test data" (Staff & roles) wipes this browser's players for a fresh run.
-- **Backend draft (2026-10-12): Supabase.** `supabase/` holds the schema, RLS and RPCs; the
-  front end's contract is `web/src/backend/contract.ts`; `supabase-api.ts` is a placeholder adapter
-  (not wired to the UI). See [docs/08-backend.md](docs/08-backend.md).
+- **Backend: Supabase, wired behind a switch (2026-10-14).** `supabase/` holds the schema, RLS and
+  RPCs. With `NEXT_PUBLIC_BACKEND=supabase` and the keys set, these all run on Supabase:
+  auth (sign-up, 6-digit code, sign-in), wallet, play (`open_box`), back office, items and
+  configuration. The site's catalog comes from the database (`services/catalog-source.ts`, cached under the `catalog` tag).
+  Otherwise everything runs on the browser mock. Both modes share the same stores and screens:
+  the `remote-*` modules fill the mock's shapes. **Every mock store action has a Supabase branch;
+  keep them in step.** The connection checklist is in [docs/08-backend.md](docs/08-backend.md).
 - **Brand: Grail Noir** (grailnoir.com). Slogan "Life is too short. Go Noir." (a two-tier lockup:
   setup line, then a foil punchline). Logo: the **gold crown-and-mask** artwork supplied 2026-10-12,
   extracted onto transparency in `public/brand/` (mark + lockup), used through
@@ -101,6 +105,9 @@ lucide-react. Icybox runs on the same Next, Tailwind and Motion stack.
 | `store/backoffice.ts`, `store/staff-actions.ts` | Demo-player status overrides and the audit log; staff actions (`setPlayerStatus`, `setRole`, `addStaff`, `settleWithdrawal`) with the **same rules as the SQL functions**. |
 | `domain/analytics.ts`, `data/demo-players.ts` | Back-office numbers (`overviewRow`, `kpis`, `dailyMetrics`, `boxPerformance`) with the SQL's definitions; 240 deterministic demo players per UTC day, drawn with the real odds. |
 | `components/admin/`, `app/admin/` | Back office, **structured after the team's casino back office** ([docs/09-backoffice-reference.md](docs/09-backoffice-reference.md)): `AdminShell` top bar (Dashboard, Players▾, Boxes▾, Payments▾, Feed, Bonuses▾, Battles▾, user menu), `PageTitle` breadcrumb band, dashboard, players list, full **player page** `/admin/players/view?id=<player number>` (Accounts row, loyalty points, issued bonuses, status, CS/SB locks, tags, groups, payments, openings, comments), groups, box openings, payments, feed, bonuses/battles placeholders, staff & roles, audit log. Client-gated (`instant = false`); pages reading the query string wrap their view in `<Suspense>`. Avoid dynamic `[id]` admin routes: unknown params make every `usePathname` layout suspend. |
+| `services/catalog.ts`, `services/catalog-source.ts`, `components/catalog-provider.tsx` | `createCatalog(data)` over plain data. Server pages `await getCatalog()`; client components `useCatalog()`; stores use `activeCatalog()`. Never import `data/items|boxes` in UI code (mock-only code and tests may use `staticCatalog`). |
+| `backend/remote-player.ts`, `remote-admin.ts`, `remote-catalog.ts`, `server-auth.ts`, `app/api/*` | Supabase wiring (see Backend above). API routes verify the caller's role server-side; the service-role key is server-only. |
+| `components/admin/catalog-admin.tsx` | Items (`/admin/items`), box configuration (`/admin/boxes/configure?id=`; price and odds editable only as a draft, publish re-checks the weights) and Configuration (`/admin/settings`, super admin). Read-only on the mock. |
 | `domain/player-insights.ts` | Player-page numbers (`accountSummary`, `loyaltyPoints`), `playerNumber`, `maskEmail`, automatic tags and the 14 rule-based `SEGMENTS` (groups). |
 | `backend/` | `contract.ts` (methods, shapes, error codes, `PERMISSIONS` + `can()`), `supabase-api.ts` (placeholder adapter), `catalog-sql.ts` (generates `supabase/seed.sql`), `test-db.ts` + `schema.test.ts` (PGlite). |
 | `app/` | Routes. `/register`, `/sign-in`, `/account` and `/admin/*` are built (mock). Battles, deals, rewards, leaderboard and affiliates are `ComingSoon` stubs listing planned behavior. |

@@ -92,9 +92,9 @@ export function BoxStage({
     if (result) setNotice({ tone: "ok", text: `${result.entry.item.name} is in your inventory.` });
   }
 
-  function handleSell() {
+  async function handleSell() {
     if (!result) return;
-    const credited = sellBack([result.uid]);
+    const credited = await sellBack([result.uid]);
     setPhase("idle");
     setNotice({ tone: "ok", text: `Sold back for ${formatUsd(credited)}. It’s in your balance.` });
   }

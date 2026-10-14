@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { boxStats, listBoxes } from "@/services/catalog";
+import { getCatalog } from "@/services/catalog-source";
 import { BoxCatalog } from "@/components/box/box-catalog";
 import { PageHeader } from "@/components/ui/layout";
 
 export const metadata: Metadata = { title: "Boxes" };
 
-export default function BoxesPage() {
+export default async function BoxesPage() {
+  const { boxStats, listBoxes } = await getCatalog();
   const boxes = listBoxes().map((box) => ({ box, top: boxStats(box).top.item }));
   return (
     <>

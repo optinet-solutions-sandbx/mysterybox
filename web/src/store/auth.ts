@@ -3,10 +3,14 @@
 import { useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { isSupabase } from "@/backend/config";
 import type { AccountStatus, AppRole } from "@/backend/contract";
+import { loadMe, remotePlayer } from "@/backend/remote-player";
+import { sb } from "@/backend/supabase-client";
 import { TEAM_STAFF } from "@/config/staff";
 import { randomHex, sha256Hex } from "@/domain/fair";
 import { digitsOnly, type RegistrationInput } from "@/domain/auth";
+import { freshSnapshot, useSession, type SessionSnapshot } from "./session";
 
 /**
  * Mock accounts, persisted in the browser. Mirrors MISTY's flow (details → one-time email code)
@@ -32,6 +36,8 @@ export interface Account {
   role: AppRole;
   status: AccountStatus;
   lastSeenAt?: string;
+  /** Database player number (Supabase); the mock derives one from the id. */
+  number?: number;
 }
 
 interface Pending {
@@ -43,8 +49,11 @@ interface AuthState {
   accounts: Record<string, Account>;
   currentEmail: string | null;
   pending: Pending | null;
-  register(input: RegistrationInput & { marketing: boolean }): Promise<{ ok: true } | { ok: false; error: "exists" }>;
-  verify(code: string): boolean;
+  /** Supabase mode: the session has been checked with the server (not persisted). */
+  remoteReady: boolean;
+  /** `signedIn`: the project auto-confirms sign-ups (no email code), so the account is already signed in. */
+  register(input: RegistrationInput & { marketing: boolean }): Promise<{ ok: true; signedIn?: boolean } | { ok: false; error: "exists" | "failed"; message?: string }>;
+  verify(code: string): Promise<boolean>;
   resendCode(): void;
   signIn(email: string, password: string): Promise<{ ok: true } | { ok: false; error: "invalid" | "unverified" | "suspended" }>;
   signOut(): void;
@@ -56,6 +65,8 @@ interface AuthState {
   /** Low-level writes; permission checks and audit live in store/staff-actions.ts. */
   patchAccount(email: string, patch: Partial<Pick<Account, "role" | "status">>): void;
   addAccount(input: { email: string; firstName: string; lastName: string; password: string; role: AppRole }): Promise<boolean>;
+  /** Supabase mode: the signed-in account and its wallet, or null when signed out. */
+  setRemoteUser(me: { account: Account; snapshot: SessionSnapshot } | null): void;
 }
 
 const key = (email: string) => email.trim().toLowerCase();
@@ -105,9 +116,39 @@ export const useAuth = create<AuthState>()(
       accounts: {},
       currentEmail: null,
       pending: null,
+      remoteReady: false,
 
       async register(input) {
         const email = key(input.email);
+        if (isSupabase) {
+          const { data, error } = await sb().auth.signUp({
+            email,
+            password: input.password,
+            options: {
+              data: {
+                first_name: input.firstName.trim(),
+                last_name: input.lastName.trim(),
+                phone_dial: input.dial,
+                phone_number: digitsOnly(input.phone),
+                marketing_opt_in: input.marketing,
+                accepted_terms: input.confirmedAge,
+                confirmed_age: input.confirmedAge,
+              },
+            },
+          });
+          // With email-enumeration protection Supabase answers an existing address with an empty identity list.
+          if (error?.code === "user_already_exists" || (data.user && (data.user.identities ?? []).length === 0)) return { ok: false, error: "exists" };
+          if (error) return { ok: false, error: "failed", message: error.message };
+          if (data.session) {
+            const me = await loadMe();
+            if (me) {
+              get().setRemoteUser(me);
+              return { ok: true, signedIn: true };
+            }
+          }
+          set({ pending: { email, code: "" } });
+          return { ok: true };
+        }
         const existing = get().accounts[email];
         if (existing?.verified) return { ok: false, error: "exists" };
         // Sign-up always creates a player. Roles only change in the back office.
@@ -116,8 +157,19 @@ export const useAuth = create<AuthState>()(
         return { ok: true };
       },
 
-      verify(code) {
+      async verify(code) {
         const pending = get().pending;
+        if (isSupabase) {
+          if (!pending) return false;
+          let { error } = await sb().auth.verifyOtp({ email: pending.email, token: code, type: "email" });
+          if (error) ({ error } = await sb().auth.verifyOtp({ email: pending.email, token: code, type: "signup" }));
+          if (error) return false;
+          const me = await loadMe();
+          if (!me) return false;
+          get().setRemoteUser(me);
+          set({ pending: null });
+          return true;
+        }
         if (!pending || code !== pending.code) return false;
         set((s) => ({
           accounts: {
@@ -132,10 +184,34 @@ export const useAuth = create<AuthState>()(
 
       resendCode() {
         const pending = get().pending;
+        if (isSupabase) {
+          if (pending) void sb().auth.resend({ type: "signup", email: pending.email });
+          return;
+        }
         if (pending) set({ pending: { ...pending, code: sixDigitCode() } });
       },
 
       async signIn(email, password) {
+        if (isSupabase) {
+          const { error } = await sb().auth.signInWithPassword({ email: key(email), password });
+          if (error) {
+            if (error.code === "email_not_confirmed") {
+              set({ pending: { email: key(email), code: "" } });
+              await sb().auth.resend({ type: "signup", email: key(email) });
+              return { ok: false, error: "unverified" };
+            }
+            return { ok: false, error: "invalid" };
+          }
+          const me = await loadMe();
+          if (!me) return { ok: false, error: "invalid" };
+          if (me.account.status !== "active") {
+            await sb().auth.signOut();
+            return { ok: false, error: "suspended" };
+          }
+          void remotePlayer.touchLastSeen().catch(() => {});
+          get().setRemoteUser(me);
+          return { ok: true };
+        }
         const account = get().accounts[key(email)];
         if (!account || (await hashPassword(password, account.salt)) !== account.passwordHash) {
           return { ok: false, error: "invalid" };
@@ -154,16 +230,25 @@ export const useAuth = create<AuthState>()(
       },
 
       signOut() {
+        if (isSupabase) {
+          void sb().auth.signOut();
+          get().setRemoteUser(null);
+          set({ pending: null });
+          return;
+        }
         set({ currentEmail: null, pending: null });
       },
 
       setMarketing(value) {
         const email = get().currentEmail;
         if (!email) return;
+        if (isSupabase) void remotePlayer.setMarketing(get().accounts[email].id, value).catch((e) => console.error("[backend]", e));
         set((s) => ({ accounts: { ...s.accounts, [email]: { ...s.accounts[email], marketing: value } } }));
       },
 
       ensureStaff() {
+        // Supabase: staff are real auth users (scripts/provision_staff.mjs creates the team).
+        if (isSupabase) return;
         const missing = TEAM_STAFF.filter((s) => !get().accounts[s.email]);
         if (!missing.length) return;
         const created: Account[] = missing.map((s) => ({
@@ -199,6 +284,15 @@ export const useAuth = create<AuthState>()(
         set((s) => ({ accounts: { ...s.accounts, [account.email]: { ...account, ...patch } } }));
       },
 
+      setRemoteUser(me) {
+        set({
+          accounts: me ? { [me.account.email]: me.account } : {},
+          currentEmail: me ? me.account.email : null,
+          remoteReady: true,
+        });
+        useSession.setState(me ? me.snapshot : freshSnapshot());
+      },
+
       async addAccount(input) {
         if (get().accounts[key(input.email)]) return false;
         const account = await newAccount({ ...input, verified: true });
@@ -211,7 +305,8 @@ export const useAuth = create<AuthState>()(
       version: 2,
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
-      partialize: ({ accounts, currentEmail, pending }) => ({ accounts, currentEmail, pending }),
+      // Supabase mode keeps only the pending sign-up: the account itself comes from the server session.
+      partialize: ({ accounts, currentEmail, pending }) => (isSupabase ? { pending } : { accounts, currentEmail, pending }),
       // v1 accounts had no id, role or status: they were all players.
       migrate: (persisted, version) => {
         const state = persisted as { accounts?: Record<string, Partial<Account>> };
@@ -230,11 +325,13 @@ export const useAuth = create<AuthState>()(
 );
 
 export function useAuthHydrated(): boolean {
-  return useSyncExternalStore(
+  const persisted = useSyncExternalStore(
     (onChange) => useAuth.persist.onFinishHydration(onChange),
     () => useAuth.persist.hasHydrated(),
     () => false,
   );
+  const remoteReady = useAuth((s) => s.remoteReady);
+  return persisted && (!isSupabase || remoteReady);
 }
 
 /** The signed-in account, or null (also null until hydrated). */

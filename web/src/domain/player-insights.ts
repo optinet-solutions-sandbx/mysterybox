@@ -20,6 +20,11 @@ export function playerNumber(id: string): number {
   return 100_000 + ((h >>> 0) % 900_000);
 }
 
+/** The number staff see and search by: the database's, or a stable one derived from the id (mock). */
+export function numberOf(p: { id: string; number?: number }): number {
+  return p.number ?? playerNumber(p.id);
+}
+
 /** "pat.doe@gmail.com" → "p******@g****.c**", like the reference page title. */
 export function maskEmail(email: string): string {
   const [local, domain = ""] = email.split("@");

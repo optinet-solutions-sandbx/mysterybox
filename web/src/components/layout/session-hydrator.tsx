@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
+import { isSupabase } from "@/backend/config";
+import { loadMe } from "@/backend/remote-player";
+import { sb } from "@/backend/supabase-client";
 import { useAuth } from "@/store/auth";
 import { useBackoffice } from "@/store/backoffice";
 import { useLedgers } from "@/store/ledgers";
@@ -22,8 +25,17 @@ export function SessionHydrator() {
       useSession.persist.rehydrate(),
       useLedgers.persist.rehydrate(),
       useBackoffice.persist.rehydrate(),
-    ]).then(() => {
+    ]).then(async () => {
       if (cancelled) return;
+      if (isSupabase) {
+        // The server session decides who is signed in; wallets live in the database.
+        useAuth.getState().setRemoteUser(await loadMe().catch(() => null));
+        const { data } = sb().auth.onAuthStateChange((event) => {
+          if (event === "SIGNED_OUT") useAuth.getState().setRemoteUser(null);
+        });
+        unsubscribe = () => data.subscription.unsubscribe();
+        return;
+      }
       useAuth.getState().ensureStaff();
       let current = useAuth.getState().currentEmail;
 

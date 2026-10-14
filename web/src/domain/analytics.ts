@@ -52,8 +52,10 @@ export interface PlayerRecord {
   /** Chronological. */
   plays: PlayEvent[];
   money: MoneyEvent[];
-  /** "browser": an account registered in this browser; "demo": generated sample data. */
-  source: "demo" | "browser";
+  /** "live": from the database; "browser": registered in this browser (mock); "demo": generated sample data. */
+  source: "live" | "browser" | "demo";
+  /** Database player number (live); the mock derives one from the id. */
+  number?: number;
 }
 
 const DAY_MS = 86_400_000;

@@ -7,7 +7,7 @@ import { ChevronDown, ChevronUp, Search, Users, X } from "lucide-react";
 import type { PlayerOverviewRow } from "@/backend/contract";
 import { formatUsd } from "@/domain/money";
 import { overviewRow, type PlayerRecord } from "@/domain/analytics";
-import { SEGMENTS, playerNumber } from "@/domain/player-insights";
+import { SEGMENTS, numberOf } from "@/domain/player-insights";
 import { cn } from "@/lib/cn";
 import { useBackofficeData, useNow } from "./data";
 import { PageTitle, SourceBadge, StatusBadge, formatCount, formatDate } from "./ui";
@@ -85,7 +85,7 @@ export function PlayersView() {
       .filter(({ p }) => !q || `${p.firstName} ${p.lastName} ${p.email}`.toLowerCase().includes(q));
     const value = ({ row }: { row: PlayerOverviewRow }) =>
       sort.key === "number"
-        ? playerNumber(row.id)
+        ? numberOf(players.find((x) => x.id === row.id) ?? row)
         : sort.key === "name"
           ? `${row.lastName} ${row.firstName}`.toLowerCase()
           : (row[sort.key] ?? "");
@@ -178,10 +178,10 @@ export function PlayersView() {
           </thead>
           <tbody className="divide-y divide-line">
             {visible.map(({ p, row }) => (
-              <tr key={p.id} className="cursor-pointer transition-colors hover:bg-accent-soft" onClick={() => router.push(`/admin/players/view?id=${playerNumber(p.id)}`)}>
+              <tr key={p.id} className="cursor-pointer transition-colors hover:bg-accent-soft" onClick={() => router.push(`/admin/players/view?id=${numberOf(p)}`)}>
                 <td className="px-4 py-3 tabular">
-                  <Link href={`/admin/players/view?id=${playerNumber(p.id)}`} onClick={(e) => e.stopPropagation()} className="font-semibold text-accent hover:underline">
-                    {playerNumber(p.id)}
+                  <Link href={`/admin/players/view?id=${numberOf(p)}`} onClick={(e) => e.stopPropagation()} className="font-semibold text-accent hover:underline">
+                    {numberOf(p)}
                   </Link>
                 </td>
                 <td className="px-4 py-3">

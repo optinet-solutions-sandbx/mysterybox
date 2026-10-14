@@ -10,6 +10,8 @@ import { SiteOnly } from "@/components/layout/site-only";
 import { Cursor } from "@/components/fx/cursor";
 import { SmoothScroll } from "@/components/fx/smooth-scroll";
 import { themeBootScript } from "@/lib/theme";
+import { CatalogProvider } from "@/components/catalog-provider";
+import { loadCatalogData } from "@/services/catalog-source";
 import "lenis/dist/lenis.css";
 import "./globals.css";
 
@@ -32,7 +34,8 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const catalog = await loadCatalogData();
   return (
     <html
       lang="en"
@@ -44,19 +47,21 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
       </head>
       <body className="flex min-h-full flex-col">
-        <PrototypeBanner />
-        <SiteOnly>
-          <SiteHeader />
-        </SiteOnly>
-        <main className="flex-1">{children}</main>
-        <SiteOnly>
-          <SiteFooter />
-          <AgeGate />
-          <SmoothScroll />
-          <Cursor />
-        </SiteOnly>
-        <SessionHydrator />
-        <div aria-hidden className="grain" />
+        <CatalogProvider data={catalog}>
+          <PrototypeBanner />
+          <SiteOnly>
+            <SiteHeader />
+          </SiteOnly>
+          <main className="flex-1">{children}</main>
+          <SiteOnly>
+            <SiteFooter />
+            <AgeGate />
+            <SmoothScroll />
+            <Cursor />
+          </SiteOnly>
+          <SessionHydrator />
+          <div aria-hidden className="grain" />
+        </CatalogProvider>
       </body>
     </html>
   );

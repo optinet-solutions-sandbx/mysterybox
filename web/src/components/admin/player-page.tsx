@@ -8,8 +8,8 @@ import { can } from "@/backend/contract";
 import { formatPhoneInput } from "@/domain/auth";
 import { formatUsd } from "@/domain/money";
 import type { PlayerRecord } from "@/domain/analytics";
-import { accountSummary, autoTags, loyaltyPoints, maskEmail, playerNumber, segmentsFor, type Tag } from "@/domain/player-insights";
-import { getBox, getItem } from "@/services/catalog";
+import { accountSummary, autoTags, loyaltyPoints, maskEmail, numberOf, playerNumber, segmentsFor, type Tag } from "@/domain/player-insights";
+import { useCatalog } from "@/components/catalog-provider";
 import { Button } from "@/components/ui/button";
 import { useCurrentUser } from "@/store/auth";
 import { useBackoffice, type PlayerLock } from "@/store/backoffice";
@@ -31,7 +31,7 @@ export function PlayerPage() {
   const params = useSearchParams();
   const { players } = useBackofficeData();
   const id = Number(params.get("id"));
-  const player = players.find((p) => playerNumber(p.id) === id) ?? null;
+  const player = players.find((p) => numberOf(p) === id) ?? null;
 
   if (!player) {
     return (
@@ -53,7 +53,7 @@ function PlayerView({ p }: { p: PlayerRecord }) {
   const now = useNow();
   const s = accountSummary(p);
   const loyalty = loyaltyPoints(p);
-  const number = playerNumber(p.id);
+  const number = numberOf(p);
   const ref = { id: p.id, email: p.source === "browser" ? p.email : undefined, name: `${p.firstName} ${p.lastName}`.trim() };
 
   return (
@@ -297,7 +297,7 @@ function Locks({ playerRef }: { playerRef: { id: string; email?: string; name: s
                       {allowed && (
                         <button
                           type="button"
-                          onClick={() => setMessage(unlockPlayer(playerRef, l.id).ok ? "Lock removed." : "Couldn't remove the lock.")}
+                          onClick={async () => setMessage((await unlockPlayer(playerRef, l.id)).ok ? "Lock removed." : "Couldn't remove the lock.")}
                           className="mt-1 block font-semibold text-accent"
                         >
                           Remove
@@ -315,10 +315,11 @@ function Locks({ playerRef }: { playerRef: { id: string; email?: string; name: s
             <LockForm
               type={adding}
               onCancel={() => setAdding(null)}
-              onSave={(reason, comment) => {
-                const res = lockPlayer(playerRef, adding, reason, comment);
-                setMessage(res.ok ? (adding === "cs" ? "Player locked: they can't sign in or play." : "Self-exclusion recorded.") : "Couldn't add the lock.");
+              onSave={async (reason, comment) => {
+                const type = adding;
                 setAdding(null);
+                const res = await lockPlayer(playerRef, type, reason, comment);
+                setMessage(res.ok ? (type === "cs" ? "Player locked: they can't sign in or play." : "Self-exclusion recorded.") : "Couldn't add the lock.");
               }}
             />
           ) : (
@@ -395,7 +396,7 @@ function Tags({ playerRef, auto }: { playerRef: { id: string; email?: string; na
     e.preventDefault();
     const tag = draft.trim().replace(/\s+/g, "-");
     if (!tag || list.includes(tag)) return setDraft("");
-    setPlayerTags(playerRef, [...list, tag]);
+    void setPlayerTags(playerRef, [...list, tag]);
     setDraft("");
   }
 
@@ -412,7 +413,7 @@ function Tags({ playerRef, auto }: { playerRef: { id: string; email?: string; na
             <li key={t} className="inline-flex items-center gap-1 rounded bg-accent px-2 py-0.5 text-xs font-semibold text-on-accent">
               {t}
               {allowed && (
-                <button type="button" aria-label={`Remove tag ${t}`} onClick={() => setPlayerTags(playerRef, list.filter((x) => x !== t))}>
+                <button type="button" aria-label={`Remove tag ${t}`} onClick={() => void setPlayerTags(playerRef, list.filter((x) => x !== t))}>
                   <X className="size-3" />
                 </button>
               )}
@@ -475,15 +476,15 @@ function Payments({ p }: { p: PlayerRecord }) {
                 </td>
                 <td className="px-4 py-2.5 capitalize">{m.status}</td>
                 <td className="px-4 py-2.5 text-right">
-                  {m.type === "withdrawal" && m.status === "pending" && p.source === "browser" && (
+                  {m.type === "withdrawal" && m.status === "pending" && p.source !== "demo" && (
                     <span className="inline-flex gap-2">
-                      <Button size="sm" onClick={() => setMessage(settleWithdrawal(p.email, m.id, "completed").ok ? "Cashout marked as paid." : "Couldn't settle it.")}>
+                      <Button size="sm" onClick={async () => setMessage((await settleWithdrawal(p.email, m.id, "completed")).ok ? "Cashout marked as paid." : "Couldn't settle it.")}>
                         Mark paid
                       </Button>
                       <Button
                         size="sm"
                         variant="secondary"
-                        onClick={() => setMessage(settleWithdrawal(p.email, m.id, "cancelled").ok ? "Cashout cancelled; funds returned." : "Couldn't settle it.")}
+                        onClick={async () => setMessage((await settleWithdrawal(p.email, m.id, "cancelled")).ok ? "Cashout cancelled; funds returned." : "Couldn't settle it.")}
                       >
                         Cancel
                       </Button>
@@ -505,6 +506,7 @@ function Payments({ p }: { p: PlayerRecord }) {
 }
 
 function Openings({ p, number }: { p: PlayerRecord; number: number }) {
+  const { getBox, findItem } = useCatalog();
   const rows = [...p.plays].reverse().slice(0, 15);
   return (
     <Panel title={`Box openings (${p.plays.length})`} aside={<Link href={`/admin/boxes/openings?player=${number}`} className="text-sm font-semibold text-accent">All openings</Link>}>
@@ -531,7 +533,7 @@ function Openings({ p, number }: { p: PlayerRecord; number: number }) {
               <tr key={`${o.at}-${o.itemId}`}>
                 <td className="px-4 py-2.5 whitespace-nowrap text-muted">{formatDateTime(o.at)}</td>
                 <td className="px-4 py-2.5">{getBox(o.boxId)?.name ?? o.boxId}</td>
-                <td className="px-4 py-2.5 font-semibold">{getItem(o.itemId).name}</td>
+                <td className="px-4 py-2.5 font-semibold">{findItem(o.itemId)?.name ?? o.itemId}</td>
                 <td className="px-4 py-2.5 text-right">{formatUsd(o.priceCents)}</td>
                 <td className={cn("px-4 py-2.5 text-right font-semibold", o.valueCents > o.priceCents && "text-success")}>{formatUsd(o.valueCents)}</td>
               </tr>
@@ -557,7 +559,7 @@ function Comments({ playerRef }: { playerRef: { id: string; email?: string; name
             onSubmit={(e) => {
               e.preventDefault();
               if (!draft.trim()) return;
-              addComment(playerRef, draft);
+              void addComment(playerRef, draft);
               setDraft("");
             }}
             className="grid gap-2"

@@ -7,7 +7,10 @@ import { economy } from "@/config/economy";
 import { randomHex, sha256Hex } from "@/domain/fair";
 import { sellBackValue } from "@/domain/odds";
 import type { Box, Cents, InventoryItem, ResolvedEntry, Transaction, TransactionType } from "@/domain/types";
-import { getItem } from "@/services/catalog";
+import { isSupabase } from "@/backend/config";
+import { BackendError } from "@/backend/contract";
+import { loadMe, remotePlayer, seedsFromRpc } from "@/backend/remote-player";
+import { activeCatalog, getItem } from "@/services/catalog";
 import { drawFromBox, type Seeds } from "@/services/play";
 
 /**
@@ -15,7 +18,7 @@ import { drawFromBox, type Seeds } from "@/services/play";
  * wallet / inventory / fairness APIs; components only talk to these actions.
  */
 
-export type WithdrawalOutcome = { ok: true } | { ok: false; reason: "insufficient_funds" | "below_minimum" };
+export type WithdrawalOutcome = { ok: true } | { ok: false; reason: "insufficient_funds" | "below_minimum" | "error" };
 
 export type OpenOutcome =
   | { ok: true; inventoryItem: InventoryItem; entry: ResolvedEntry }
@@ -34,10 +37,10 @@ interface SessionState {
 
   deposit(amount: Cents): void;
   /** Placeholder for payouts: reserves the amount as a pending withdrawal until the back office settles it. */
-  requestWithdrawal(amount: Cents): WithdrawalOutcome;
+  requestWithdrawal(amount: Cents): Promise<WithdrawalOutcome>;
   cancelWithdrawal(id: string): void;
   openBox(box: Box): Promise<OpenOutcome>;
-  sellBack(uids: string[]): Cents;
+  sellBack(uids: string[]): Promise<Cents>;
   requestShipping(uid: string): void;
   cancelShipping(uid: string): void;
   setClientSeed(clientSeed: string): void;
@@ -48,6 +51,14 @@ interface SessionState {
 }
 
 const MAX_TRANSACTIONS = 200;
+
+/** Supabase mode: re-reads the signed-in player's wallet, inventory, ledger and seeds. */
+export async function refreshRemote() {
+  const me = await loadMe();
+  if (me) useSession.setState(me.snapshot);
+}
+
+const report = (e: unknown) => console.error("[backend]", e);
 
 function tx(type: TransactionType, amount: Cents, label: string): Transaction {
   return { id: crypto.randomUUID(), type, amount, label, at: new Date().toISOString() };
@@ -79,13 +90,30 @@ export const useSession = create<SessionState>()(
       ...initial,
 
       deposit(amount) {
+        if (isSupabase) {
+          void remotePlayer.deposit(amount).then(refreshRemote).catch(report);
+          return;
+        }
         set((s) => ({
           balance: s.balance + amount,
           transactions: [tx("deposit", amount, "Demo top-up"), ...s.transactions].slice(0, MAX_TRANSACTIONS),
         }));
       },
 
-      requestWithdrawal(amount) {
+      async requestWithdrawal(amount) {
+        if (isSupabase) {
+          try {
+            await remotePlayer.requestWithdrawal(amount);
+            await refreshRemote();
+            return { ok: true };
+          } catch (e) {
+            const code = e instanceof BackendError ? e.code : "unknown";
+            if (code === "amount_below_minimum") return { ok: false, reason: "below_minimum" };
+            if (code === "insufficient_funds") return { ok: false, reason: "insufficient_funds" };
+            report(e);
+            return { ok: false, reason: "error" };
+          }
+        }
         const { balance } = get();
         if (amount < economy.minWithdrawal) return { ok: false, reason: "below_minimum" };
         if (amount > balance) return { ok: false, reason: "insufficient_funds" };
@@ -101,6 +129,10 @@ export const useSession = create<SessionState>()(
       },
 
       cancelWithdrawal(id) {
+        if (isSupabase) {
+          void remotePlayer.cancelWithdrawal(id).then(refreshRemote).catch(report);
+          return;
+        }
         const t = get().transactions.find((x) => x.id === id && x.type === "withdrawal" && x.status === "pending");
         if (!t) return;
         set((s) => ({
@@ -111,6 +143,33 @@ export const useSession = create<SessionState>()(
       },
 
       async openBox(box) {
+        if (isSupabase) {
+          try {
+            const r = await remotePlayer.openBox(box);
+            const itemId = String(r.item_id);
+            const entry = activeCatalog().resolveEntries(box).find((e) => e.item.id === itemId);
+            if (!entry) throw new Error("The drawn item is not in the loaded catalog: " + itemId);
+            const inventoryItem: InventoryItem = {
+              uid: String(r.inventory_item_id),
+              itemId,
+              boxId: box.id,
+              acquiredAt: new Date().toISOString(),
+              status: "held",
+              draw: { serverSeedHash: String(r.server_seed_hash), clientSeed: String(r.client_seed), nonce: Number(r.nonce), roll: Number(r.roll) },
+            };
+            set((s) => ({
+              balance: Number(r.balance_cents),
+              inventory: [inventoryItem, ...s.inventory],
+              seeds: s.seeds ? { ...s.seeds, nonce: Number(r.nonce) + 1 } : s.seeds,
+            }));
+            void refreshRemote().catch(report);
+            return { ok: true, inventoryItem, entry };
+          } catch (e) {
+            if (e instanceof BackendError && e.code === "insufficient_funds") return { ok: false, reason: "insufficient_funds" };
+            report(e);
+            return { ok: false, reason: "not_ready" };
+          }
+        }
         const { balance, seeds } = get();
         if (!seeds) return { ok: false, reason: "not_ready" };
         if (balance < box.price) return { ok: false, reason: "insufficient_funds" };
@@ -134,7 +193,12 @@ export const useSession = create<SessionState>()(
         return { ok: true, inventoryItem, entry };
       },
 
-      sellBack(uids) {
+      async sellBack(uids) {
+        if (isSupabase) {
+          const r = await remotePlayer.sellBack(uids);
+          await refreshRemote();
+          return Number(r.credited_cents);
+        }
         const wanted = new Set(uids);
         let credited = 0;
         const sold: string[] = [];
@@ -156,6 +220,10 @@ export const useSession = create<SessionState>()(
       },
 
       requestShipping(uid) {
+        if (isSupabase) {
+          void remotePlayer.requestShipping(uid).then(refreshRemote).catch(report);
+          return;
+        }
         const inv = get().inventory.find((i) => i.uid === uid);
         if (!inv || inv.status !== "held") return;
         set((s) => ({
@@ -165,6 +233,10 @@ export const useSession = create<SessionState>()(
       },
 
       cancelShipping(uid) {
+        if (isSupabase) {
+          void remotePlayer.cancelShipping(uid).then(refreshRemote).catch(report);
+          return;
+        }
         // Only while pending — once operations pick it up it goes through support (per vendor demo).
         const inv = get().inventory.find((i) => i.uid === uid);
         if (!inv || inv.status !== "shipping_pending") return;
@@ -175,12 +247,20 @@ export const useSession = create<SessionState>()(
       },
 
       setClientSeed(clientSeed) {
+        if (isSupabase) {
+          void remotePlayer.setClientSeed(clientSeed).then((r) => set(seedsFromRpc(r))).catch(report);
+          return;
+        }
         const seeds = get().seeds;
         if (!seeds || !clientSeed.trim()) return;
         set({ seeds: { ...seeds, clientSeed: clientSeed.trim() } });
       },
 
       async rotateSeeds() {
+        if (isSupabase) {
+          set(seedsFromRpc(await remotePlayer.rotateSeeds()));
+          return;
+        }
         const current = get().seeds;
         const next = await freshSeeds(current?.clientSeed);
         set((s) => ({
@@ -190,6 +270,8 @@ export const useSession = create<SessionState>()(
       },
 
       async ensureSeeds() {
+        // Supabase: the server commits seeds; they arrive with the player's data at sign-in.
+        if (isSupabase) return;
         if (!get().seeds) set({ seeds: await freshSeeds() });
       },
 
@@ -198,6 +280,7 @@ export const useSession = create<SessionState>()(
       },
 
       reset() {
+        if (isSupabase) return;
         set({ ...initial, ageConfirmed: get().ageConfirmed });
         void get().ensureSeeds();
       },

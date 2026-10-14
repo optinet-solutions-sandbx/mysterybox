@@ -1,31 +1,50 @@
 "use client";
 
-import { can, type AccountStatus, type AppRole } from "@/backend/contract";
+import { isSupabase } from "@/backend/config";
+import { BackendError, can, type AccountStatus, type AppRole } from "@/backend/contract";
+import { reloadBackoffice, useRemoteBackoffice } from "@/backend/remote-admin";
+import { accessToken, rpc } from "@/backend/supabase-client";
 import { useAuth, type Account } from "./auth";
 import { useBackoffice, type PlayerLock } from "./backoffice";
 import { useLedgers } from "./ledgers";
 
 /**
- * Back-office actions for the mock, with the same rules the SQL functions enforce
- * (supabase/migrations/20261012120300_backoffice.sql). Every successful action is audited.
+ * Back-office actions. With Supabase each one calls its SQL function (which enforces the role
+ * rules and writes the audit log) and reloads the back office. The mock applies the same rules
+ * to this browser's data and audits them itself.
  */
 
-export type StaffActionResult =
-  | { ok: true }
-  | { ok: false; error: "forbidden" | "cannot_change_self" | "last_super_admin" | "not_found" | "exists" | "not_pending" };
+export type StaffActionError = "forbidden" | "cannot_change_self" | "last_super_admin" | "not_found" | "exists" | "not_pending" | "unavailable";
+export type StaffActionResult = { ok: true } | { ok: false; error: StaffActionError };
+
+type PlayerRef = { id: string; email?: string; name: string };
 
 function actor(): Account | null {
   const { currentEmail, accounts } = useAuth.getState();
-  return currentEmail ? accounts[currentEmail] ?? null : null;
+  return currentEmail ? (accounts[currentEmail] ?? null) : null;
 }
 
 function audit(by: Account, action: string, targetType: string, targetId: string, detail: Record<string, unknown> = {}) {
   useBackoffice.getState().log({ actorId: by.id, actorRole: by.role, action, targetType, targetId, detail: { by: by.email, ...detail } });
 }
 
-type PlayerRef = { id: string; email?: string; name: string };
+/** Runs a Supabase call, reloads, and maps the SQL error codes to the UI's. */
+async function remote(call: () => Promise<unknown>): Promise<StaffActionResult> {
+  try {
+    await call();
+    await reloadBackoffice();
+    return { ok: true };
+  } catch (e) {
+    const code = e instanceof BackendError ? e.code : "unknown";
+    console.error("[backend]", e);
+    if (code === "cannot_change_self" || code === "last_super_admin" || code === "forbidden") return { ok: false, error: code };
+    if (code === "player_not_found" || code === "lock_not_found") return { ok: false, error: "not_found" };
+    if (code === "transaction_not_pending") return { ok: false, error: "not_pending" };
+    return { ok: false, error: "forbidden" };
+  }
+}
 
-/** Writes a status after the same checks as admin_set_player_status. */
+/** Writes a status after the same checks as admin_set_player_status (mock only). */
 function applyStatus(by: Account, player: PlayerRef, status: AccountStatus): StaffActionResult {
   if (player.email) {
     const target = useAuth.getState().accounts[player.email];
@@ -39,8 +58,9 @@ function applyStatus(by: Account, player: PlayerRef, status: AccountStatus): Sta
   return { ok: true };
 }
 
-/** Suspend / reactivate a player. Browser accounts carry `email`; generated demo players don't. */
-export function setPlayerStatus(player: PlayerRef, status: AccountStatus, from: AccountStatus): StaffActionResult {
+/** Suspend / reactivate a player. */
+export async function setPlayerStatus(player: PlayerRef, status: AccountStatus, from: AccountStatus): Promise<StaffActionResult> {
+  if (isSupabase) return remote(() => rpc("admin_set_player_status", { p_user_id: player.id, p_status: status, p_reason: null }));
   const by = actor();
   if (!by || !can(by.role, "players.suspend")) return { ok: false, error: "forbidden" };
   const res = applyStatus(by, player, status);
@@ -48,14 +68,15 @@ export function setPlayerStatus(player: PlayerRef, status: AccountStatus, from: 
   return res;
 }
 
-/** Status that follows from the active locks: self-exclusion wins, then a staff lock. */
+/** Status that follows from the active locks: self-exclusion wins, then a staff lock (mirrors _status_from_locks). */
 function statusFromLocks(locks: PlayerLock[]): AccountStatus {
   const active = locks.filter((l) => !l.removedAt);
   return active.some((l) => l.type === "sb") ? "self_excluded" : active.some((l) => l.type === "cs") ? "suspended" : "active";
 }
 
 /** Adds a CS (staff) lock or an SB (self-exclusion) lock; the account status follows. */
-export function lockPlayer(player: PlayerRef, type: PlayerLock["type"], reason: string, comment: string): StaffActionResult {
+export async function lockPlayer(player: PlayerRef, type: PlayerLock["type"], reason: string, comment: string): Promise<StaffActionResult> {
+  if (isSupabase) return remote(() => rpc("admin_lock_player", { p_player_id: player.id, p_type: type, p_reason: reason, p_comment: comment }));
   const by = actor();
   if (!by || !can(by.role, "players.suspend")) return { ok: false, error: "forbidden" };
   const existing = useBackoffice.getState().locks[player.id] ?? [];
@@ -67,7 +88,8 @@ export function lockPlayer(player: PlayerRef, type: PlayerLock["type"], reason: 
   return { ok: true };
 }
 
-export function unlockPlayer(player: PlayerRef, lockId: string): StaffActionResult {
+export async function unlockPlayer(player: PlayerRef, lockId: string): Promise<StaffActionResult> {
+  if (isSupabase) return remote(() => rpc("admin_unlock_player", { p_lock_id: Number(lockId) }));
   const by = actor();
   if (!by || !can(by.role, "players.suspend")) return { ok: false, error: "forbidden" };
   const locks = useBackoffice.getState().locks[player.id] ?? [];
@@ -80,8 +102,9 @@ export function unlockPlayer(player: PlayerRef, lockId: string): StaffActionResu
   return { ok: true };
 }
 
-/** Staff notes on the player card. */
-export function addComment(player: PlayerRef, text: string): StaffActionResult {
+/** Staff notes on the player page. */
+export async function addComment(player: PlayerRef, text: string): Promise<StaffActionResult> {
+  if (isSupabase) return remote(() => rpc("admin_add_comment", { p_player_id: player.id, p_body: text.trim() }));
   const by = actor();
   if (!by || !can(by.role, "players.notes")) return { ok: false, error: "forbidden" };
   useBackoffice.getState().addComment(player.id, by.email, text.trim());
@@ -89,8 +112,9 @@ export function addComment(player: PlayerRef, text: string): StaffActionResult {
   return { ok: true };
 }
 
-/** Manual tags (the system adds its own automatically; see domain/player-insights.ts). */
-export function setPlayerTags(player: PlayerRef, tags: string[]): StaffActionResult {
+/** Manual tags (automatic ones are computed; see domain/player-insights.ts). */
+export async function setPlayerTags(player: PlayerRef, tags: string[]): Promise<StaffActionResult> {
+  if (isSupabase) return remote(() => rpc("admin_set_tags", { p_player_id: player.id, p_tags: tags }));
   const by = actor();
   if (!by || !can(by.role, "players.notes")) return { ok: false, error: "forbidden" };
   const before = useBackoffice.getState().tags[player.id] ?? [];
@@ -100,7 +124,13 @@ export function setPlayerTags(player: PlayerRef, tags: string[]): StaffActionRes
 }
 
 /** Super admin only; never your own role, and never the last super admin. */
-export function setRole(email: string, role: AppRole): StaffActionResult {
+export async function setRole(email: string, role: AppRole): Promise<StaffActionResult> {
+  if (isSupabase) {
+    const { staff, players } = useRemoteBackoffice.getState();
+    const target = staff.find((s) => s.email === email) ?? players.find((p) => p.email === email);
+    if (!target) return { ok: false, error: "not_found" };
+    return remote(() => rpc("admin_set_role", { p_user_id: target.id, p_role: role }));
+  }
   const by = actor();
   if (!by || !can(by.role, "staff.manage")) return { ok: false, error: "forbidden" };
   const { accounts } = useAuth.getState();
@@ -114,8 +144,24 @@ export function setRole(email: string, role: AppRole): StaffActionResult {
   return { ok: true };
 }
 
-/** Super admin only: creates a verified staff account with a temporary password. */
+/** Super admin only: a verified staff account with a temporary password (Supabase: via /api/admin/staff). */
 export async function addStaff(input: { email: string; firstName: string; lastName: string; role: AppRole; password: string }): Promise<StaffActionResult> {
+  if (isSupabase) {
+    try {
+      const res = await fetch("/api/admin/staff", {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${await accessToken()}` },
+        body: JSON.stringify(input),
+      });
+      const body = (await res.json()) as { error?: string };
+      if (!res.ok) return { ok: false, error: body.error === "exists" ? "exists" : body.error === "unavailable" ? "unavailable" : "forbidden" };
+      await reloadBackoffice();
+      return { ok: true };
+    } catch (e) {
+      console.error("[backend]", e);
+      return { ok: false, error: "unavailable" };
+    }
+  }
   const by = actor();
   if (!by || !can(by.role, "staff.manage")) return { ok: false, error: "forbidden" };
   const created = await useAuth.getState().addAccount(input);
@@ -125,8 +171,9 @@ export async function addStaff(input: { email: string; firstName: string; lastNa
   return { ok: true };
 }
 
-/** Pay out or cancel a browser account's pending withdrawal (demo players' are read-only). */
-export function settleWithdrawal(email: string, transactionId: string, outcome: "completed" | "cancelled"): StaffActionResult {
+/** Pay out or cancel a pending withdrawal (mock: browser accounts only; demo players are read-only). */
+export async function settleWithdrawal(email: string, transactionId: string, outcome: "completed" | "cancelled"): Promise<StaffActionResult> {
+  if (isSupabase) return remote(() => rpc("admin_settle_transaction", { p_transaction_id: transactionId, p_outcome: outcome }));
   const by = actor();
   if (!by || !can(by.role, "payments.settle")) return { ok: false, error: "forbidden" };
   if (!useLedgers.getState().settleWithdrawal(email, transactionId, outcome)) return { ok: false, error: "not_pending" };
@@ -134,9 +181,9 @@ export function settleWithdrawal(email: string, transactionId: string, outcome: 
   return { ok: true };
 }
 
-/** Super admin only: wipes every player account in this browser and its activity, plus the audit
- * log, so testing starts fresh. Staff accounts stay. Logged as the first entry of the new log. */
-export function clearTestData(): StaffActionResult & { removed?: number } {
+/** Super admin, mock only: wipes this browser's player accounts and activity and the audit log. */
+export async function clearTestData(): Promise<StaffActionResult & { removed?: number }> {
+  if (isSupabase) return { ok: false, error: "unavailable" };
   const by = actor();
   if (!by || !can(by.role, "settings.edit")) return { ok: false, error: "forbidden" };
   const players = Object.values(useAuth.getState().accounts)

@@ -4,9 +4,12 @@ import { useState, type ReactNode } from "react";
 import { computeRoll, sha256Hex } from "@/domain/fair";
 import { pickByRoll } from "@/domain/odds";
 import { formatUsd } from "@/domain/money";
-import { listBoxes, resolveEntries } from "@/services/catalog";
+import { useCatalog } from "@/components/catalog-provider";
 import { useSession, useSessionHydrated } from "@/store/session";
 import { Button } from "@/components/ui/button";
+import { AuthPrompt } from "@/components/auth/auth-prompt";
+import { isSupabase } from "@/backend/config";
+import { useAuthHydrated, useCurrentUser } from "@/store/auth";
 
 const field = "w-full rounded-xl bg-surface-2 px-3 py-2.5 font-mono text-sm ring-1 ring-line";
 
@@ -17,7 +20,13 @@ export function FairnessPanel() {
   const setClientSeed = useSession((s) => s.setClientSeed);
   const rotateSeeds = useSession((s) => s.rotateSeeds);
   const [draft, setDraft] = useState<string | null>(null);
+  const authHydrated = useAuthHydrated();
+  const user = useCurrentUser();
 
+  // Supabase: seeds belong to an account (the server commits them), so ask signed-out visitors to sign in.
+  if (isSupabase && authHydrated && !user) {
+    return <AuthPrompt title="Sign in to see your seeds" body="Your server seed hash, client seed and nonce are kept with your account." />;
+  }
   if (!hydrated || !seeds) return <div className="h-64 animate-pulse rounded-card bg-surface" />;
 
   return (
@@ -74,6 +83,7 @@ export function FairnessPanel() {
 }
 
 function Verifier({ defaults }: { defaults?: { serverSeed: string; serverSeedHash: string; clientSeed: string } }) {
+  const { listBoxes, resolveEntries } = useCatalog();
   const boxes = listBoxes();
   const [serverSeed, setServerSeed] = useState(defaults?.serverSeed ?? "");
   const [clientSeed, setClientSeed] = useState(defaults?.clientSeed ?? "");
