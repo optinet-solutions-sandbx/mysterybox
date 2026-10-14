@@ -32,7 +32,7 @@ not decoration.**
   (`web/src/box-api/`, `NEXT_PUBLIC_BACKEND=mock`); `api` points it at their server. The Supabase draft
   is superseded for the box system. Handoff, rulings and open items:
   [docs/10-box-system-handoff.md](docs/10-box-system-handoff.md). Live: https://mysterybox-seven.vercel.app.
-- **Accounts on Supabase, behind their own switch (2026-10-14).** `NEXT_PUBLIC_ACCOUNTS=supabase` (plus
+- **Accounts on Supabase, behind their own switch (2026-10-14; LIVE since 2026-10-14, project `ijpxlcdjhqqcugaeqrjm`, "Confirm email" off until a mail provider is added).** `NEXT_PUBLIC_ACCOUNTS=supabase` (plus
   the URL and anon key) moves **login and identity** to Supabase Auth: sign-up with the 6-digit code,
   sign-in, roles, status, locks, tags, comments, staff and the audit log, all shared across devices.
   Wallets, opens and credit stay on the box system's per-account storage until the kit's API is

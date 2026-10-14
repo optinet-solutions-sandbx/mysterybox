@@ -5,6 +5,12 @@
 > [10-box-system-handoff.md](10-box-system-handoff.md). This draft stays as the reference for accounts,
 > roles and the back office.
 
+**Live, 2026-10-14:** production runs `NEXT_PUBLIC_ACCOUNTS=supabase` against project
+`ijpxlcdjhqqcugaeqrjm`. The schema and seed are applied and the five team super admins are provisioned.
+Email confirmation is off, so sign-up signs players straight in. Turn it back on with a mail
+provider and the `{{ .Token }}` template (step 3 below). A full live pass passed: sign-up on the page,
+an open, the back office, a CS lock that blocks sign-in, and cleanup.
+
 **Status, 2026-10-14:**
 - **Accounts:** wired to Supabase behind `NEXT_PUBLIC_ACCOUNTS=supabase`. That covers sign-up with the
   6-digit code, sign-in, roles, status, locks, tags, comments, staff and the audit log.
