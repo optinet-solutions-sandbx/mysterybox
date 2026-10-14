@@ -44,7 +44,7 @@ export function LogoMark({
       width={LOGO_SIZE.width}
       height={LOGO_SIZE.height}
       sizes={sizes}
-      priority={priority}
+      {...(priority ? { loading: "eager" as const, fetchPriority: "high" as const } : {})}
       alt={title ?? ""}
       aria-hidden={title ? undefined : true}
       className={cn("h-auto", className)}

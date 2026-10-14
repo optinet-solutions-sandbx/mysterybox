@@ -19,7 +19,7 @@ const C = {
   muted: "#cbb9b0",
   gold: "#e8c27a",
   goldLight: "#f9ecd0",
-  rarity: { common: "#9c8a87", uncommon: "#cfa8d1", rare: "#a86fab", epic: "#e0334d", grail: "#e8c27a" },
+  rarity: { common: "#9c8a87", uncommon: "#e9dccb", rare: "#c08a3e", epic: "#c73a52", grail: "#e8c27a" },
 } as const;
 
 const root = process.cwd();

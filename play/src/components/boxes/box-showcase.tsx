@@ -79,7 +79,6 @@ function Carousel({ boxes, index, onIndex }: { boxes: Box[]; index: number; onIn
   const inView = useInView(stage, { margin: "0px 0px -10% 0px" });
   const reduce = useReducedMotion();
   const wide = useMedia("(min-width: 768px)");
-  const [peek, setPeek] = useState(false);
   const go = (d: number) => {
     sfx.swish();
     onIndex((index + d + boxes.length) % boxes.length);
@@ -105,8 +104,6 @@ function Carousel({ boxes, index, onIndex }: { boxes: Box[]; index: number; onIn
           if (info.offset.x < -50) go(1);
           else if (info.offset.x > 50) go(-1);
         }}
-        onPointerEnter={(e) => e.pointerType === "mouse" && setPeek(true)}
-        onPointerLeave={() => setPeek(false)}
         className="relative h-[300px] touch-pan-y overflow-hidden rounded-[32px] outline-none md:h-[360px]"
       >
         <div aria-hidden className="absolute inset-x-[10%] bottom-[8%] h-1/2 bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--glow)_40%,transparent),transparent)]" />
@@ -128,7 +125,7 @@ function Carousel({ boxes, index, onIndex }: { boxes: Box[]; index: number; onIn
                 exit={{ opacity: 0, scale: 0.5 }}
                 transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 260, damping: 30 }}
               >
-                <Chest finish={b.material} still={pos !== 0} float={pos === 0 && inView} peek={pos === 0 && peek} priority={pos === 0} sizes="(min-width: 768px) 360px, 72vw" className={wide ? "h-[300px] w-[360px]" : "h-[230px] w-[270px]"} label={`${b.name} box`} />
+                <Chest finish={b.material} still float={pos === 0 && inView} tilt={pos === 0} priority={pos === 0} sizes={pos === 0 ? "(min-width: 768px) 360px, 72vw" : "(min-width: 768px) 200px, 40vw"} className={wide ? "h-[300px] w-[360px]" : "h-[230px] w-[270px]"} label={`${b.name} box`} />
               </motion.button>
             );
           })}

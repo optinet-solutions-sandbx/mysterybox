@@ -19,6 +19,10 @@ export function AppHydrator() {
       rememberReferral(new URLSearchParams(window.location.search).get("ref"));
       sweepVaults();
     });
+    // Once the page is idle, fetch the opening screen's code (not three.js) so the first tap on
+    // Buy opens instantly.
+    const idle = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1500));
+    idle(() => void import("@/components/open/open-overlay"));
     const timer = setInterval(() => sweepVaults(), 30_000);
     // A slow device can take longer than the browser allows for a screen transition; the page
     // still changes, only the slide is skipped, so that abort isn't an error worth surfacing.

@@ -102,9 +102,9 @@ describe("levels", () => {
   });
 
   it("finds the level and progress to the next", () => {
-    expect(levelFor(0)).toMatchObject({ level: { name: "Ivory" }, next: { name: "Navy" }, progress: 0 });
+    expect(levelFor(0)).toMatchObject({ level: { name: "Ivory" }, next: { name: "Burgundy" }, progress: 0 });
     expect(levelFor(250).progress).toBe(0.5);
-    expect(levelFor(500).level.name).toBe("Navy");
+    expect(levelFor(500).level.name).toBe("Burgundy");
     expect(levelFor(60_000)).toMatchObject({ level: { name: "Gold" }, next: null, progress: 1 });
   });
 });

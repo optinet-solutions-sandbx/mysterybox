@@ -126,7 +126,7 @@ export const boxes: Box[] = [
     name: "Jewel Vault",
     tagline: "Love, Juste un Clou, HardWear and Kelly.",
     shelf: "jewelry",
-    material: "plum",
+    material: "bronze",
     odds: [
       ["hermes-clic-h", 42],
       ["cartier-love-small", 20],

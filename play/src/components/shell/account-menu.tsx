@@ -13,7 +13,7 @@ export function Avatar({ name, className = "size-10 text-base" }: { name: string
   return (
     <span
       aria-hidden
-      className={`grid shrink-0 place-items-center rounded-full bg-[radial-gradient(circle_at_30%_25%,var(--plum-400),var(--plum-600)_60%,var(--plum-800))] font-display font-semibold text-[var(--foil-4)] ${className}`}
+      className={`grid shrink-0 place-items-center rounded-full bg-[radial-gradient(circle_at_30%_25%,var(--champagne-300),var(--champagne-500)_55%,var(--champagne-700))] font-display font-semibold text-[var(--onyx-wine)] ${className}`}
     >
       {name.slice(0, 1).toUpperCase()}
     </span>

@@ -13,11 +13,18 @@ export function chestStill(finish: BoxMaterial) {
   return `/boxes/${finish}-${STILLS_VERSION}.webp`;
 }
 
+/** Starts loading three.js and the chest model ahead of an opening (call on Buy intent). */
+export function preloadChest() {
+  void import("./chest-scene");
+  void import("@/components/open/open-overlay");
+}
+
 /**
- * The chest, live in WebGL. First paint is a pre-rendered still of the same model
- * (public/boxes, from scripts/render_box_stills.py); three.js loads afterwards and the live canvas
- * fades in over it. Renders only while on screen, pauses behind the opening overlay, and stays on
- * the still where WebGL is unavailable.
+ * The chest. `still` (grids, carousel, box page) is the pre-rendered image of the WebGL model
+ * (public/boxes, from scripts/render_box_stills.py) with a CSS float and pointer tilt: no three.js,
+ * no GPU work. Otherwise (the opening) the still paints first, three.js loads and compiles its
+ * shaders asynchronously, and the live canvas fades in over it; it renders only while on screen,
+ * pauses behind the opening overlay, and stays on the still where WebGL is unavailable.
  */
 export function Chest({
   finish,
@@ -52,6 +59,7 @@ export function Chest({
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const wrap = useRef<HTMLDivElement>(null);
+  const tiltLayer = useRef<HTMLDivElement>(null);
   const scene = useRef<ChestScene | null>(null);
   const [live, setLive] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -66,9 +74,14 @@ export function Chest({
     const el = canvas.current;
     const box = wrap.current;
     import("./chest-scene")
-      .then(({ ChestScene }) => {
+      .then(async ({ ChestScene }) => {
         if (disposed) return;
         const s = new ChestScene(el, { finish });
+        await s.warm();
+        if (disposed) {
+          s.dispose();
+          return;
+        }
         s.onFrame = () => {
           setLive(true);
           s.onFrame = null;
@@ -140,9 +153,18 @@ export function Chest({
   }, [open, peek, live, reduce]);
 
   function onPointerMove(e: PointerEvent<HTMLDivElement>) {
-    if (!tilt || reduce || e.pointerType !== "mouse" || !scene.current) return;
+    if (!tilt || reduce || e.pointerType !== "mouse") return;
     const r = e.currentTarget.getBoundingClientRect();
-    scene.current.setPointer(((e.clientX - r.left) / r.width) * 2 - 1, ((e.clientY - r.top) / r.height) * 2 - 1);
+    const x = ((e.clientX - r.left) / r.width) * 2 - 1;
+    const y = ((e.clientY - r.top) / r.height) * 2 - 1;
+    if (scene.current) scene.current.setPointer(x, y);
+    // Stills tilt with a CSS transform written straight to the element (no re-render).
+    else if (tiltLayer.current) tiltLayer.current.style.transform = `perspective(900px) rotateX(${(-y * 6).toFixed(2)}deg) rotateY(${(x * 9).toFixed(2)}deg)`;
+  }
+
+  function onPointerLeave() {
+    scene.current?.setPointer(0, 0);
+    if (tiltLayer.current) tiltLayer.current.style.transform = "";
   }
 
   return (
@@ -151,18 +173,22 @@ export function Chest({
       role="img"
       aria-label={label}
       onPointerMove={onPointerMove}
-      onPointerLeave={() => scene.current?.setPointer(0, 0)}
+      onPointerLeave={onPointerLeave}
       className={cn("relative", className)}
     >
-      <Image
-        src={chestStill(finish)}
-        alt=""
-        fill
-        sizes={sizes}
-        priority={priority}
-        draggable={false}
-        className={cn("object-contain transition-opacity duration-500", live ? "opacity-0" : "opacity-100")}
-      />
+      <div ref={tiltLayer} className="absolute inset-0 transition-transform duration-500 ease-snap">
+        <div className={cn("absolute inset-0", still && float && !reduce && "animate-float")}>
+          <Image
+            src={chestStill(finish)}
+            alt=""
+            fill
+            sizes={sizes}
+            {...(priority ? { loading: "eager" as const, fetchPriority: "high" as const } : {})}
+            draggable={false}
+            className={cn("object-contain transition-opacity duration-500", live ? "opacity-0" : "opacity-100")}
+          />
+        </div>
+      </div>
       {!still && (
         <canvas
           ref={canvas}

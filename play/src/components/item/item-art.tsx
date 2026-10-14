@@ -34,7 +34,8 @@ export function PiecePhoto({ item, sizes, className }: { item: Item; sizes: stri
           alt={item.name}
           fill
           sizes={sizes}
-          priority
+          loading="eager"
+          fetchPriority="high"
           className="object-contain drop-shadow-[0_24px_36px_rgb(0_0_0/0.45)]"
           draggable={false}
         />
@@ -92,7 +93,7 @@ export function ItemArt({
       />
       {item.image ? (
         <div className="relative" style={item.imageAspect ? fitToArea(item.imageAspect) : { width: "80%", height: "80%" }}>
-          <Image src={item.image} alt={item.name} fill sizes={sizes} priority={priority} className="object-contain drop-shadow-[0_10px_18px_rgb(0_0_0/0.35)]" />
+          <Image src={item.image} alt={item.name} fill sizes={sizes} {...(priority ? { loading: "eager" as const, fetchPriority: "high" as const } : {})} className="object-contain drop-shadow-[0_10px_18px_rgb(0_0_0/0.35)]" />
         </div>
       ) : (
         <svg viewBox="0 0 100 100" className="w-[64%] overflow-visible drop-shadow-[0_8px_24px_rgb(0_0_0/0.5)]" aria-label={item.name} role="img">

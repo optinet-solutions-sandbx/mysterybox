@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { preloadChest } from "@/components/chest/chest";
 import { button } from "@/components/ui/button";
 import { formatUsd } from "@/domain/money";
 import type { Box } from "@/domain/types";
@@ -12,7 +13,11 @@ export function BuyButton({ box, size = "lg", className }: { box: Box; size?: "m
     <button
       type="button"
       disabled={busy}
+      onPointerEnter={preloadChest}
+      onTouchStart={preloadChest}
+      onFocus={preloadChest}
       onClick={async () => {
+        preloadChest();
         setBusy(true);
         await buyBox(box.slug);
         setBusy(false);

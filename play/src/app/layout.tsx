@@ -1,12 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Cinzel, Jost } from "next/font/google";
 import { brand } from "@/config/brand";
-import { AuthSheet } from "@/components/account/auth-sheet";
-import { OpenOverlay } from "@/components/open/open-overlay";
 import { AgeGate, AppHydrator, Footer, PrototypeBanner, Toast } from "@/components/shell/chrome";
+import { LazyOverlays } from "@/components/shell/lazy-overlays";
 import { TabBar } from "@/components/shell/tab-bar";
 import { TopBar } from "@/components/shell/top-bar";
-import { AddFundsSheet } from "@/components/wallet/add-funds-sheet";
 import { returningBootScript, themeBootScript } from "@/lib/theme";
 import "./globals.css";
 
@@ -49,13 +47,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <Footer />
         </div>
         <TabBar />
-        <AuthSheet />
-        <AddFundsSheet />
-        <OpenOverlay />
+        <LazyOverlays />
         <Toast />
         <AgeGate />
         <AppHydrator />
-        <div aria-hidden className="grain" />
       </body>
     </html>
   );

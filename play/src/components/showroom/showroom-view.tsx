@@ -83,7 +83,7 @@ export function ShowroomView() {
       </p>
 
       <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-5">
-        {pieces.map((item) => {
+        {pieces.map((item, i) => {
           const rarity = bestRarity(item.id);
           const count = boxesHolding(item.id).length;
           return (
@@ -93,7 +93,7 @@ export function ShowroomView() {
                 onClick={() => setSelected(item)}
                 className="group w-full overflow-hidden rounded-3xl border border-line/80 bg-surface/50 text-left transition-[border-color,transform] duration-300 ease-snap hover:-translate-y-0.5 hover:border-accent/50"
               >
-                <ItemArt item={item} rarity={rarity} showBrand={false} sizes="(min-width: 1024px) 220px, 45vw" />
+                <ItemArt item={item} rarity={rarity} showBrand={false} sizes="(min-width: 1024px) 220px, 45vw" priority={i < 4} />
                 <div className="p-3">
                   <p className="truncate text-xs font-semibold tracking-wide text-muted">{item.brand}</p>
                   <p className="truncate text-sm font-medium">{item.name}</p>

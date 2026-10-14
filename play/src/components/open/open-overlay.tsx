@@ -145,7 +145,7 @@ function OpenScene({ slug, pull }: { slug: string; pull: Pull }) {
       transition={{ duration: 0.25 }}
       onClick={() => phase === "opening" && reveal()}
     >
-      {/* Sapphire room light while sealed. */}
+      {/* Burgundy room light while sealed. */}
       <div aria-hidden className="absolute inset-0 bg-[radial-gradient(70%_55%_at_50%_42%,color-mix(in_oklab,var(--glow)_34%,transparent),transparent_75%)]" />
       {/* Reveal: the whole screen floods with the piece's rarity colour, fading to black under the text. */}
       <motion.div

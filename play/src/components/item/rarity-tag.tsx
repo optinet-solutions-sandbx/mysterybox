@@ -17,7 +17,7 @@ export const rarityBg: Record<Rarity, string> = {
   grail: "bg-rarity-grail",
 };
 
-/** A coloured dot with the tier name in the text colour (plum and crimson are too dark for small type on garnet). */
+/** A coloured dot with the tier name in the text colour (burgundy is too dark for small type on garnet). */
 export function RarityTag({ rarity, className }: { rarity: Rarity; className?: string }) {
   return (
     <span className={cn("inline-flex items-center gap-1.5 text-xs font-semibold text-muted", className)}>
@@ -27,11 +27,11 @@ export function RarityTag({ rarity, className }: { rarity: Rarity; className?: s
   );
 }
 
-/** Text on each rarity's fill: dark on the light tiers, cream on plum and crimson. */
+/** Text on each rarity's fill: dark on the light tiers, cream on burgundy. */
 const chipInk: Record<Rarity, string> = {
   common: "text-[var(--onyx-wine)]",
   uncommon: "text-[var(--onyx-wine)]",
-  rare: "text-[var(--cream)]",
+  rare: "text-[var(--onyx-wine)]",
   epic: "text-[var(--cream)]",
   grail: "text-[var(--onyx-wine)]",
 };

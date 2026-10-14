@@ -26,34 +26,34 @@ interface Finish {
   texture?: "leather" | "marble-dark" | "marble-light";
 }
 
-/** Finishes in the Crimson Throne scheme (keys are the catalogue's material names). */
+/** Finishes in burgundy and gold (keys are the catalogue's material names). */
 const FINISHES: Record<BoxMaterial, Finish> = {
   navy: {
-    body: () => ({ color: 0x4a1424, roughness: 0.58, sheen: 0.35, sheenColor: new THREE.Color(0xa0303f), sheenRoughness: 0.45, clearcoat: 0.25, clearcoatRoughness: 0.35 }),
+    body: () => ({ color: 0x4a0f1e, roughness: 0.58, sheen: 0.35, sheenColor: new THREE.Color(0x9f1d35), sheenRoughness: 0.45, clearcoat: 0.25, clearcoatRoughness: 0.35 }),
     crown: { color: 0xe8c27a, metalness: 1, roughness: 0.25 },
     texture: "leather",
   },
   obsidian: {
-    body: () => ({ color: 0x8a5f6c, roughness: 0.14, clearcoat: 1, clearcoatRoughness: 0.03 }),
+    body: () => ({ color: 0x9c8460, roughness: 0.14, clearcoat: 1, clearcoatRoughness: 0.03 }),
     crown: { color: 0xe8c27a, metalness: 1, roughness: 0.22 },
     texture: "marble-dark",
   },
   sapphire: {
-    body: () => ({ color: 0x7c0719, roughness: 0.22, metalness: 0.1, clearcoat: 1, clearcoatRoughness: 0.03 }),
+    body: () => ({ color: 0x5a0016, roughness: 0.2, metalness: 0.1, clearcoat: 1, clearcoatRoughness: 0.03 }),
     crown: { color: 0xf2d9a4, metalness: 1, roughness: 0.2 },
   },
   ivory: {
     body: () => ({ color: 0xf6ecdf, roughness: 0.32, clearcoat: 0.9, clearcoatRoughness: 0.12, sheen: 0.6, sheenColor: new THREE.Color(0xffffff) }),
-    crown: { color: 0x7a0a1d, metalness: 0.2, roughness: 0.45 },
+    crown: { color: 0x650015, metalness: 0.2, roughness: 0.45 },
     texture: "marble-light",
   },
-  plum: {
-    body: () => ({ color: 0x381638, roughness: 0.4, clearcoat: 0.9, clearcoatRoughness: 0.08, sheen: 0.2, sheenColor: new THREE.Color(0x844a87), sheenRoughness: 0.5 }),
-    crown: { color: 0xe8c27a, metalness: 1, roughness: 0.22 },
+  bronze: {
+    body: () => ({ color: 0xa87a3e, metalness: 1, roughness: 0.5, clearcoat: 0.3, clearcoatRoughness: 0.4 }),
+    crown: { color: 0x4a0010, metalness: 0.3, roughness: 0.4 },
   },
   gold: {
     body: () => ({ color: 0xd9b26a, metalness: 1, roughness: 0.32, clearcoat: 0.5, clearcoatRoughness: 0.25 }),
-    crown: { color: 0x530714, metalness: 0.3, roughness: 0.4 },
+    crown: { color: 0x4a0010, metalness: 0.3, roughness: 0.4 },
   },
 };
 
@@ -219,7 +219,7 @@ export class ChestScene {
 
     const key = new THREE.DirectionalLight(0xfff1dc, 2.4);
     key.position.set(-3, 5, 4);
-    const rim = new THREE.DirectionalLight(0xe0334d, 1.8);
+    const rim = new THREE.DirectionalLight(0xb02a45, 1.7);
     rim.position.set(4, 2.5, -4);
     const fill = new THREE.HemisphereLight(0xffe9e0, 0x1c0a10, 0.35);
     this.scene.add(key, rim, fill);
@@ -289,10 +289,10 @@ export class ChestScene {
     const body = new THREE.MeshPhysicalMaterial(params);
     const gold = new THREE.MeshPhysicalMaterial({ color: 0xe2c07c, metalness: 1, roughness: 0.22, clearcoat: 0.3 });
     this.velvet = new THREE.MeshPhysicalMaterial({
-      color: 0x7a0a1d,
+      color: 0x650015,
       roughness: 1,
       sheen: 1,
-      sheenColor: new THREE.Color(0xf191a2),
+      sheenColor: new THREE.Color(0xc73a52),
       sheenRoughness: 0.35,
       emissive: new THREE.Color(0xffc879),
       emissiveIntensity: 0,
@@ -311,7 +311,7 @@ export class ChestScene {
     // Velvet lining on the inner walls.
     const lining = new THREE.Mesh(
       extrudeUp(roundedRect(W - WALL * 2 + 0.002, D - WALL * 2 + 0.002, R - WALL * 0.6), H - WALL - 0.04, 0),
-      new THREE.MeshPhysicalMaterial({ color: 0x7a0a1d, roughness: 1, sheen: 1, sheenColor: new THREE.Color(0xf191a2), side: THREE.BackSide }),
+      new THREE.MeshPhysicalMaterial({ color: 0x650015, roughness: 1, sheen: 1, sheenColor: new THREE.Color(0xc73a52), side: THREE.BackSide }),
     );
     lining.position.y = WALL;
     this.disposables.push(lining.material as THREE.Material);
@@ -359,7 +359,7 @@ export class ChestScene {
     const lid = new THREE.Group();
     lid.position.set(0, 0, D / 2);
     const lidBody = new THREE.Mesh(extrudeUp(roundedRect(W + 0.04, D + 0.04, R + 0.02), LID, 0.07), body);
-    const lidVelvet = new THREE.MeshPhysicalMaterial({ color: 0x530714, roughness: 1, sheen: 1, sheenColor: new THREE.Color(0xe0334d), sheenRoughness: 0.4 });
+    const lidVelvet = new THREE.MeshPhysicalMaterial({ color: 0x4a0010, roughness: 1, sheen: 1, sheenColor: new THREE.Color(0x9f1d35), sheenRoughness: 0.4 });
     this.disposables.push(lidVelvet);
     const lidUnder = new THREE.Mesh(new THREE.ShapeGeometry(roundedRect(W - WALL * 2, D - WALL * 2, R - WALL)), lidVelvet);
     lidUnder.rotation.x = Math.PI / 2;
@@ -399,6 +399,13 @@ export class ChestScene {
     this.hinge.add(lid);
     this.chest.add(this.hinge);
     this.chest.position.y = 0.06;
+  }
+
+  /** Compiles every shader before the first frame, in parallel where the GPU driver allows. */
+  async warm() {
+    const gl = this.renderer.getContext();
+    if (gl.getExtension("KHR_parallel_shader_compile")) await this.renderer.compileAsync(this.scene, this.camera);
+    else this.renderer.compile(this.scene, this.camera);
   }
 
   setPointer(x: number, y: number) {

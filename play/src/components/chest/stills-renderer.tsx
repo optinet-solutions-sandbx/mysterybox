@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import type { BoxMaterial } from "@/domain/types";
 
-const FINISHES: BoxMaterial[] = ["ivory", "navy", "sapphire", "obsidian", "gold", "plum"];
+const FINISHES: BoxMaterial[] = ["ivory", "navy", "sapphire", "obsidian", "gold", "bronze"];
 const SIZE = 1100;
 
 declare global {

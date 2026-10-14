@@ -44,7 +44,7 @@ export function DropTimer({ className }: { className?: string }) {
   if (!now) return <p className={cn("h-7", className)} />;
   const { d, h, m } = countdownParts(dropEndsAt(new Date(now)) - now);
   return (
-    <p className={cn("inline-flex h-7 items-center gap-2 rounded-lg bg-event-bg/60 px-2.5 text-xs font-semibold text-[var(--plum-200)]", className)}>
+    <p className={cn("inline-flex h-7 items-center gap-2 rounded-lg bg-accent-soft px-2.5 text-xs font-semibold text-accent", className)}>
       <span aria-hidden className="size-1.5 animate-pulse rounded-full bg-current" />
       This week only: ends in {d}d {h}h {m}m
     </p>

@@ -33,7 +33,7 @@ export type ItemArtKey =
   | "coin";
 
 /** Box leather/finish. */
-export type BoxMaterial = "navy" | "obsidian" | "sapphire" | "ivory" | "gold" | "plum";
+export type BoxMaterial = "navy" | "obsidian" | "sapphire" | "ivory" | "gold" | "bronze";
 
 export interface Item {
   id: string;

@@ -1,5 +1,5 @@
 import { NotEnoughFunds, openBox, useApp } from "./app";
-import { openAddFunds, openAuth, toast, useUi } from "./ui";
+import { openAddFunds, openAuth, startOpening, toast, useUi } from "./ui";
 
 /** Buy and open a box from any screen: sign-up first, top-up when short, then the opening overlay. */
 export async function buyBox(slug: string) {
@@ -9,7 +9,7 @@ export async function buyBox(slug: string) {
   }
   try {
     const pull = await openBox(slug);
-    useUi.setState({ opening: { slug, pull } });
+    startOpening({ slug, pull });
   } catch (e) {
     if (e instanceof NotEnoughFunds) {
       toast(e.message);
