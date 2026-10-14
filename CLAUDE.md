@@ -259,6 +259,33 @@ Lighthouse on the live site, mobile home: 25 → 84 (blocking 39,970 ms → 260 
    `NEXT_PUBLIC_BRAND=<id> npx next dev`, look at it, delete the pack and run `npm run brands`.
 6. Report results per flow with evidence, and say plainly what was not tested.
 
+## Daily PMS report (every day, before 12 AM Manila time)
+
+Every day work happens on this project, report it before midnight Asia/Manila (UTC+8) to the team's
+PMS, project **"Mystery Box"** at https://pms-nu-eight.vercel.app, so it shows in the assignee's daily
+task report. Do it as the last step of the day's work, and before 12 AM even if the work continues.
+
+- **Done:** one task per finished piece of work, filed as done on the day it was finished. The PMS
+  dates a task by the moment it moves to Done and cannot backdate it, so a day missed shows on the wrong
+  day. Assign the person who did the work (default: John Campilanan, the token's owner). In the
+  description, write "Done YYYY-MM-DD", what changed in plain words, and the commit hash.
+- **Pending:** anything started, proposed or waiting (an approval, a team decision, outside setup)
+  is a To Do task assigned to its owner, described as "Pending since YYYY-MM-DD" plus what it waits on.
+  When it is finished, move that task to Done (`done <taskId>`); don't create a second one.
+- **Check first and last:** `list` before adding (no duplicates); `report` at the end, confirming
+  the day's items appear. Don't submit or finalize the daily report; the owner does that in the PMS.
+- **Credentials:** `PMS_BASE_URL`, `PMS_PROJECT_ID`, `PMS_USER_ID`, `PMS_API_TOKEN` live in
+  `web/.env.local` (gitignored). Never put them in the repo, which is public.
+
+```bash
+node scripts/pms.mjs list                                  # tasks by column
+node scripts/pms.mjs add "<title>" --column done --desc "Done 2026-10-14. … Commit abc1234."
+node scripts/pms.mjs add "<title>" --desc "Pending since 2026-10-14. Waits on …"   # To Do
+node scripts/pms.mjs add "<title>" --assignee ramiel@optinetsolutions.com …        # someone else
+node scripts/pms.mjs done <taskId>                         # a pending task is finished
+node scripts/pms.mjs report                                # today's daily report
+```
+
 ## Docs
 
 [docs/README.md](docs/README.md) is the index: brief and roadmap, research digest, product spec,
