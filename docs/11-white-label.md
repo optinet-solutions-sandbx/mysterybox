@@ -62,7 +62,7 @@ A brand pack is a folder: `web/public/brands/<id>/`.
 | `brand.json` | Everything brand-specific (below). Editors such as VS Code autocomplete and check it against `brand.schema.json`. |
 | `mark.webp` | The logo symbol on a transparent background. |
 | `lockup.webp` | Optional: the full logo (symbol and name) for the footer. Without it the footer uses the mark. |
-| `icon.png`, `apple-icon.png` | Browser tab icon (square, e.g. 512×512) and home-screen icon (180×180). |
+| `icon.png`, `apple-icon.png` | Browser tab icon (square, 192×192 is plenty; keep it under ~40 KB, it loads on every page) and home-screen icon (180×180). |
 
 ### Steps
 
