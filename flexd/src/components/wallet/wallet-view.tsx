@@ -30,16 +30,16 @@ function Wallet({ account }: { account: Account }) {
     <div>
       <section aria-label="Balances" className="rounded-[32px] border border-line/80 bg-[var(--card)] p-5 md:p-8">
         <p className="text-sm text-muted">Total balance</p>
-        <p className="mt-1 font-display text-4xl font-semibold tabular md:text-5xl">{formatBalance(totalBalance(account.balances))}</p>
+        <p className="mt-1 font-price text-4xl font-semibold tabular md:text-5xl">{formatBalance(totalBalance(account.balances))}</p>
         <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="rounded-3xl bg-bg/40 p-4">
             <p className="font-semibold">Credit</p>
-            <p className="mt-1 font-display text-2xl font-semibold tabular">{formatBalance(credit)}</p>
+            <p className="mt-1 font-price text-2xl font-semibold tabular">{formatBalance(credit)}</p>
             <p className="mt-2 text-sm text-muted">Money you added and rewards. Spends on boxes and shipping, first.</p>
           </div>
           <div className="rounded-3xl bg-bg/40 p-4">
             <p className="font-semibold">Withdrawable</p>
-            <p className="mt-1 font-display text-2xl font-bold text-accent tabular">{formatBalance(withdrawable)}</p>
+            <p className="mt-1 font-price text-2xl font-bold text-accent tabular">{formatBalance(withdrawable)}</p>
             <p className="mt-2 text-sm text-muted">From pieces you sold back. Cash it out, or spend it once your credit runs out.</p>
           </div>
         </div>
@@ -108,7 +108,7 @@ function History({ txs }: { txs: Tx[] }) {
               </p>
             </div>
             <div className="text-right">
-              <p className={cn("font-display font-semibold tabular", amount > 0 ? "text-success" : "text-fg")}>
+              <p className={cn("font-price font-semibold tabular", amount > 0 ? "text-success" : "text-fg")}>
                 {amount > 0 ? "+" : amount < 0 ? "−" : ""}
                 {formatUsd(Math.abs(amount))}
               </p>
@@ -159,7 +159,7 @@ function CashOutForm({ withdrawable, onDone }: { withdrawable: number; onDone: (
               setValue(e.target.value.replace(/[^\d.]/g, ""));
               setError(null);
             }}
-            className="w-full bg-transparent font-display text-xl font-semibold outline-none tabular"
+            className="w-full bg-transparent font-price text-xl font-semibold outline-none tabular"
           />
           <button type="button" onClick={() => setValue((withdrawable / 100).toFixed(2))} className="rounded-pill border border-line px-3 py-1 text-xs font-semibold">
             Max

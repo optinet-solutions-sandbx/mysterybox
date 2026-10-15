@@ -38,6 +38,7 @@
 
   --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-display-face), "Trajan Pro", ui-serif, Georgia, serif;
+  --font-price: var(--font-price-face), "Playfair Display", Georgia, serif;
   --font-mono: var(--font-numeric), ui-monospace, monospace;
 }
 
@@ -277,8 +278,8 @@ body {
   background: var(--bg);
   color: var(--fg);
   font-family: var(--font-sans);
-  /* Jost is variable: a touch above regular so body copy doesn't thin out on dark surfaces. */
-  font-weight: 450;
+  /* Jost 400 for text, 300 for the large intro line (the palette sheet). */
+  font-weight: 400;
   letter-spacing: 0.005em;
 }
 
@@ -378,13 +379,23 @@ body::before {
   }
 }
 
-/* Punchy UI headlines: heavy Jost in capitals. Names of boxes and pieces, and prices, stay Cinzel. */
+/* Headlines: Cinzel capitals in the gold sheen. One word may be amethyst (.accent-word). */
 @utility font-punch {
-  font-family: var(--font-sans);
-  font-weight: 800;
-  letter-spacing: -0.012em;
-  line-height: 0.95;
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1.08;
   text-transform: uppercase;
+  background-image: var(--foil);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* The one amethyst word in a gold headline. */
+.accent-word {
+  color: var(--accent-word);
+  -webkit-text-fill-color: var(--accent-word);
 }
 
 /* ---------- Screen transitions (see components/shell/page-transition) ---------- */

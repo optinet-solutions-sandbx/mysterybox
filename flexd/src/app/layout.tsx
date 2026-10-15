@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Cinzel, Jost } from "next/font/google";
+import { Cinzel, Jost, Playfair_Display } from "next/font/google";
 import { brand } from "@/config/brand";
 import { AgeGate, AppHydrator, Footer, PrototypeBanner, Toast } from "@/components/shell/chrome";
 import { LazyOverlays } from "@/components/shell/lazy-overlays";
@@ -8,9 +8,10 @@ import { TopBar } from "@/components/shell/top-bar";
 import { returningBootScript } from "@/lib/theme";
 import "./globals.css";
 
-// Cinzel: inscriptional capitals for names and prices. Jost: the geometric text face.
+// Cinzel: capitals for headlines and names. Playfair Display: prices. Jost: the text face.
 const display = Cinzel({ variable: "--font-display-face", subsets: ["latin"] });
 const body = Jost({ variable: "--font-body", subsets: ["latin"] });
+const price = Playfair_Display({ variable: "--font-price-face", subsets: ["latin"] });
 
 // Absolute URLs for link previews: an explicit site URL, else Vercel's production domain.
 const siteUrl =
@@ -33,7 +34,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" data-theme="dark" suppressHydrationWarning className={`${display.variable} ${body.variable} h-full antialiased`}>
+    <html lang="en" data-theme="dark" suppressHydrationWarning className={`${display.variable} ${body.variable} ${price.variable} h-full antialiased`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: returningBootScript }} />
       </head>

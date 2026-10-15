@@ -67,7 +67,7 @@ function AddFundsForm() {
                 setCustom("");
               }}
               className={cn(
-                "h-12 rounded-2xl border font-display font-semibold tabular transition-colors",
+                "h-12 rounded-2xl border font-price font-semibold tabular transition-colors",
                 !custom && amount === a ? "border-accent bg-accent-soft text-fg" : "border-line text-muted hover:text-fg",
               )}
             >

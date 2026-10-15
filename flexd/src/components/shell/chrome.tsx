@@ -59,7 +59,7 @@ export function AgeGate() {
       <div className="w-full max-w-sm text-center">
         <LogoMark className="mx-auto w-28" sizes="112px" />
         <h1 id="age-title" className="mt-8 font-punch text-4xl">
-          Are you {brand.minimumAge} or older?
+          Are you <span className="accent-word">{brand.minimumAge}</span> or older?
         </h1>
         <p className="mt-3 text-muted">
           Opening a box is a purchase with a random result, so {brand.name} is for adults in the {brand.market} only.

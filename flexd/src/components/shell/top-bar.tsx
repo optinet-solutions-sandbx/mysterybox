@@ -54,7 +54,7 @@ export function TopBar() {
           ) : account ? (
             <>
               <div className="flex h-10 items-center rounded-pill border border-line bg-surface/70 pr-1 pl-4">
-                <Link href="/wallet" className="font-display text-[15px] font-semibold tabular" aria-label="Wallet">
+                <Link href="/wallet" className="font-price text-[15px] font-semibold tabular" aria-label="Wallet">
                   {formatBalance(totalBalance(account.balances))}
                 </Link>
                 <button

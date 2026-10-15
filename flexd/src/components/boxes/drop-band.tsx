@@ -65,7 +65,7 @@ export function DropBand() {
       <div aria-hidden className="absolute -top-1/3 right-0 h-[140%] w-2/3 bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--event)_34%,transparent),transparent)]" />
       <div className="relative grid grid-cols-1 items-center gap-6 p-6 md:grid-cols-[1.1fr_1fr] md:p-10">
         <div>
-          <p className="font-punch text-lg text-event">This week&apos;s drop</p>
+          <p className="font-display text-lg uppercase tracking-[0.04em] text-event">This week&apos;s drop</p>
           <h2 id="drop-title" className="mt-2 font-display text-3xl md:text-5xl">
             {drop.name}
           </h2>

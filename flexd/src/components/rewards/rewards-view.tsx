@@ -134,11 +134,11 @@ function ReferralCard({ account }: { account: Account }) {
       <dl className="mt-6 grid grid-cols-2 gap-3">
         <div className="rounded-3xl bg-bg/40 p-4">
           <dt className="text-sm text-muted">Friends who opened a box</dt>
-          <dd className="mt-1 font-display text-2xl font-semibold tabular">{account.referral.invited}</dd>
+          <dd className="mt-1 font-price text-2xl font-semibold tabular">{account.referral.invited}</dd>
         </div>
         <div className="rounded-3xl bg-bg/40 p-4">
           <dt className="text-sm text-muted">You earned</dt>
-          <dd className="mt-1 font-display text-2xl font-bold text-accent tabular">{formatUsd(account.referral.earned)}</dd>
+          <dd className="mt-1 font-price text-2xl font-bold text-accent tabular">{formatUsd(account.referral.earned)}</dd>
         </div>
       </dl>
     </section>
@@ -161,14 +161,14 @@ function Leaderboard({ account }: { account: Account | null }) {
           const item = getItem(row.itemId);
           return (
             <li key={row.name} className="flex items-center gap-3 py-3">
-              <span className={cn("w-6 shrink-0 text-center font-display font-semibold tabular", i < 3 ? "text-accent" : "text-subtle")}>{i + 1}</span>
+              <span className={cn("w-6 shrink-0 text-center font-price font-semibold tabular", i < 3 ? "text-accent" : "text-subtle")}>{i + 1}</span>
               <Avatar name={row.name} className="size-9 text-sm" />
               <span className="min-w-0 flex-1 truncate font-medium">{row.name}</span>
               <ItemArt item={item} showBrand={false} sizes="40px" className="hidden size-10 shrink-0 rounded-xl sm:grid" />
               <span className="hidden w-40 truncate text-sm text-muted md:block">
                 {item.brand} {item.name}
               </span>
-              <span className="w-20 shrink-0 text-right font-display text-sm font-semibold tabular">{row.points.toLocaleString("en-US")}</span>
+              <span className="w-20 shrink-0 text-right font-price text-sm font-semibold tabular">{row.points.toLocaleString("en-US")}</span>
             </li>
           );
         })}
@@ -182,7 +182,7 @@ function Leaderboard({ account }: { account: Account | null }) {
                 Best pull {formatUsd(best.value)}
               </span>
             )}
-            <span className="w-20 shrink-0 text-right font-display text-sm font-semibold tabular">{pointsFor(account.spent).toLocaleString("en-US")}</span>
+            <span className="w-20 shrink-0 text-right font-price text-sm font-semibold tabular">{pointsFor(account.spent).toLocaleString("en-US")}</span>
           </li>
         )}
       </ol>

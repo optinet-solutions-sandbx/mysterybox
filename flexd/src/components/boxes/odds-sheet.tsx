@@ -31,7 +31,7 @@ export function TierTable({ box, className }: { box: Box; className?: string }) 
             <td className="py-3 tabular text-muted">
               {t.min === t.max ? formatUsdCompact(t.min) : `${formatUsdCompact(t.min)} – ${formatUsdCompact(t.max)}`}
             </td>
-            <td className="py-3 text-right font-display font-semibold tabular">{formatDisplayedOdds(t.probability)}</td>
+            <td className="py-3 text-right font-price font-semibold tabular">{formatDisplayedOdds(t.probability)}</td>
           </tr>
         ))}
       </tbody>
@@ -55,7 +55,7 @@ export function PieceOddsList({ box }: { box: Box }) {
             </p>
           </div>
           <div className="text-right">
-            <p className="font-display font-semibold tabular">{formatDisplayedOdds(e.probability)}</p>
+            <p className="font-price font-semibold tabular">{formatDisplayedOdds(e.probability)}</p>
             <p className="text-xs text-subtle">{formatOneIn(e.probability)}</p>
           </div>
         </li>

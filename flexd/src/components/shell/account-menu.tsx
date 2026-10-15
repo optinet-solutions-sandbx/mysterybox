@@ -43,7 +43,7 @@ export function AccountMenu({ account }: { account: Account }) {
             <Link href="/wallet" onClick={close} className="flex items-center gap-3 rounded-2xl px-3 py-3 transition-colors hover:bg-surface-2">
               <Wallet className="size-5 text-muted" />
               Wallet
-              <span className="ml-auto font-display text-sm tabular text-muted">
+              <span className="ml-auto font-price text-sm tabular text-muted">
                 {formatBalance(account.balances.credit + account.balances.withdrawable)}
               </span>
             </Link>

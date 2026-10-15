@@ -6,6 +6,7 @@ import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/rea
 import { useRef, useState, type KeyboardEvent } from "react";
 import { Chest } from "@/components/chest/chest";
 import { ItemArt } from "@/components/item/item-art";
+import { AccentName } from "@/components/ui/accent-name";
 import { formatUsd, formatUsdCompact } from "@/domain/money";
 import { SHELVES, type Box, type Shelf } from "@/domain/types";
 import { cn } from "@/lib/cn";
@@ -159,7 +160,9 @@ function BoxDetails({ box }: { box: Box }) {
     <div className="mt-5">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <h2 className="font-display text-[26px] leading-tight md:text-3xl">{box.name}</h2>
+          <h2 className="font-punch text-[26px] leading-tight md:text-3xl">
+            <AccentName name={box.name} />
+          </h2>
           <p className="mt-1 text-muted">{box.tagline}</p>
         </div>
         <OddsButton box={box} className="h-10 shrink-0 rounded-pill border border-line px-4 text-sm font-medium text-fg transition-colors hover:border-accent/60" />
@@ -178,7 +181,7 @@ function BoxDetails({ box }: { box: Box }) {
             <ItemArt item={e.item} rarity={e.rarity} showBrand={false} sizes="48px" className="size-12 shrink-0 rounded-xl" />
             <div className="min-w-0">
               <p className="truncate text-xs font-semibold tracking-wide">{e.item.brand}</p>
-              <p className="font-display text-sm font-semibold text-accent tabular">{formatUsdCompact(e.item.value)}</p>
+              <p className="font-price text-sm font-semibold text-accent tabular">{formatUsdCompact(e.item.value)}</p>
             </div>
           </li>
         ))}
@@ -187,11 +190,11 @@ function BoxDetails({ box }: { box: Box }) {
       <div className="mt-4 grid grid-cols-2 rounded-2xl border border-line/80 bg-surface/60 py-3 text-center">
         <div>
           <p className="text-xs text-muted">Min value</p>
-          <p className="font-display text-lg font-semibold tabular">{formatUsd(min)}</p>
+          <p className="font-price text-lg font-semibold tabular">{formatUsd(min)}</p>
         </div>
         <div className="border-l border-line/80">
           <p className="text-xs text-muted">Max value</p>
-          <p className="font-display text-lg font-bold tabular text-accent">{formatUsd(max)}</p>
+          <p className="font-price text-lg font-bold tabular text-accent">{formatUsd(max)}</p>
         </div>
       </div>
       <BuyButton box={box} className="mt-4 w-full" />

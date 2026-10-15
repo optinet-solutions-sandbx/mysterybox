@@ -52,7 +52,7 @@ export default async function PullPage({ params }: PageProps<"/pull/[itemId]">) 
         <div className="min-w-0">
           <p className="text-muted">{item.brand}</p>
           <h1 className="mt-1 font-display text-4xl leading-tight md:text-5xl">{item.name}</h1>
-          <p className="mt-3 font-display text-4xl font-bold text-accent tabular">{formatUsd(item.value)}</p>
+          <p className="mt-3 font-price text-4xl font-bold text-accent tabular">{formatUsd(item.value)}</p>
           <p className="mt-5 max-w-md text-muted">
             Someone pulled this from a box on {brand.name}. Every box shows its odds and value range before you buy, and anything
             you pull can be shipped home or sold back.
@@ -76,7 +76,7 @@ export default async function PullPage({ params }: PageProps<"/pull/[itemId]">) 
                 </p>
               </div>
               <div className="text-right">
-                <p className="font-display font-semibold tabular">{formatDisplayedOdds(probability)}</p>
+                <p className="font-price font-semibold tabular">{formatDisplayedOdds(probability)}</p>
                 <p className="text-xs text-subtle">chance</p>
               </div>
               <Link href={`/box/${box.slug}`} transitionTypes={FORWARD} className={button({ variant: "outline", size: "sm" })}>

@@ -156,7 +156,7 @@ function VaultItems({
                 <p className="truncate text-xs font-semibold tracking-wide text-muted">{item.brand}</p>
                 <p className="truncate font-medium">{item.name}</p>
                 <div className="mt-1 flex items-center gap-3">
-                  <span className="font-display font-semibold tabular">{formatUsd(p.value)}</span>
+                  <span className="font-price font-semibold tabular">{formatUsd(p.value)}</span>
                   <RarityTag rarity={p.rarity} />
                 </div>
                 <p className="mt-auto pt-2 text-xs text-subtle">{now ? `Sells back in ${formatTimeLeft(vaultDeadline(p.at) - now)}` : " "}</p>
@@ -183,7 +183,7 @@ function SellSheet({ pull, onClose }: { pull: Pull | null; onClose: () => void }
             <div className="min-w-0">
               <p className="truncate text-xs font-semibold tracking-wide text-muted">{item.brand}</p>
               <p className="truncate font-medium">{item.name}</p>
-              <p className="font-display font-semibold tabular">{formatUsd(pull.value)}</p>
+              <p className="font-price font-semibold tabular">{formatUsd(pull.value)}</p>
             </div>
           </div>
           <p className="mt-5 text-sm text-muted">The money goes to your withdrawable balance, ready to cash out or spend.</p>
@@ -250,7 +250,7 @@ function ShipmentCard({ shipment, account, now }: { shipment: Shipment; account:
             {shipping.carrier}, tracking {shipment.tracking}
           </p>
         </div>
-        <p className="font-display text-sm tabular text-muted">{formatUsd(shipment.quote.total)} paid</p>
+        <p className="font-price text-sm tabular text-muted">{formatUsd(shipment.quote.total)} paid</p>
       </div>
       <ol className="mt-4 grid grid-cols-4 gap-1.5" aria-label="Shipment progress">
         {STAGES.map((s, i) => (
@@ -294,7 +294,7 @@ function SoldList({ pulls }: { pulls: Pull[] }) {
               </p>
             </div>
             <div className="text-right">
-              <p className="font-display font-semibold tabular text-success">+{formatUsd(p.soldFor ?? 0)}</p>
+              <p className="font-price font-semibold tabular text-success">+{formatUsd(p.soldFor ?? 0)}</p>
               <p className="text-xs text-subtle tabular">of {formatUsd(p.value)}</p>
             </div>
           </li>

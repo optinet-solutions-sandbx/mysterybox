@@ -72,7 +72,7 @@ export function SwipeToSell({ offer, onSell }: { offer: number; onSell: () => vo
         </motion.button>
         <motion.div style={{ opacity: fade }} className="pointer-events-none ml-auto pr-6 text-right">
           <span className="block text-xs text-muted">{Math.round(economy.sellBackRate * 100)}% offer</span>
-          <span className="font-display text-xl font-semibold tabular">{formatUsd(offer)}</span>
+          <span className="font-price text-xl font-semibold tabular">{formatUsd(offer)}</span>
         </motion.div>
       </div>
       <p className="mt-2 text-center text-xs text-subtle">Swiping sells this piece for {formatUsd(offer)}. Sales are final.</p>

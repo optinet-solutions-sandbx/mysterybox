@@ -97,7 +97,7 @@ function ShipFlow({ account, pulls: selected, onDone, onClose }: { account: Acco
                 <span className="min-w-0 flex-1 truncate text-sm">
                   {item.brand} {item.name}
                 </span>
-                <span className="font-display text-sm font-semibold tabular">{formatUsd(p.value)}</span>
+                <span className="font-price text-sm font-semibold tabular">{formatUsd(p.value)}</span>
               </li>
             );
           })}
@@ -125,7 +125,7 @@ function ShipFlow({ account, pulls: selected, onDone, onClose }: { account: Acco
           )}
           <div className="flex justify-between border-t border-line/70 pt-2 font-semibold">
             <dt>Total</dt>
-            <dd className="font-display tabular">{formatUsd(quote.total)}</dd>
+            <dd className="font-price tabular">{formatUsd(quote.total)}</dd>
           </div>
         </dl>
         <p className="text-sm text-muted">

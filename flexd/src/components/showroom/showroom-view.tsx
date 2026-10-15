@@ -98,7 +98,7 @@ export function ShowroomView() {
                   <p className="truncate text-xs font-semibold tracking-wide text-muted">{item.brand}</p>
                   <p className="truncate text-sm font-medium">{item.name}</p>
                   <div className="mt-2 flex items-center justify-between gap-2">
-                    <span className="font-display text-sm font-semibold tabular">{formatUsd(item.value)}</span>
+                    <span className="font-price text-sm font-semibold tabular">{formatUsd(item.value)}</span>
                     <span className="text-xs text-subtle">
                       {count} {count === 1 ? "box" : "boxes"}
                     </span>
@@ -123,7 +123,7 @@ function PieceSheet({ item, onClose }: { item: Item | null; onClose: () => void 
           <ItemArt item={item} rarity={bestRarity(item.id)} showBrand={false} sizes="400px" className="rounded-3xl" />
           <h3 className="mt-4 font-display text-2xl">{item.name}</h3>
           <div className="mt-2 flex items-baseline justify-between gap-4">
-            <span className="font-display text-2xl font-bold text-accent tabular">{formatUsd(item.value)}</span>
+            <span className="font-price text-2xl font-bold text-accent tabular">{formatUsd(item.value)}</span>
             <span className="text-sm text-muted">
               Sells back for {formatUsd(sellBackValue(item.value))} ({Math.round(economy.sellBackRate * 100)}%)
             </span>
@@ -140,7 +140,7 @@ function PieceSheet({ item, onClose }: { item: Item | null; onClose: () => void 
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="font-display font-semibold tabular">{formatDisplayedOdds(probability)}</p>
+                  <p className="font-price font-semibold tabular">{formatDisplayedOdds(probability)}</p>
                   <p className="text-xs text-subtle">{formatOneIn(probability)}</p>
                 </div>
                 <Link href={`/box/${box.slug}`} transitionTypes={FORWARD} onClick={onClose} className={button({ variant: "outline", size: "sm" })}>
