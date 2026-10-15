@@ -1,0 +1,57 @@
+import type { Metadata, Viewport } from "next";
+import { Cinzel, Jost } from "next/font/google";
+import { brand } from "@/config/brand";
+import { AgeGate, AppHydrator, Footer, PrototypeBanner, Toast } from "@/components/shell/chrome";
+import { LazyOverlays } from "@/components/shell/lazy-overlays";
+import { TabBar } from "@/components/shell/tab-bar";
+import { TopBar } from "@/components/shell/top-bar";
+import { returningBootScript, themeBootScript } from "@/lib/theme";
+import "./globals.css";
+
+// Cinzel: inscriptional capitals for names and prices. Jost: the geometric text face.
+const display = Cinzel({ variable: "--font-display-face", subsets: ["latin"] });
+const body = Jost({ variable: "--font-body", subsets: ["latin"] });
+
+// Absolute URLs for link previews: an explicit site URL, else Vercel's production domain.
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000");
+
+export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
+  title: { default: `${brand.name}: open a box, keep the piece or sell it back`, template: `%s · ${brand.name}` },
+  description: brand.description,
+  robots: { index: false, follow: false },
+  openGraph: { siteName: brand.name, type: "website" },
+};
+
+export const viewport: Viewport = {
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#1c0a10" },
+    { media: "(prefers-color-scheme: light)", color: "#fbf5ee" },
+  ],
+};
+
+export default function RootLayout({ children }: LayoutProps<"/">) {
+  return (
+    <html lang="en" data-theme="dark" suppressHydrationWarning className={`${display.variable} ${body.variable} h-full antialiased`}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `${themeBootScript};${returningBootScript};` }} />
+      </head>
+      <body className="flex min-h-full flex-col">
+        <PrototypeBanner />
+        <TopBar />
+        <main className="flex-1">{children}</main>
+        <div className="pb-tabbar">
+          <Footer />
+        </div>
+        <TabBar />
+        <LazyOverlays />
+        <Toast />
+        <AgeGate />
+        <AppHydrator />
+      </body>
+    </html>
+  );
+}

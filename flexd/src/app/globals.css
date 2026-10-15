@@ -1,0 +1,530 @@
+@import "tailwindcss";
+
+/*
+ * Brand tokens: burgundy and gold (below). Components use ONLY the semantic utilities
+ * (bg-surface, text-muted, border-line, bg-primary, text-foil, …), never raw hex, so the scheme can
+ * still be tuned here in one place.
+ */
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-sapphire: var(--sapphire);
+  --color-glow: var(--glow);
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  --color-event: var(--event);
+  --color-event-bg: var(--event-bg);
+  --color-hot: var(--hot);
+  --color-on-hot: var(--on-hot);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+
+  --color-rarity-common: var(--rarity-common);
+  --color-rarity-uncommon: var(--rarity-uncommon);
+  --color-rarity-rare: var(--rarity-rare);
+  --color-rarity-epic: var(--rarity-epic);
+  --color-rarity-grail: var(--rarity-grail);
+
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display-face), "Trajan Pro", ui-serif, Georgia, serif;
+  --font-mono: var(--font-numeric), ui-monospace, monospace;
+}
+
+@theme {
+  --radius-card: 1.25rem;
+  --radius-pill: 999px;
+  --ease-snap: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-reel: cubic-bezier(0.08, 0.82, 0.17, 1);
+
+  --animate-marquee: marquee var(--marquee-duration, 60s) linear infinite;
+  --animate-rise: rise var(--rise-duration, 6s) ease-in var(--rise-delay, 0s) infinite;
+  --animate-aurora: aurora 18s ease-in-out infinite alternate;
+  --animate-rise-in: rise-in 1.1s var(--ease-snap) both;
+  --animate-fade-up: fade-up 0.9s var(--ease-snap) both;
+  --animate-drop-in: drop-in 1.4s var(--ease-snap) both;
+  --animate-float: float 5s ease-in-out infinite;
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0) rotate(-1deg);
+    }
+    50% {
+      transform: translateY(-12px) rotate(1deg);
+    }
+  }
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  @keyframes rise {
+    0% {
+      transform: translate3d(0, 0, 0) scale(0.6);
+      opacity: 0;
+    }
+    15% {
+      opacity: 1;
+    }
+    100% {
+      transform: translate3d(var(--drift, 0px), -220px, 0) scale(1);
+      opacity: 0;
+    }
+  }
+
+  @keyframes rise-in {
+    from {
+      transform: translateY(110%);
+    }
+    to {
+      transform: none;
+    }
+  }
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes drop-in {
+    from {
+      opacity: 0;
+      transform: translateY(-40px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes aurora {
+    0% {
+      transform: translate3d(-6%, -4%, 0) scale(1);
+    }
+    100% {
+      transform: translate3d(6%, 5%, 0) scale(1.15);
+    }
+  }
+}
+
+/*
+ * Burgundy and gold (2026-10-14): the "Crimson Throne" scheme with its red taken down to burgundy
+ * (the user's swatches: #800020, #9F1D35, #650015, #C73A52) and its royal plum replaced by gold.
+ * Champagne gold for wins, balance and events; burgundy for every primary action; garnet cards on
+ * onyx wine. [data-theme="dark"] also lets one part of a light page stay dark (the opening screen).
+ */
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Ramps */
+  --burgundy-100: #fbe9ec;
+  --burgundy-200: #f0c4cc;
+  --burgundy-300: #e08797;
+  --burgundy-400: #c73a52;
+  --burgundy-500: #9f1d35;
+  --burgundy-600: #800020;
+  --burgundy-700: #650015;
+  --burgundy-800: #4a0010;
+  --burgundy-900: #2e000a;
+  --champagne-100: #fdf7ea;
+  --champagne-200: #f9ecd0;
+  --champagne-300: #f2d9a4;
+  --champagne-400: #e8c27a;
+  --champagne-500: #cfa452;
+  --champagne-600: #a9833a;
+  --champagne-700: #80622a;
+  --champagne-800: #57421c;
+  --champagne-900: #352810;
+
+  /* Named swatches */
+  --burgundy: var(--burgundy-600);
+  --champagne: var(--champagne-400);
+  --garnet: #3d1520;
+  --onyx-wine: #1c0a10;
+  --cream: #f6ecdf;
+  /* Older names some components still use, mapped onto the scheme. */
+  --obsidian: var(--onyx-wine);
+  --navy: var(--garnet);
+  --sapphire: var(--burgundy-700);
+  --gold: var(--champagne);
+  --ivory: var(--cream);
+
+  /* Semantic roles */
+  --bg: var(--onyx-wine);
+  --surface: var(--garnet);
+  --surface-2: color-mix(in oklab, var(--garnet) 76%, var(--burgundy-700));
+  --fg: var(--cream);
+  --muted: color-mix(in oklab, var(--cream) 80%, var(--onyx-wine));
+  --subtle: color-mix(in oklab, var(--cream) 64%, var(--onyx-wine));
+  --line: color-mix(in oklab, var(--champagne) 20%, transparent);
+  /* Gold: wins, balance, money, events. */
+  --accent: var(--champagne);
+  --on-accent: var(--onyx-wine);
+  --accent-soft: color-mix(in oklab, var(--champagne) 12%, transparent);
+  /* Burgundy: opening a box and every primary action. */
+  --primary: var(--burgundy-600);
+  --primary-hi: var(--burgundy-500);
+  --on-primary: var(--cream);
+  /* Active states (current tab, dots, the swipe cue): the lightest burgundy that reads on onyx. */
+  --hot: var(--burgundy-400);
+  --on-hot: var(--cream);
+  /* Events and VIP (the weekly drop) speak in gold. */
+  --event: var(--champagne-400);
+  --event-bg: var(--champagne-800);
+  /* Emitted light under and inside the boxes. */
+  --glow: var(--burgundy-500);
+  --success: var(--champagne);
+  --danger: var(--burgundy-300);
+
+  /* Gold is foil, never flat paint: type, edges, the balance. */
+  --foil-1: var(--champagne-700);
+  --foil-2: var(--champagne-200);
+  --foil-3: var(--champagne-400);
+  --foil-4: var(--champagne-100);
+  --foil-5: var(--champagne-600);
+  --foil: linear-gradient(115deg, var(--foil-1) 0%, var(--foil-2) 26%, var(--foil-3) 44%, var(--foil-4) 56%, var(--foil-5) 76%, var(--foil-2) 100%);
+  /* Foil chips keep bright gold in both modes (dark text sits on them). */
+  --foil-btn: linear-gradient(115deg, #a9833a 0%, #f9ecd0 26%, #e8c27a 44%, #fdf7ea 56%, #cfa452 76%, #f2d9a4 100%);
+  --foil-edge: linear-gradient(90deg, transparent, color-mix(in oklab, var(--champagne) 70%, transparent), transparent);
+  --primary-btn: linear-gradient(160deg, var(--burgundy-500) 0%, var(--burgundy-600) 50%, var(--burgundy-700) 100%);
+
+  /* Surfaces and light that change with the mode. */
+  --plate: linear-gradient(180deg, #4a1a28, #2a0e16);
+  --card: linear-gradient(180deg, #431823 0%, #2a0d15 100%);
+  --reel-bg: radial-gradient(80% 120% at 50% 50%, #4a1a28, #14070b);
+  --reel-edge: #14070b;
+  --floor-shadow: rgb(0 0 0 / 0.7);
+  --shadow-strong: rgb(0 0 0 / 0.9);
+  --aurora-a: color-mix(in oklab, var(--glow) 30%, transparent);
+  --aurora-b: color-mix(in oklab, var(--burgundy-700) 55%, transparent);
+  --dust: var(--champagne-200);
+  --marble-base: var(--onyx-wine);
+  --marble-img: url("/textures/marble-dark.webp");
+  --grain-opacity: 0.035;
+
+  /* Rarity ladder without purple: stone, cream, bronze, burgundy, gold. */
+  --rarity-common: #9c8a87;
+  --rarity-uncommon: #e9dccb;
+  --rarity-rare: #c08a3e;
+  --rarity-epic: var(--burgundy-500);
+  --rarity-grail: var(--champagne-400);
+}
+
+/*
+ * Light mode: cream paper. Onyx wine carries the text, gold deepens so foil type stays legible,
+ * burgundy keeps every primary action. Applied by the boot script in <head> from the saved choice
+ * or the system preference (see lib/theme.ts).
+ */
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #fbf5ee;
+  --surface: #fffaf5;
+  --surface-2: #f3e3dc;
+  --fg: var(--onyx-wine);
+  --muted: color-mix(in oklab, var(--onyx-wine) 80%, #fbf5ee);
+  --subtle: color-mix(in oklab, var(--onyx-wine) 64%, #fbf5ee);
+  --line: color-mix(in oklab, var(--garnet) 16%, transparent);
+  --accent: var(--champagne-700);
+  --on-accent: var(--onyx-wine);
+  --accent-soft: color-mix(in oklab, var(--champagne-600) 12%, transparent);
+  --primary: var(--burgundy-600);
+  --primary-hi: var(--burgundy-500);
+  --on-primary: var(--cream);
+  --hot: var(--burgundy-600);
+  --on-hot: var(--cream);
+  --event: var(--champagne-700);
+  --event-bg: var(--champagne-700);
+  --glow: var(--burgundy-300);
+  --success: var(--champagne-700);
+  --danger: var(--burgundy-600);
+
+  --foil-1: var(--champagne-800);
+  --foil-2: var(--champagne-600);
+  --foil-3: var(--champagne-700);
+  --foil-4: var(--champagne-500);
+  --foil-5: var(--champagne-800);
+
+  --plate: linear-gradient(180deg, #ffffff, #f4e8e0);
+  --card: linear-gradient(180deg, #fffaf5 0%, #f4e6dd 100%);
+  --reel-bg: radial-gradient(80% 120% at 50% 50%, #ffffff, #f1e2d9);
+  --reel-edge: #f1e2d9;
+  --floor-shadow: rgb(61 21 32 / 0.25);
+  --shadow-strong: rgb(61 21 32 / 0.28);
+  --aurora-a: color-mix(in oklab, var(--glow) 14%, transparent);
+  --aurora-b: color-mix(in oklab, var(--burgundy-700) 12%, transparent);
+  --dust: var(--champagne-600);
+  --marble-base: #fbf5ee;
+  --marble-img: url("/textures/marble-light.webp");
+  --grain-opacity: 0.025;
+
+  --rarity-common: #7d6d6a;
+  --rarity-uncommon: #a08a6e;
+  --rarity-rare: #9a6424;
+  --rarity-epic: var(--burgundy-600);
+  --rarity-grail: var(--champagne-700);
+}
+
+/* ---------- Utilities ---------- */
+
+@utility text-foil {
+  background-image: var(--foil);
+  background-size: 200% 100%;
+  background-position: 0% 50%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility bg-foil {
+  background-image: var(--foil-btn);
+  background-size: 200% 100%;
+}
+
+/* Veined marble: sapphire on obsidian, blue-grey on ivory (pre-rendered in public/textures). */
+@utility bg-marble {
+  background-color: var(--marble-base);
+  background-image: var(--marble-img);
+  background-size: 1400px 1000px;
+}
+
+/* ---------- Base ---------- */
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  /* Jost is variable: a touch above regular so body copy doesn't thin out on dark surfaces. */
+  font-weight: 450;
+  letter-spacing: 0.005em;
+}
+
+/* Layered so a utility (e.g. the hero's font-medium) still wins. */
+@layer base {
+  h1,
+  h2,
+  h3 {
+    font-weight: 600;
+  }
+  b,
+  strong {
+    font-weight: 600;
+  }
+}
+
+::selection {
+  background: var(--gold);
+  color: var(--obsidian);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* Film grain over everything. No blend mode: blending a fixed full-screen layer re-composites the
+   whole page on every scroll frame. */
+.grain {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+
+/* Primary button: burgundy, with the same light sweep on hover. */
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background-image: var(--primary-btn);
+  color: var(--on-primary);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18);
+}
+.btn-primary::after {
+  content: "";
+  position: absolute;
+  inset: -20% auto -20% -60%;
+  width: 45%;
+  transform: skewX(-20deg);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.28), transparent);
+  transition: left 0.9s var(--ease-snap);
+  z-index: -1;
+}
+.btn-primary:hover::after {
+  left: 130%;
+}
+
+/* Foil button: a light sweep crosses the gold on hover. */
+.btn-foil {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background-image: var(--foil-btn);
+  background-size: 200% 100%;
+  transition: background-position 0.8s var(--ease-snap);
+}
+.btn-foil::after {
+  content: "";
+  position: absolute;
+  inset: -20% auto -20% -60%;
+  width: 45%;
+  transform: skewX(-20deg);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.55), transparent);
+  transition: left 0.9s var(--ease-snap);
+  z-index: -1;
+}
+.btn-foil:hover {
+  background-position: 100% 50%;
+}
+.btn-foil:hover::after {
+  left: 130%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Punchy UI headlines: heavy Jost in capitals. Names of boxes and pieces, and prices, stay Cinzel. */
+@utility font-punch {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  letter-spacing: -0.012em;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+/* ---------- Screen transitions (see components/shell/page-transition) ---------- */
+
+::view-transition {
+  pointer-events: none;
+}
+::view-transition-old(.nav-forward) {
+  --slide-offset: -72px;
+  animation:
+    140ms ease-in both vt-fade reverse,
+    380ms var(--ease-snap) both vt-slide reverse;
+}
+::view-transition-new(.nav-forward) {
+  --slide-offset: 72px;
+  animation:
+    200ms ease-out 120ms both vt-fade,
+    380ms var(--ease-snap) both vt-slide;
+}
+::view-transition-old(.nav-back) {
+  --slide-offset: 72px;
+  animation:
+    140ms ease-in both vt-fade reverse,
+    380ms var(--ease-snap) both vt-slide reverse;
+}
+::view-transition-new(.nav-back) {
+  --slide-offset: -72px;
+  animation:
+    200ms ease-out 120ms both vt-fade,
+    380ms var(--ease-snap) both vt-slide;
+}
+::view-transition-group(.morph) {
+  animation-duration: 420ms;
+  animation-timing-function: var(--ease-snap);
+}
+::view-transition-group(site-header),
+::view-transition-group(tab-bar) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(site-header),
+::view-transition-old(tab-bar) {
+  display: none;
+}
+::view-transition-new(site-header),
+::view-transition-new(tab-bar) {
+  animation: none;
+}
+@keyframes vt-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes vt-slide {
+  from {
+    translate: var(--slide-offset);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
+
+/* Phones: returning visitors land straight on the boxes (the boot script sets data-returning). */
+@media (max-width: 63.99rem) {
+  :root[data-returning] .first-visit-only {
+    display: none;
+  }
+}
+
+/* ---------- App shell ---------- */
+
+/* Horizontal rails (category switch, piece strips) scroll without a visible bar. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Room for the phone tab bar and the home indicator. */
+@utility pb-tabbar {
+  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  @media (min-width: 64rem) {
+    padding-bottom: 0;
+  }
+}
+
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Light poured from an open box or a revealed piece; --tone is the rarity colour. */
+@utility bg-tone-light {
+  background: radial-gradient(60% 55% at 50% 45%, color-mix(in oklab, var(--tone) 45%, transparent), transparent 70%);
+}
