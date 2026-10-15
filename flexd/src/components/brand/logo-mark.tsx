@@ -4,7 +4,7 @@ import { cn } from "@/lib/cn";
 
 export { LOGO_ASPECT, LOGO_SIZE, LOGO_SRC } from "@/config/mark";
 
-/** FLEXD crown-and-mask. `foil` is the gold artwork; `solid` draws its traced outline in currentColor. */
+/** FLEXD crown-and-mask. `foil` is the lilac-chrome artwork; `solid` draws its traced outline in currentColor. */
 export function LogoMark({
   className,
   tone = "foil",

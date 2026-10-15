@@ -7,7 +7,7 @@ import { LOGO_SIZE, LOGO_SRC, MARK } from "./mark";
 const root = process.cwd();
 
 describe("FLEXD mark", () => {
-  it("has a gold raster at LOGO_SIZE on transparency (the chest lid uses its alpha)", async () => {
+  it("has a raster at LOGO_SIZE on transparency (the chest lid uses its alpha)", async () => {
     const file = join(root, "public", LOGO_SRC);
     const meta = await sharp(file).metadata();
     expect([meta.width, meta.height]).toEqual([LOGO_SIZE.width, LOGO_SIZE.height]);

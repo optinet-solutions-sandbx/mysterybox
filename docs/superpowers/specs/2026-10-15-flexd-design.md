@@ -148,7 +148,7 @@ The six WebP stills in `public/boxes/` are re-rendered from the model with
 - **Wordmark:** "FLEXD" in Cinzel with wide tracking, set in type (no image).
 - **Icons:** `app/icon.png` and `app/apple-icon.png` from the mark on ground.
 - Grail Noir's mark and lockup files are removed from `flexd/public/brand/`.
-- Replaced on 2026-10-15 by the client's crown-and-mask artwork, kept in gold (see `flexd/README.md`).
+- Replaced on 2026-10-15 by the client's crown-and-mask artwork in the lilac chrome of their screens (see `flexd/README.md`).
 
 ### Motion and sound
 
