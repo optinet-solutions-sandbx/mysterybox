@@ -48,7 +48,7 @@ export function PieceOddsList({ box }: { box: Box }) {
           <ItemArt item={e.item} rarity={e.rarity} showBrand={false} sizes="56px" className="size-14 shrink-0 rounded-2xl" />
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs text-muted">{e.item.brand}</p>
-            <p className="truncate font-medium">{e.item.name}</p>
+            <p className="line-clamp-2 font-medium">{e.item.name}</p>
             <p className="flex items-center gap-3 text-sm text-subtle">
               <span className="tabular">{formatUsd(e.item.value)}</span>
               <RarityTag rarity={e.rarity} />

@@ -101,7 +101,7 @@ function History({ txs }: { txs: Tx[] }) {
               <Icon className="size-[18px]" />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate font-medium">{t.label}</p>
+              <p className="line-clamp-2 font-medium">{t.label}</p>
               <p className="flex gap-3 truncate text-sm text-subtle">
                 <span>{now ? date.format(new Date(t.at)) : ""}</span>
                 <span>{balance}</span>

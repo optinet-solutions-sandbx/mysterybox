@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 import type { BoxMaterial } from "@/domain/types";
 import { cn } from "@/lib/cn";
+import { loadOpenOverlay } from "@/components/shell/overlay-code";
 import { useUi } from "@/store/ui";
 import type { ChestScene } from "./chest-scene";
 import { STILLS_VERSION } from "./stills-version";
@@ -16,7 +17,7 @@ export function chestStill(finish: BoxMaterial) {
 /** Starts loading three.js and the chest model ahead of an opening (call on Buy intent). */
 export function preloadChest() {
   void import("./chest-scene");
-  void import("@/components/open/open-overlay");
+  void loadOpenOverlay();
 }
 
 /**

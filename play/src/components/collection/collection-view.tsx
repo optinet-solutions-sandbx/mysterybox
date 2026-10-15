@@ -154,7 +154,7 @@ function VaultItems({
               </button>
               <div className="flex min-w-0 flex-1 flex-col">
                 <p className="truncate text-xs font-semibold tracking-wide text-muted">{item.brand}</p>
-                <p className="truncate font-medium">{item.name}</p>
+                <p className="line-clamp-2 font-medium">{item.name}</p>
                 <div className="mt-1 flex items-center gap-3">
                   <span className="font-display font-semibold tabular">{formatUsd(p.value)}</span>
                   <RarityTag rarity={p.rarity} />
@@ -182,7 +182,7 @@ function SellSheet({ pull, onClose }: { pull: Pull | null; onClose: () => void }
             <ItemArt item={item} rarity={pull.rarity} showBrand={false} sizes="80px" className="size-20 shrink-0 rounded-2xl" />
             <div className="min-w-0">
               <p className="truncate text-xs font-semibold tracking-wide text-muted">{item.brand}</p>
-              <p className="truncate font-medium">{item.name}</p>
+              <p className="line-clamp-2 font-medium">{item.name}</p>
               <p className="font-display font-semibold tabular">{formatUsd(pull.value)}</p>
             </div>
           </div>
@@ -285,7 +285,7 @@ function SoldList({ pulls }: { pulls: Pull[] }) {
           <li key={p.id} className="flex items-center gap-3 py-3">
             <ItemArt item={item} rarity={p.rarity} showBrand={false} sizes="48px" className="size-12 shrink-0 rounded-xl" />
             <div className="min-w-0 flex-1">
-              <p className="truncate font-medium">
+              <p className="line-clamp-2 font-medium">
                 {item.brand} {item.name}
               </p>
               <p className="truncate text-sm text-subtle">

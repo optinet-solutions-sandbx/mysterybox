@@ -96,7 +96,7 @@ export function ShowroomView() {
                 <ItemArt item={item} rarity={rarity} showBrand={false} sizes="(min-width: 1024px) 220px, 45vw" priority={i < 4} />
                 <div className="p-3">
                   <p className="truncate text-xs font-semibold tracking-wide text-muted">{item.brand}</p>
-                  <p className="truncate text-sm font-medium">{item.name}</p>
+                  <p className="line-clamp-2 min-h-[2lh] text-sm font-medium">{item.name}</p>
                   <div className="mt-2 flex items-center justify-between gap-2">
                     <span className="font-display text-sm font-semibold tabular">{formatUsd(item.value)}</span>
                     <span className="text-xs text-subtle">

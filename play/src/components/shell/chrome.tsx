@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect } from "react";
 import { brand } from "@/config/brand";
 import { LogoMark } from "@/components/brand/logo-mark";
+import { prefetchOverlays } from "@/components/shell/overlay-code";
 import { button } from "@/components/ui/button";
 import { useMounted } from "@/components/ui/sheet";
 import { confirmAge, rememberReferral, sweepVaults, useApp, useHydrated } from "@/store/app";
@@ -19,10 +20,10 @@ export function AppHydrator() {
       rememberReferral(new URLSearchParams(window.location.search).get("ref"));
       sweepVaults();
     });
-    // Once the page is idle, fetch the opening screen's code (not three.js) so the first tap on
-    // Buy opens instantly.
+    // Once the page is idle, fetch the overlays' code (not three.js) so the first tap on Buy,
+    // Sign up or Add funds opens instantly.
     const idle = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1500));
-    idle(() => void import("@/components/open/open-overlay"));
+    idle(prefetchOverlays);
     const timer = setInterval(() => sweepVaults(), 30_000);
     // A slow device can take longer than the browser allows for a screen transition; the page
     // still changes, only the slide is skipped, so that abort isn't an error worth surfacing.

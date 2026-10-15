@@ -1,10 +1,22 @@
+import { loadAuthSheet, loadOpenOverlay } from "@/components/shell/overlay-code";
 import { NotEnoughFunds, openBox, useApp } from "./app";
 import { openAddFunds, openAuth, startOpening, toast, useUi } from "./ui";
 
-/** Buy and open a box from any screen: sign-up first, top-up when short, then the opening overlay. */
+/**
+ * Buy and open a box from any screen: sign-up first, top-up when short, then the opening overlay.
+ * Resolves once that screen can show, so the Buy button stays busy until then; nothing is charged
+ * if the opening screen's code can't load.
+ */
 export async function buyBox(slug: string) {
   if (!useApp.getState().currentId) {
+    await loadAuthSheet().catch(() => undefined);
     openAuth("sign-up");
+    return;
+  }
+  try {
+    await loadOpenOverlay();
+  } catch {
+    toast("Couldn't load the opening screen. Check your connection and try again.");
     return;
   }
   try {

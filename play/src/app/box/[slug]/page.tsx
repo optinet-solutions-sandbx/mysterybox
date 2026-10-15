@@ -85,7 +85,7 @@ export default async function BoxPage({ params }: PageProps<"/box/[slug]">) {
                   <ItemArt item={e.item} rarity={e.rarity} showBrand={false} sizes="(min-width: 1024px) 180px, 45vw" priority={i < 3} />
                   <div className="p-3">
                     <p className="truncate text-xs font-semibold tracking-wide text-muted">{e.item.brand}</p>
-                    <p className="truncate text-sm font-medium">{e.item.name}</p>
+                    <p className="line-clamp-2 min-h-[2lh] text-sm font-medium">{e.item.name}</p>
                     <div className="mt-2 flex items-center justify-between gap-2">
                       <span className="font-display text-sm font-semibold tabular">{formatUsd(e.item.value)}</span>
                       <span className="text-xs font-semibold tabular text-muted">{formatDisplayedOdds(e.probability)}</span>
