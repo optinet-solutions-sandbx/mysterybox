@@ -127,7 +127,7 @@ function Carousel({ boxes, index, onIndex }: { boxes: Box[]; index: number; onIn
                 exit={{ opacity: 0, scale: 0.5 }}
                 transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 260, damping: 30 }}
               >
-                <Chest finish={b.material} still float={pos === 0 && inView} tilt={pos === 0} priority={pos === 0} sizes={pos === 0 ? "(min-width: 768px) 390px, 85vw" : "(min-width: 768px) 240px, 50vw"} className={wide ? "h-[320px] w-[390px]" : "h-[275px] w-[330px]"} label={`${b.name} box`} />
+                <Chest still float={pos === 0 && inView} tilt={pos === 0} priority={pos === 0} sizes={pos === 0 ? "(min-width: 768px) 390px, 85vw" : "(min-width: 768px) 240px, 50vw"} className={wide ? "h-[320px] w-[390px]" : "h-[275px] w-[330px]"} label={`${b.name} box`} />
               </motion.button>
             );
           })}

@@ -92,7 +92,7 @@ export function DropBand() {
           </div>
         </div>
         <div className="grid place-items-center">
-          <Chest finish={drop.material} still sizes="(min-width: 768px) 420px, 80vw" className={cn("h-64 w-full max-w-md md:h-80", inView && "animate-float")} label={`${drop.name} box`} />
+          <Chest still sizes="(min-width: 768px) 420px, 80vw" className={cn("h-64 w-full max-w-md md:h-80", inView && "animate-float")} label={`${drop.name} box`} />
         </div>
       </div>
     </section>

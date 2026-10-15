@@ -12,9 +12,10 @@ Spec: `docs/superpowers/specs/2026-10-15-flexd-design.md`. Plan: `docs/superpowe
 - Dark only, as in the client's screens (`src/app/globals.css`): near-black lit with soft purple, glass cards with lit
   edges (`glass`, `glass-lit`), a glowing violet primary button, gold for money. Glows sit about a third softer than
   the screens (the client asked for a little less shine).
-- Boxes: the clasp box of the client's first screen, in holographic foil tinted per box (pearl, lilac, silver, black,
-  rose, gold; `src/components/chest/chest-finishes.ts`), with FLEXD and the categories printed on the sides and a faint
-  floor reflection (`chest-scene.ts`). Re-render the stills after any change.
+- Boxes: the client's own box picture, cut from their first screen ("The Time Room") by `npm run box:art -- <screen.png>`
+  into `public/boxes/flexd-box-<fingerprint>.webp` with its lid seam in `src/components/chest/box-art.ts`. Every box
+  uses it. The opening is 2D (`chest.tsx`): the lid half lifts along the seam with light in the gap, the box shakes, a
+  beam rises from the lit velvet inside. No WebGL. A sharper export of the same screen drops straight in.
 - Big headlines in Playfair Display capitals (`font-hero`), names and section titles in Cinzel (`font-punch`), both
   ivory with one lilac word (`AccentName`, `.accent-word`); prices in Playfair Display (`font-price`).
 - Logo: the client's crown-and-mask in the lilac chrome of their screens (`public/brand/flexd-mark-<fingerprint>.webp`, traced
@@ -33,14 +34,14 @@ Spec: `docs/superpowers/specs/2026-10-15-flexd-design.md`. Plan: `docs/superpowe
     npx tsc --noEmit
     npx eslint
     npx next build
-    npm run brand:assets -- <artwork.png> [--tint]   # new logo artwork; re-render the chest stills if its shape changed
+    npm run brand:assets -- <artwork.png> [--tint]   # new logo artwork
+    npm run box:art -- <screen.png>                  # the box picture, from the client's first screen
 
 From the repo root:
 
-    python scripts/render_box_stills.py http://localhost:3000 flexd   # after changing the chest; restart the dev server after
     python scripts/e2e_flexd.py http://localhost:3312 <out_dir>       # against `npx next start -p 3312`
 
-Both need Python Playwright 1.62 (a venv; the machine's global 1.42 is too old) and Pillow.
+It needs Python Playwright 1.62 (a venv; the machine's global 1.42 is too old) and Pillow.
 
 ## Deploy
 

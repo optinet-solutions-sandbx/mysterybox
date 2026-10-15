@@ -55,6 +55,23 @@
   --animate-fade-up: fade-up 0.9s var(--ease-snap) both;
   --animate-drop-in: drop-in 1.4s var(--ease-snap) both;
   --animate-float: float 5s ease-in-out infinite;
+  --animate-shake: shake 0.34s linear infinite;
+
+  @keyframes shake {
+    0%,
+    100% {
+      transform: translate(0, 0) rotate(0deg);
+    }
+    25% {
+      transform: translate(-2px, 1px) rotate(-0.7deg);
+    }
+    50% {
+      transform: translate(2px, -1px) rotate(0.6deg);
+    }
+    75% {
+      transform: translate(-1px, -1px) rotate(-0.4deg);
+    }
+  }
 
   @keyframes float {
     0%,

@@ -236,10 +236,8 @@ function OpenScene({ slug, pull }: { slug: string; pull: Pull }) {
                 }}
               >
                 <Chest
-                  finish={box.material}
                   open={lid}
                   shake={phase === "opening"}
-                  foreground
                   priority
                   sizes="(min-width: 768px) 460px, 92vw"
                   className={wide ? "h-[420px] w-[480px]" : "h-[340px] w-[min(92vw,380px)]"}

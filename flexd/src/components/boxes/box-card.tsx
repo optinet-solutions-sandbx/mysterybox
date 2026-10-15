@@ -20,7 +20,7 @@ export function BoxCard({ box }: { box: Box }) {
       <div className="relative -mb-4 h-40 overflow-hidden px-3 pt-2 md:h-48">
         <div aria-hidden className="absolute inset-x-0 bottom-0 h-2/3 bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--velvet-500)_26%,transparent),transparent)]" />
         <ViewTransition name={`chest-${box.slug}`} share="morph" default="none">
-          <Chest finish={box.material} still sizes="(min-width: 1024px) 260px, 45vw" className="pointer-events-none size-full" label={`${box.name} box`} />
+          <Chest still sizes="(min-width: 1024px) 260px, 45vw" className="pointer-events-none size-full" label={`${box.name} box`} />
         </ViewTransition>
       </div>
       <div className="relative flex flex-1 flex-col p-4 pt-0 md:p-5 md:pt-0">
