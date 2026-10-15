@@ -20,7 +20,7 @@ export function BoxCard({ box, top }: { box: Box; top: Item }) {
       onMouseLeave={() => setHover(false)}
       onFocus={() => setHover(true)}
       onBlur={() => setHover(false)}
-      className="group relative flex flex-col overflow-hidden rounded-[28px] border border-line bg-[image:var(--card)] transition-[transform,border-color] duration-500 ease-snap hover:-translate-y-1.5 hover:border-accent/60"
+      className="group relative flex h-full flex-col overflow-hidden rounded-[28px] border border-line bg-[image:var(--card)] transition-[transform,border-color] duration-500 ease-snap hover:-translate-y-1.5 hover:border-accent/60"
     >
       {box.badge && (
         <span className="absolute top-5 left-5 z-10 rounded-pill border border-accent/40 bg-bg/50 px-3 py-1 text-xs text-accent backdrop-blur">
@@ -35,9 +35,9 @@ export function BoxCard({ box, top }: { box: Box; top: Item }) {
       </div>
       <div className="flex flex-1 flex-col px-6 pb-6">
         <h3 className="font-display text-2xl">{box.name}</h3>
-        <p className="mt-1.5 line-clamp-2 text-sm text-muted">{box.tagline}</p>
-        <div className="mt-5 flex items-center gap-3 border-t border-line pt-4">
-          <ItemArt item={top} rarity="legendary" showBrand={false} sizes="44px" className="size-11 shrink-0 rounded-[10px]" />
+        <p className="mt-1.5 mb-5 line-clamp-2 text-sm text-muted">{box.tagline}</p>
+        <div className="mt-auto flex items-center gap-3 border-t border-line pt-4">
+          <ItemArt item={top} rarity="legendary" showBrand={false} sizes="44px" className="size-11 shrink-0 rounded-[10px] ring-1 ring-accent/50" />
           <p className="min-w-0 flex-1 text-xs font-medium text-muted">
             Top piece
             <span className="block truncate text-sm font-semibold text-fg">

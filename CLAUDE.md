@@ -156,6 +156,8 @@ anything moves; the browser only animates and verifies it.**
    Never use raw hex in components; `Box3D` materials (the box is an object, the same in both modes)
    are the exception. Check every visual change in **light and dark**.
 2. **Gold is foil, not paint.** Use `text-foil` / `bg-foil` on type, edges and the primary button.
+   Exception (QA 2026-10-15): prices in compact lists use solid `text-price` (`--price`: the light foil
+   stop in dark mode, the accent in light), where a gradient on small type reads as noise.
    `background-clip:text` does **not** reach transformed or absolutely positioned children, so animated
    numbers take `foil` themselves (`<RollingNumber foil>`, `<CountUp foil>`).
 3. **Type:** Cinzel (`font-display`) for headings, prices and the monogram; Jost for text. Geist Mono

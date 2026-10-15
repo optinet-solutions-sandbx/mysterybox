@@ -15,6 +15,7 @@
   --color-subtle: var(--subtle);
   --color-line: var(--line);
   --color-accent: var(--accent);
+  --color-price: var(--price);
   --color-on-accent: var(--on-accent);
   --color-accent-soft: var(--accent-soft);
   --color-sapphire: var(--sapphire);
@@ -133,6 +134,8 @@
   --accent: var(--gold);
   --on-accent: var(--obsidian);
   --accent-soft: color-mix(in oklab, var(--gold) 12%, transparent);
+  /* Solid gold for prices in lists (QA 2026-10-15), where foil reads as noise: the light foil stop. */
+  --price: var(--foil-2);
   /* Brighter sapphire for emitted light; the board sapphire is a surface colour. */
   --glow: color-mix(in oklab, #3d6bff 60%, var(--sapphire));
   --success: #6fcf9a;
@@ -187,6 +190,8 @@
   --accent: #8b6b36;
   --on-accent: var(--obsidian);
   --accent-soft: color-mix(in oklab, #8b6b36 10%, transparent);
+  /* The light foil stop is too faint on ivory; the deeper accent gold reads. */
+  --price: var(--accent);
   --glow: color-mix(in oklab, #3d6bff 40%, var(--sapphire));
   --success: #1f8a52;
   --danger: #c23b4b;

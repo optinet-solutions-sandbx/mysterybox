@@ -84,7 +84,7 @@ export function OddsProof({
           <ul className="mt-6 grid gap-4">
             {rows.map((r, i) => (
               <li key={r.item.id} className="grid grid-cols-[48px_1fr_auto] items-center gap-4">
-                <ItemArt item={r.item} rarity={r.rarity} showBrand={false} sizes="48px" className="size-12 rounded-[10px]" />
+                <ItemArt item={r.item} rarity={r.rarity} showBrand={false} sizes="48px" className="size-12 rounded-[10px] ring-1 ring-fg/30" />
                 <div className="min-w-0">
                   <p className="truncate text-sm">
                     <span className="text-muted">{r.item.brand}</span> {r.item.name}
@@ -101,7 +101,7 @@ export function OddsProof({
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-display text-sm text-foil tabular">{formatUsd(r.item.value)}</p>
+                  <p className="font-display text-sm text-price tabular">{formatUsd(r.item.value)}</p>
                   <p className="text-xs text-subtle tabular">{formatPercent(r.probability * 100)}</p>
                 </div>
               </li>

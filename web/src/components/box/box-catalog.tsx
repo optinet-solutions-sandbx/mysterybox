@@ -5,6 +5,7 @@ import { useState } from "react";
 import { categoryLabel } from "@/config/brand-pack";
 import type { Box, Item } from "@/domain/types";
 import { cn } from "@/lib/cn";
+import { SelectMenu } from "@/components/ui/select-menu";
 import { BoxCard } from "./box-card";
 
 type Filter = string;
@@ -47,20 +48,7 @@ export function BoxCatalog({ boxes }: { boxes: { box: Box; top: Item }[] }) {
             </button>
           ))}
         </div>
-        <label className="flex items-center gap-3 text-sm text-muted">
-          Sort
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value as Sort)}
-            className="rounded-pill border border-line bg-surface px-4 py-2 text-fg"
-          >
-            {sorts.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <SelectMenu label="Sort" value={sort} options={sorts.map((s) => ({ value: s.id, label: s.label }))} onChange={setSort} />
       </div>
 
       <LayoutGroup>
@@ -68,7 +56,7 @@ export function BoxCatalog({ boxes }: { boxes: { box: Box; top: Item }[] }) {
           {visible.map(({ box, top }) => (
             <motion.div
               key={box.id}
-              className="min-w-0"
+              className="h-full min-w-0"
               layout
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}

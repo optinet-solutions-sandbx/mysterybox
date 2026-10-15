@@ -52,7 +52,8 @@ export default async function LegalPage({ params }: PageProps<"/legal/[slug]">) 
   return (
     <>
       <PageHeader eyebrow="Legal" title={page.title} intro={page.summary} />
-      <Container className="max-w-3xl py-10">
+      <Container className="py-10">
+        <div className="max-w-3xl">
         <div className="rounded-card bg-accent-soft p-5 text-sm ring-1 ring-line">
           Placeholder. Final wording must come from {brand.legalEntity}’s counsel before any public launch.
         </div>
@@ -62,6 +63,7 @@ export default async function LegalPage({ params }: PageProps<"/legal/[slug]">) 
             <li key={line}>{line}</li>
           ))}
         </ol>
+        </div>
       </Container>
     </>
   );
