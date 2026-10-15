@@ -92,7 +92,7 @@ function VaultList({ account, pulls }: { account: Account; pulls: Pull[] }) {
       )}
 
       {chosen.length > 0 && (
-        <div className="fixed inset-x-0 bottom-[calc(4.6rem+env(safe-area-inset-bottom))] z-30 border-t border-line/70 bg-bg px-4 py-3 lg:bottom-0">
+        <div className="fixed inset-x-0 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-30 border-t border-line/70 bg-bg px-4 py-3 lg:bottom-0">
           <div className="mx-auto flex max-w-3xl items-center gap-4">
             <div className="min-w-0 text-sm">
               <p className="font-semibold">

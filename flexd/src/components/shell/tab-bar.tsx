@@ -12,9 +12,9 @@ export function TabBar() {
     <nav
       aria-label="Main"
       style={{ viewTransitionName: "tab-bar" }}
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-line/70 bg-bg pb-safe lg:hidden"
+      className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-40 rounded-[28px] border border-line bg-surface lg:hidden"
     >
-      <ul className="mx-auto grid max-w-md grid-cols-4 px-2 pt-1.5 pb-1.5">
+      <ul className="mx-auto grid max-w-md grid-cols-4 p-1.5">
         {NAV.map(({ href, label, icon: Icon }) => {
           const active = isActive(pathname, href);
           return (
@@ -24,11 +24,11 @@ export function TabBar() {
                 transitionTypes={navDirection(pathname, href)}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "mx-1 flex flex-col items-center gap-1 rounded-2xl py-2 text-[11px] font-medium transition-colors",
-                  active ? "bg-surface text-fg" : "text-subtle",
+                  "flex flex-col items-center gap-1 rounded-[22px] py-2 text-[11px] font-medium transition-colors",
+                  active ? "bg-[image:var(--primary-btn)] text-fg shadow-[var(--velvet-inset)]" : "text-muted hover:text-fg",
                 )}
               >
-                <Icon className={cn("size-[22px]", active && "text-hot")} strokeWidth={active ? 2.2 : 1.7} />
+                <Icon className="size-[22px]" strokeWidth={active ? 2.2 : 1.7} />
                 {label}
               </Link>
             </li>

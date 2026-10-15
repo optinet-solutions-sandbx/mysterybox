@@ -103,7 +103,7 @@ export default async function BoxPage({ params }: PageProps<"/box/[slug]">) {
       </div>
 
       {/* Phones: the price and Buy stay in reach above the tab bar. */}
-      <div className="fixed inset-x-0 bottom-[calc(4.6rem+env(safe-area-inset-bottom))] z-30 border-t border-line/70 bg-bg px-4 py-3 lg:hidden">
+      <div className="fixed inset-x-0 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-30 border-t border-line/70 bg-bg px-4 py-3 lg:hidden">
         <div className="mx-auto flex max-w-xl items-center gap-4">
           <div className="min-w-0">
             <p className="truncate text-xs text-muted">{box.name}</p>

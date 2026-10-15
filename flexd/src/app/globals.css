@@ -482,7 +482,7 @@ body::before {
 
 /* Room for the phone tab bar and the home indicator. */
 @utility pb-tabbar {
-  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  padding-bottom: calc(6.5rem + env(safe-area-inset-bottom));
   @media (min-width: 64rem) {
     padding-bottom: 0;
   }

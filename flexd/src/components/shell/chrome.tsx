@@ -55,7 +55,7 @@ export function AgeGate() {
   const ageOk = useApp((s) => s.ageOk);
   if (!hydrated || ageOk) return null;
   return (
-    <div role="dialog" aria-modal="true" aria-labelledby="age-title" className="fixed inset-0 z-[90] grid place-items-center bg-bg bg-[radial-gradient(60%_50%_at_50%_30%,color-mix(in_oklab,var(--primary)_30%,transparent),transparent_70%)] px-6">
+    <div role="dialog" aria-modal="true" aria-labelledby="age-title" className="fixed inset-0 z-[90] grid place-items-center bg-bg bg-drape px-6">
       <div className="w-full max-w-sm text-center">
         <LogoMark className="mx-auto w-28" sizes="112px" />
         <h1 id="age-title" className="mt-8 font-punch text-4xl">

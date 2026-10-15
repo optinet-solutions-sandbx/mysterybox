@@ -39,7 +39,7 @@ export function ShelfSwitch({ value, onChange }: { value: Shelf; onChange: (s: S
           onClick={() => onChange(s)}
           className={cn(
             "h-10 shrink-0 rounded-pill border px-4 text-sm font-medium transition-colors",
-            value === s ? "border-transparent bg-primary text-on-primary" : "border-line text-muted hover:text-fg",
+            value === s ? "border-transparent bg-[image:var(--primary-btn)] text-fg" : "border-line text-fg/90 hover:border-edge",
           )}
         >
           {SHELF_LABEL[s]}
@@ -145,7 +145,7 @@ function Carousel({ boxes, index, onIndex }: { boxes: Box[]; index: number; onIn
       {boxes.length > 1 && (
         <div className="mt-1 flex justify-center gap-1.5" aria-hidden>
           {boxes.map((b, j) => (
-            <span key={b.id} className={cn("h-1.5 rounded-full transition-all duration-300", j === index ? "w-6 bg-hot" : "w-1.5 bg-line")} />
+            <span key={b.id} className={cn("h-1.5 rounded-full transition-all duration-300", j === index ? "w-6 bg-foil" : "w-1.5 bg-line")} />
           ))}
         </div>
       )}
@@ -165,7 +165,7 @@ function BoxDetails({ box }: { box: Box }) {
           </h2>
           <p className="mt-1 text-muted">{box.tagline}</p>
         </div>
-        <OddsButton box={box} className="h-10 shrink-0 rounded-pill border border-line px-4 text-sm font-medium text-fg transition-colors hover:border-accent/60" />
+        <OddsButton box={box} className="h-10 shrink-0 rounded-pill border border-edge px-4 text-sm font-medium text-fg transition-colors hover:border-accent" />
       </div>
       {box.drop && <DropTimer className="mt-3" />}
 
