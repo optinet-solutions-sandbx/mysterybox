@@ -41,11 +41,14 @@ export function AppHydrator() {
   return null;
 }
 
+/** The prototype notice, a pill under the header (the screens). */
 export function PrototypeBanner() {
   return (
-    <p className="relative z-50 bg-surface-2 px-4 py-1.5 text-center text-xs text-muted">
-      Prototype: no real money. Accounts stay in this browser.
-    </p>
+    <div className="mx-auto w-full max-w-7xl px-4 md:px-8">
+      <p className="glass mx-auto mt-1 max-w-md rounded-pill px-4 py-1.5 text-center text-xs text-muted">
+        <span className="text-hot">Prototype: no real money.</span> Accounts stay in this browser.
+      </p>
+    </div>
   );
 }
 
@@ -58,17 +61,17 @@ export function AgeGate() {
     <div role="dialog" aria-modal="true" aria-labelledby="age-title" className="fixed inset-0 z-[90] grid place-items-center bg-bg bg-drape px-6">
       <div className="w-full max-w-sm text-center">
         <LogoMark className="mx-auto w-28" sizes="112px" />
-        <h1 id="age-title" className="mt-8 font-punch text-4xl">
+        <h1 id="age-title" className="mt-8 font-hero text-[42px]">
           Are you <span className="accent-word">{brand.minimumAge}</span> or older?
         </h1>
         <p className="mt-3 text-muted">
           Opening a box is a purchase with a random result, so {brand.name} is for adults in the {brand.market} only.
         </p>
         <div className="mt-8 grid gap-3">
-          <button type="button" onClick={confirmAge} className={button({ size: "lg" })}>
+          <button type="button" onClick={confirmAge} className={button({ size: "lg", className: "text-sm tracking-[0.18em] uppercase" })}>
             I&apos;m {brand.minimumAge} or older
           </button>
-          <a href="https://www.google.com" className={button({ variant: "outline", size: "lg" })}>
+          <a href="https://www.google.com" className={button({ variant: "outline", size: "lg", className: "text-sm tracking-[0.18em] uppercase" })}>
             Leave
           </a>
         </div>
@@ -112,7 +115,7 @@ export function Footer() {
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-4 py-10 md:grid-cols-[1fr_2fr] md:px-8">
         <div className="flex items-center gap-3">
           <LogoMark className="w-12" sizes="48px" />
-          <span className="font-display tracking-[0.14em]">{brand.name}</span>
+          <span className="tracking-[0.5em]">{brand.name}</span>
         </div>
         <div className="space-y-3 text-sm text-muted">
           <p>

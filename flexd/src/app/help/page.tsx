@@ -100,7 +100,7 @@ export default function HelpPage() {
   return (
     <PageTransition>
     <div className="mx-auto max-w-3xl px-4 pt-6 md:px-8 md:pt-12">
-      <h1 className="font-punch text-[clamp(2rem,10vw,2.75rem)] md:text-7xl">Help</h1>
+      <h1 className="font-hero text-[clamp(2.25rem,11vw,3rem)] md:text-7xl">Help</h1>
       <p className="mt-2 text-muted">Answers about boxes, your pieces, payments, shipping and your account.</p>
       <div className="mt-10 space-y-10">
         {SECTIONS.map((s) => (

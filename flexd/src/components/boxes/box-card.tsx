@@ -15,17 +15,17 @@ export function BoxCard({ box }: { box: Box }) {
     <Link
       href={`/box/${box.slug}`}
       transitionTypes={FORWARD}
-      className="group relative flex flex-col overflow-hidden rounded-[28px] border border-line/80 bg-[var(--card)] transition-[border-color,transform] duration-300 ease-snap hover:-translate-y-1 hover:border-accent/50"
+      className="glass group relative flex flex-col overflow-hidden rounded-[28px] transition-[border-color,transform] duration-300 ease-snap hover:-translate-y-1 hover:border-hot/60"
     >
       <div className="relative -mb-4 h-40 overflow-hidden px-3 pt-2 md:h-48">
-        <div aria-hidden className="absolute inset-x-0 bottom-0 h-2/3 bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--glow)_28%,transparent),transparent)]" />
+        <div aria-hidden className="absolute inset-x-0 bottom-0 h-2/3 bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--velvet-500)_26%,transparent),transparent)]" />
         <ViewTransition name={`chest-${box.slug}`} share="morph" default="none">
           <Chest finish={box.material} still sizes="(min-width: 1024px) 260px, 45vw" className="pointer-events-none size-full" label={`${box.name} box`} />
         </ViewTransition>
       </div>
       <div className="relative flex flex-1 flex-col p-4 pt-0 md:p-5 md:pt-0">
         <div className="flex items-baseline justify-between gap-3">
-          <h3 className="truncate font-display text-base md:text-lg">{box.name}</h3>
+          <h3 className="truncate font-punch text-base md:text-lg">{box.name}</h3>
           <span className="shrink-0 font-price text-base font-bold text-accent tabular md:text-lg">{formatUsd(box.price)}</span>
         </div>
         <p className="mt-1 text-sm text-muted">

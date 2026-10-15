@@ -12,4 +12,6 @@ export const brand = {
   supportEmail: "support@flexd.example",
   minimumAge: 18,
   market: "United States",
+  /** Printed on the box's side, one per line (the client's screens). */
+  boxSideLines: ["Bags", "Watches", "Jewelry", "Beauty"],
 } as const;

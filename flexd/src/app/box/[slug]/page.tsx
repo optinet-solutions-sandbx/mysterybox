@@ -45,12 +45,12 @@ export default async function BoxPage({ params }: PageProps<"/box/[slug]">) {
       <div className="mt-4 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-14">
         <div className="lg:sticky lg:top-24 lg:self-start">
           <BoxHero box={box} />
-          <div className="mt-4 grid grid-cols-2 rounded-2xl border border-line/80 bg-surface/60 py-3 text-center">
+          <div className="glass-lit mt-4 grid grid-cols-2 rounded-[22px] py-4 text-center">
             <div>
               <p className="text-xs text-muted">Min value</p>
               <p className="font-price text-lg font-semibold tabular">{formatUsd(min)}</p>
             </div>
-            <div className="border-l border-line/80">
+            <div className="border-l border-fg/25">
               <p className="text-xs text-muted">Max value</p>
               <p className="font-price text-lg font-bold text-accent tabular">{formatUsd(max)}</p>
             </div>
@@ -84,7 +84,7 @@ export default async function BoxPage({ params }: PageProps<"/box/[slug]">) {
             </h2>
             <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
               {entries.map((e, i) => (
-                <li key={e.item.id} className="overflow-hidden rounded-3xl border border-line/80 bg-surface/50">
+                <li key={e.item.id} className="glass overflow-hidden rounded-3xl">
                   <ItemArt item={e.item} rarity={e.rarity} showBrand={false} sizes="(min-width: 1024px) 180px, 45vw" priority={i < 3} />
                   <div className="p-3">
                     <p className="truncate text-xs font-semibold tracking-wide text-muted">{e.item.brand}</p>

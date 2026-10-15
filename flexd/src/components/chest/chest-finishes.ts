@@ -1,53 +1,44 @@
-import * as THREE from "three";
 import type { BoxMaterial } from "@/domain/types";
 
 /**
- * FLEXD box finishes: matte velvet in the purple family and brushed gold for the top box. The client
- * asked for less shine, so no finish has a clear coat or iridescence and velvet stays rough; the
- * crown, piping and lock plate stay metallic gold. Keys are the catalogue's material names.
+ * FLEXD box finishes (2026-10-15, after the client's screens): holographic foil, a different tint per
+ * box. Each is a metal whose colour map is the foil (a base sheen with a few rainbow streaks) plus a
+ * touch of thin-film iridescence; set a notch rougher than the screens because the client asked for a
+ * little less shine. Keys are the catalogue's material names.
  */
 export interface Finish {
-  body: () => THREE.MeshPhysicalMaterialParameters;
-  /** Crown colour and metalness on the lid. */
-  crown: { color: number; metalness: number; roughness: number };
-  /** A fine nap: the leather texture as a light bump map. */
-  nap?: { repeat: number; scale: number };
+  /** The foil's base sheen, light then shade (CSS colours), laid diagonally. */
+  base: [string, string];
+  /** Rainbow streaks across the foil (CSS colours). */
+  streaks: string[];
+  metalness: number;
+  roughness: number;
+  iridescence: number;
+  /** Lid crown and side print: dark ink on light foils, lilac chrome on the black one. */
+  ink: { color: number; metalness: number; roughness: number };
 }
 
-const CROWN = { color: 0xe6cf9a, metalness: 1, roughness: 0.28 };
-const NAP = { repeat: 6, scale: 0.12 };
+const INK = { color: 0x1e1029, metalness: 0.5, roughness: 0.4 };
+const CHROME_INK = { color: 0xb48ae8, metalness: 1, roughness: 0.28 };
+const FOIL = { metalness: 0.92, roughness: 0.2, iridescence: 0.25 };
 
-function velvet(color: number, sheenColor: number) {
-  return (): THREE.MeshPhysicalMaterialParameters => ({
-    color,
-    metalness: 0,
-    roughness: 0.92,
-    // A low sheen: at full strength the studio light turned the velvet into glowing violet.
-    sheen: 0.45,
-    sheenColor: new THREE.Color(sheenColor),
-    sheenRoughness: 0.6,
-  });
-}
-
-// Base colours sit darker than the palette because the studio light and tone mapping lift them;
-// on screen they land near the sheet's velvet-100, -300, -500 and -900.
 export const FINISHES: Record<BoxMaterial, Finish> = {
-  /** Lilac velvet (Vanity). */
-  ivory: { body: velvet(0x8f7aa8, 0xc9b6e0), crown: CROWN, nap: NAP },
-  /** Royal velvet (First Edition, The Flap Room). */
-  navy: { body: velvet(0x33105a, 0x5e3a8c), crown: CROWN, nap: NAP },
-  /** Amethyst velvet (Sun Club). */
-  sapphire: { body: velvet(0x5c3590, 0x9a7ac6), crown: CROWN, nap: NAP },
-  /** Black velvet with a purple cast (The Atelier, The Time Room). */
-  obsidian: { body: velvet(0x0e0814, 0x30223f), crown: CROWN, nap: NAP },
-  /** Plum velvet, red-purple (Jewel Vault). */
-  bronze: { body: velvet(0x2e0a2c, 0x5c2a55), crown: CROWN, nap: NAP },
-  /** Brushed gold, satin rather than mirror (Grail Reserve); the crown is polished for contrast. */
-  gold: {
-    body: () => ({ color: 0xc9a75e, metalness: 1, roughness: 0.5 }),
-    crown: { color: 0xf0ddae, metalness: 1, roughness: 0.2 },
-  },
+  /** Pearl hologram (Vanity). */
+  ivory: { base: ["#fbf6f0", "#bdb1a8"], streaks: ["#e8cfff", "#cfe0ff", "#ffd3e6", "#ffe6c4"], ...FOIL, ink: INK },
+  /** Lilac hologram (Sun Club). */
+  sapphire: { base: ["#efe5fd", "#9d86c9"], streaks: ["#b88cff", "#9fbfff", "#f0a8e0"], ...FOIL, ink: INK },
+  /** Silver hologram (The Atelier, The Time Room), the box in the client's first screen. */
+  obsidian: { base: ["#f8f8fc", "#a3a2b2"], streaks: ["#c3a2ff", "#9cc2ff", "#ffb6e1", "#d4c0ff"], ...FOIL, ink: INK },
+  /** Black hologram (First Edition, The Flap Room): dark foil with a rainbow sheen. */
+  navy: { base: ["#3c3846", "#121016"], streaks: ["#7a4fd0", "#3f78c8", "#c0569a", "#6a5ad8"], ...FOIL, roughness: 0.3, ink: CHROME_INK },
+  /** Rose hologram (Jewel Vault). */
+  bronze: { base: ["#fce8ee", "#c093a1"], streaks: ["#ffb3d1", "#d8b8ff", "#ffcfb0"], ...FOIL, ink: INK },
+  /** Gold hologram (Grail Reserve). */
+  gold: { base: ["#f7e4b8", "#ad8644"], streaks: ["#ffd9a0", "#e6c2ff", "#c9f0d4", "#ffc7a8"], ...FOIL, ink: INK },
 };
+
+/** The champagne-gold clasp on the front, satin rather than mirror. */
+export const CLASP = { color: 0xe9cd98, metalness: 1, roughness: 0.3 } as const;
 
 /** Lining, lid underside and scene light in the FLEXD palette. */
 export const INTERIOR = {
@@ -55,7 +46,7 @@ export const INTERIOR = {
   liningSheen: 0x7a4bb5,
   lid: 0x1e0833,
   lidSheen: 0x5b1e92,
-  rimLight: 0x7a52b0,
-  rimIntensity: 1.2,
+  rimLight: 0x8a5ad0,
+  rimIntensity: 1.4,
   fillGround: 0x0a0510,
 } as const;

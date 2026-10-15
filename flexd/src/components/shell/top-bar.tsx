@@ -20,14 +20,17 @@ export function TopBar() {
   const account = useCurrentAccount();
 
   return (
-    <header style={{ viewTransitionName: "site-header" }} className="sticky top-0 z-40 border-b border-line/60 bg-bg/92">
+    <header style={{ viewTransitionName: "site-header" }} className="sticky top-0 z-40 bg-[linear-gradient(180deg,var(--bg)_55%,color-mix(in_oklab,var(--bg)_80%,transparent))]">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 md:px-8">
         <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label={`${brand.name}, all boxes`}>
           <LogoMark className="w-11" sizes="44px" />
           {/* The spaced wordmark fits beside Sign in / Sign up from ~380px; signed in, the balance pill grows with
               the balance, so phones show the mark only (as play/ does). */}
-          <span className={cn("text-foil font-display text-[17px] tracking-[0.42em]", account ? "max-sm:hidden" : "max-[379px]:hidden")}>
+          <span className={cn("relative pl-1 text-[19px] font-normal tracking-[0.5em] text-fg", account ? "max-sm:hidden" : "max-[379px]:hidden")}>
             {brand.name}
+            <sup aria-hidden className="absolute top-0 -right-1 text-[7px] tracking-normal text-muted">
+              TM
+            </sup>
           </span>
         </Link>
 
@@ -74,10 +77,10 @@ export function TopBar() {
             </>
           ) : (
             <>
-              <button type="button" onClick={() => openAuth("sign-in")} className={button({ variant: "ghost", size: "sm" })}>
+              <button type="button" onClick={() => openAuth("sign-in")} className={button({ variant: "ghost", size: "sm", className: "font-normal text-fg/90" })}>
                 Sign in
               </button>
-              <button type="button" onClick={() => openAuth("sign-up")} className={button({ size: "sm" })}>
+              <button type="button" onClick={() => openAuth("sign-up")} className={button({ variant: "velvet", size: "sm", className: "font-medium" })}>
                 Sign up
               </button>
             </>

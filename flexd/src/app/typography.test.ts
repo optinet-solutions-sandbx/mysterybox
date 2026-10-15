@@ -27,9 +27,11 @@ describe("FLEXD type", () => {
     expect(css).toMatch(/--font-price:/);
     expect(css).toMatch(/\.accent-word\s*\{/);
   });
-  it("sets headlines in Cinzel capitals", () => {
-    const punch = css.slice(css.indexOf("@utility font-punch"), css.indexOf("}", css.indexOf("@utility font-punch")));
-    expect(punch).toMatch(/font-family:\s*var\(--font-display\)/);
-    expect(punch).toMatch(/text-transform:\s*uppercase/);
+  it("sets names in Cinzel, whose lower case are small capitals, and big headlines in Playfair capitals", () => {
+    const block = (name: string) => css.slice(css.indexOf(`@utility ${name}`), css.indexOf("}", css.indexOf(`@utility ${name}`)));
+    expect(block("font-punch")).toMatch(/font-family:\s*var\(--font-display\)/);
+    expect(block("font-punch")).not.toMatch(/text-transform/);
+    expect(block("font-hero")).toMatch(/font-family:\s*var\(--font-price\)/);
+    expect(block("font-hero")).toMatch(/text-transform:\s*uppercase/);
   });
 });

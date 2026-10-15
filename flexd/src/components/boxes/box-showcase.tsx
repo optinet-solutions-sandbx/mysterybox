@@ -39,7 +39,7 @@ export function ShelfSwitch({ value, onChange }: { value: Shelf; onChange: (s: S
           onClick={() => onChange(s)}
           className={cn(
             "h-10 shrink-0 rounded-pill border px-4 text-sm font-medium transition-colors",
-            value === s ? "border-transparent bg-[image:var(--primary-btn)] text-fg" : "border-line text-fg/90 hover:border-edge",
+            value === s ? "btn-primary border-transparent text-on-primary" : "glass text-fg/90 hover:border-fg/40",
           )}
         >
           {SHELF_LABEL[s]}
@@ -105,9 +105,9 @@ function Carousel({ boxes, index, onIndex }: { boxes: Box[]; index: number; onIn
           if (info.offset.x < -50) go(1);
           else if (info.offset.x > 50) go(-1);
         }}
-        className="relative h-[300px] touch-pan-y overflow-hidden rounded-[32px] outline-none md:h-[360px]"
+        className="relative h-[330px] touch-pan-y overflow-hidden rounded-[32px] outline-none md:h-[380px]"
       >
-        <div aria-hidden className="absolute inset-x-[10%] bottom-[8%] h-1/2 bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--glow)_40%,transparent),transparent)]" />
+        <div aria-hidden className="absolute inset-x-[6%] bottom-[4%] h-1/2 bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--velvet-500)_32%,transparent),transparent)]" />
         <AnimatePresence initial={false}>
           {visible.map((offset) => {
             const k = boxes.length === 2 ? offset : (index + offset + boxes.length) % boxes.length;
@@ -120,13 +120,14 @@ function Carousel({ boxes, index, onIndex }: { boxes: Box[]; index: number; onIn
                 tabIndex={-1}
                 aria-hidden={pos !== 0}
                 onClick={() => pos !== 0 && go(pos)}
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                className={cn("absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2", pos === 0 ? "z-10" : "z-0")}
                 initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ x: `${pos * (wide ? 62 : 58)}%`, scale: pos === 0 ? 1 : 0.55, opacity: pos === 0 ? 1 : 0.42 }}
+                // The neighbours wait behind the current box, smaller and darker (the screens).
+                animate={{ x: `${pos * (wide ? 46 : 40)}%`, y: pos === 0 ? "6%" : "-16%", scale: pos === 0 ? 1 : 0.6, opacity: pos === 0 ? 1 : 0.5 }}
                 exit={{ opacity: 0, scale: 0.5 }}
                 transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 260, damping: 30 }}
               >
-                <Chest finish={b.material} still float={pos === 0 && inView} tilt={pos === 0} priority={pos === 0} sizes={pos === 0 ? "(min-width: 768px) 360px, 72vw" : "(min-width: 768px) 200px, 40vw"} className={wide ? "h-[300px] w-[360px]" : "h-[230px] w-[270px]"} label={`${b.name} box`} />
+                <Chest finish={b.material} still float={pos === 0 && inView} tilt={pos === 0} priority={pos === 0} sizes={pos === 0 ? "(min-width: 768px) 390px, 85vw" : "(min-width: 768px) 240px, 50vw"} className={wide ? "h-[320px] w-[390px]" : "h-[275px] w-[330px]"} label={`${b.name} box`} />
               </motion.button>
             );
           })}
@@ -145,7 +146,7 @@ function Carousel({ boxes, index, onIndex }: { boxes: Box[]; index: number; onIn
       {boxes.length > 1 && (
         <div className="mt-1 flex justify-center gap-1.5" aria-hidden>
           {boxes.map((b, j) => (
-            <span key={b.id} className={cn("h-1.5 rounded-full transition-all duration-300", j === index ? "w-6 bg-foil" : "w-1.5 bg-line")} />
+            <span key={b.id} className={cn("h-1.5 rounded-full transition-all duration-300", j === index ? "w-6 bg-hot" : "w-1.5 bg-fg/25")} />
           ))}
         </div>
       )}
@@ -160,41 +161,42 @@ function BoxDetails({ box }: { box: Box }) {
     <div className="mt-5">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <h2 className="font-punch text-[26px] leading-tight md:text-3xl">
+          <h2 className="font-punch text-[34px] leading-tight md:text-4xl">
             <AccentName name={box.name} />
           </h2>
           <p className="mt-1 text-muted">{box.tagline}</p>
         </div>
-        <OddsButton box={box} className="h-10 shrink-0 rounded-pill border border-edge px-4 text-sm font-medium text-fg transition-colors hover:border-accent" />
+        <OddsButton box={box} className="mt-1 h-11 shrink-0 rounded-pill border border-edge px-5 text-[15px] font-medium text-fg transition-colors hover:border-fg/70" />
       </div>
       {box.drop && <DropTimer className="mt-3" />}
 
       <div className="mt-5 flex items-center justify-between text-sm">
-        <span className="font-medium text-muted">Inside</span>
+        <span className="font-medium text-fg">Inside</span>
         <Link href={`/box/${box.slug}`} transitionTypes={FORWARD} className="inline-flex items-center gap-1 font-medium text-fg hover:text-hot">
           Details <ChevronRight className="size-4" />
         </Link>
       </div>
       <ul className="no-scrollbar -mx-4 mt-2 flex gap-2.5 overflow-x-auto px-4 md:mx-0 md:px-0">
-        {pieces.map((e) => (
-          <li key={e.item.id} className="flex w-[168px] shrink-0 items-center gap-2.5 rounded-2xl border border-line/80 bg-surface/60 p-2">
-            <ItemArt item={e.item} rarity={e.rarity} showBrand={false} sizes="48px" className="size-12 shrink-0 rounded-xl" />
+        {pieces.map((e, j) => (
+          // The top piece is lit and priced in gold, as in the screens; the rest are quiet glass.
+          <li key={e.item.id} className={cn("flex w-[188px] shrink-0 items-center gap-3 rounded-2xl p-2", j === 0 ? "glass-lit" : "glass")}>
+            <ItemArt item={e.item} rarity={e.rarity} showBrand={false} sizes="56px" className="size-14 shrink-0 rounded-xl" />
             <div className="min-w-0">
-              <p className="truncate text-xs font-semibold tracking-wide">{e.item.brand}</p>
-              <p className="font-price text-sm font-semibold text-accent tabular">{formatUsdCompact(e.item.value)}</p>
+              <p className="truncate text-sm font-semibold">{e.item.brand}</p>
+              <p className={cn("font-price text-lg font-semibold tabular", j === 0 ? "text-accent" : "text-fg")}>{formatUsdCompact(e.item.value)}</p>
             </div>
           </li>
         ))}
       </ul>
 
-      <div className="mt-4 grid grid-cols-2 rounded-2xl border border-line/80 bg-surface/60 py-3 text-center">
+      <div className="glass-lit mt-4 grid grid-cols-2 rounded-[22px] py-4 text-center">
         <div>
-          <p className="text-xs text-muted">Min value</p>
-          <p className="font-price text-lg font-semibold tabular">{formatUsd(min)}</p>
+          <p className="text-sm text-muted">Min value</p>
+          <p className="font-price text-[26px] leading-tight font-semibold tabular">{formatUsd(min)}</p>
         </div>
-        <div className="border-l border-line/80">
-          <p className="text-xs text-muted">Max value</p>
-          <p className="font-price text-lg font-bold tabular text-accent">{formatUsd(max)}</p>
+        <div className="border-l border-fg/25">
+          <p className="text-sm text-muted">Max value</p>
+          <p className="font-price text-[26px] leading-tight font-bold tabular text-accent">{formatUsd(max)}</p>
         </div>
       </div>
       <BuyButton box={box} className="mt-4 w-full" />

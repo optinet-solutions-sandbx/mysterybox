@@ -1,7 +1,7 @@
 # FLEXD
 
 The third site in this repo: a copy of `play/` (the IcyBox-style app) re-branded as **FLEXD** and
-re-skinned in matte velvet purple and gold, after the client's screens (2026-10-15). It is a
+re-skinned 1:1 after the client's screens (2026-10-15; matte velvet first, then holographic and glass the same day). It is a
 separate product and may drift from `play/`; fixes to `play/` are not copied over automatically.
 
 Spec: `docs/superpowers/specs/2026-10-15-flexd-design.md`. Plan: `docs/superpowers/plans/2026-10-15-flexd.md`.
@@ -9,12 +9,17 @@ Spec: `docs/superpowers/specs/2026-10-15-flexd-design.md`. Plan: `docs/superpowe
 ## How it differs from play/
 
 - Name FLEXD (`src/config/brand.ts`); no slogan; domain, support email and legal entity are placeholders.
-- Dark only. Colours are the client's Velvet & Gold sheet, in `src/app/globals.css`.
-- Less shiny: velvet buttons are a near-flat fill; boxes are matte velvet (`src/components/chest/chest-finishes.ts`).
-- Cinzel gold headlines with one amethyst word (`AccentName`, `.accent-word`); prices in Playfair Display (`font-price`).
+- Dark only, as in the client's screens (`src/app/globals.css`): near-black lit with soft purple, glass cards with lit
+  edges (`glass`, `glass-lit`), a glowing violet primary button, gold for money. Glows sit about a third softer than
+  the screens (the client asked for a little less shine).
+- Boxes: the clasp box of the client's first screen, in holographic foil tinted per box (pearl, lilac, silver, black,
+  rose, gold; `src/components/chest/chest-finishes.ts`), with FLEXD and the categories printed on the sides and a faint
+  floor reflection (`chest-scene.ts`). Re-render the stills after any change.
+- Big headlines in Playfair Display capitals (`font-hero`), names and section titles in Cinzel (`font-punch`), both
+  ivory with one lilac word (`AccentName`, `.accent-word`); prices in Playfair Display (`font-price`).
 - Logo: the client's crown-and-mask in the lilac chrome of their screens (`public/brand/flexd-mark-<fingerprint>.webp`, traced
   outline in `src/config/mark.json`); `npm run brand:assets -- <artwork.png> [--tint]` puts in new artwork (`--tint`
-  recolours it to that lilac) and redraws the icons. The box lids keep their gold inlay (only the logo's shape is used).
+  recolours it to that lilac) and redraws the icons. The box lids print the logo's shape in dark ink (lilac on the black box).
 - Loyalty levels follow the box finishes: Lilac, Amethyst, Plum, Royal, Gold.
 - Floating tab bar. The spaced wordmark shows from 380px when signed out and from 640px when signed in
   (the balance pill grows with the balance); otherwise the mark alone.

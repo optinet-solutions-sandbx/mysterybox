@@ -28,23 +28,23 @@ function contrast(a: string, b: string): number {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-describe("FLEXD velvet and gold tokens", () => {
+describe("FLEXD tokens (the client's screens)", () => {
   it.each([
     ["bg", "#0a0510"],
     ["surface", "#160a22"],
     ["surface-2", "#22112f"],
     ["line", "#3d2152"],
-    ["fg", "#f4e9d2"],
-    ["muted", "#b3a3c4"],
+    ["fg", "#f4efe9"],
+    ["muted", "#c6bed0"],
     ["primary", "#5b1e92"],
     ["primary-hi", "#3f1366"],
-    ["on-primary", "#e6cf9a"],
+    ["on-primary", "#ffffff"],
     ["accent", "#c2a05a"],
     ["accent-word", "#a374e0"],
-    ["edge", "#8c6a2e"],
+    ["edge", "#77708a"],
     ["success", "#7fb89a"],
     ["danger", "#e07a86"],
-  ])("--%s is the palette sheet's %s", (role, hex) => {
+  ])("--%s is %s", (role, hex) => {
     expect(resolve(role)).toBe(hex);
   });
 
@@ -52,8 +52,10 @@ describe("FLEXD velvet and gold tokens", () => {
     expect(css).not.toMatch(/\[data-theme="light"\]/);
   });
 
-  it("keeps the purple matte: no bright velvet stop, no light sweep", () => {
-    expect(T.get("primary-btn")).not.toMatch(/#6e2ba8|radial-gradient/i);
+  it("keeps the glows softer than the screens: faint, and no light sweep across the button", () => {
+    const alphas = [...(T.get("primary-glow") ?? "").matchAll(/\/\s*([\d.]+)\)/g)].map((m) => Number(m[1]));
+    expect(alphas.length).toBeGreaterThan(0);
+    for (const a of alphas) expect(a).toBeLessThanOrEqual(0.6);
     expect(css).not.toMatch(/\.btn-primary::after/);
   });
 

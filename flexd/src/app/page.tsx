@@ -38,10 +38,10 @@ export default function BoxesPage() {
     <div className="mx-auto max-w-7xl px-4 md:px-8">
       <section className="grid grid-cols-1 gap-10 pt-6 lg:grid-cols-[1fr_minmax(0,500px)] lg:items-center lg:gap-16 lg:pt-14">
         <div className="first-visit-only min-w-0">
-          <h1 className="font-punch text-[34px] md:text-6xl lg:text-[76px]">
+          <h1 className="font-hero text-[46px] md:text-6xl lg:text-[76px]">
             Every box holds a <span className="accent-word">real</span> piece.
           </h1>
-          <p className="mt-4 max-w-lg text-[17px] font-light text-muted md:text-lg">
+          <p className="mt-4 max-w-lg text-[17px] text-muted md:text-lg">
             Bags, watches, jewelry and beauty from the houses you know. Open a box, then keep the piece or sell it back for{" "}
             {sellPercent}% of its value.
           </p>

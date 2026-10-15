@@ -39,8 +39,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: returningBootScript }} />
       </head>
       <body className="flex min-h-full flex-col">
-        <PrototypeBanner />
         <TopBar />
+        <PrototypeBanner />
         <main className="flex-1">{children}</main>
         <div className="pb-tabbar">
           <Footer />
