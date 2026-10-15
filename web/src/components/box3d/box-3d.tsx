@@ -101,15 +101,18 @@ export const materials: Record<BoxMaterial, Material> = {
   },
 };
 
-/** Accepts a number (animated with a spring) or a MotionValue (scroll, etc.). */
-function useNum(value: Num, spring = true) {
+/** Accepts a number or a MotionValue (scroll, etc.) and follows it directly. */
+function useNumRaw(value: Num) {
   const local = useMotionValue(typeof value === "number" ? value : 0);
   useEffect(() => {
     if (typeof value === "number") local.set(value);
   }, [value, local]);
-  const source = isMotionValue(value) ? value : local;
-  const smoothed = useSpring(source, { stiffness: 85, damping: 15, mass: 0.9 });
-  return spring ? smoothed : source;
+  return isMotionValue(value) ? value : local;
+}
+
+/** The same, animated with a spring. */
+function useNum(value: Num) {
+  return useSpring(useNumRaw(value), { stiffness: 85, damping: 15, mass: 0.9 });
 }
 
 /** One box size per context, so every box in a row (catalog, shelf) and every hero box match. */
@@ -152,8 +155,9 @@ export function Box3D({
   const o = Math.max(2, Math.round(width * 0.014));
 
   const openMV = useNum(open);
-  const vx = useNum(viewX, false);
-  const vy = useNum(viewY, false);
+  // The camera follows its source directly: a spring here would recompute every scroll frame unused.
+  const vx = useNumRaw(viewX);
+  const vy = useNumRaw(viewY);
 
   const px = useMotionValue(0);
   const py = useMotionValue(0);
@@ -168,7 +172,9 @@ export function Box3D({
   // Only mount the gold dust while the lid is open: closed boxes would otherwise run ~22
   // invisible infinite animations each.
   const [lit, setLit] = useState(false);
-  useMotionValueEvent(light, "change", (v) => setLit(v > 0.04));
+  useMotionValueEvent(light, "change", (v) => {
+    if (v > 0.04 !== lit) setLit(v > 0.04);
+  });
 
   const vars = {
     "--w": `${width}px`,
@@ -207,16 +213,25 @@ export function Box3D({
       role="img"
       aria-label="Mystery box"
     >
-      {/* Floor shadow */}
-      <motion.div
-        aria-hidden
-        className="absolute rounded-[50%] bg-[radial-gradient(closest-side,var(--floor-shadow),transparent)]"
-        style={{ width: width * 1.5, height: h * 0.5, top: "58%" }}
-        animate={float && !reduce ? { scale: [1, 0.9, 1], opacity: [0.85, 0.6, 0.85] } : {}}
-        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-      />
+      {/* Floor shadow: it breathes only under a floating box. */}
+      {float && !reduce ? (
+        <motion.div
+          aria-hidden
+          className="absolute rounded-[50%] bg-[radial-gradient(closest-side,var(--floor-shadow),transparent)]"
+          style={{ width: width * 1.5, height: h * 0.5, top: "58%" }}
+          animate={{ scale: [1, 0.9, 1], opacity: [0.85, 0.6, 0.85] }}
+          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+        />
+      ) : (
+        <div
+          aria-hidden
+          className="absolute rounded-[50%] bg-[radial-gradient(closest-side,var(--floor-shadow),transparent)]"
+          style={{ width: width * 1.5, height: h * 0.5, top: "58%" }}
+        />
+      )}
 
-      {beam && (
+      {/* The beam exists only once the lid starts to lift (its opacity follows the light). */}
+      {beam && lit && (
         <motion.div
           aria-hidden
           className="pointer-events-none absolute left-1/2 -translate-x-1/2"
@@ -230,7 +245,7 @@ export function Box3D({
                 "radial-gradient(50% 60% at 50% 100%, rgb(255 244 214 / 0.95), rgb(226 196 127 / 0.45) 40%, rgb(61 107 255 / 0.18) 70%, transparent 100%)",
             }}
           />
-          {lit && <GoldDust count={18} className="inset-x-[18%] bottom-0 h-full" />}
+          <GoldDust count={18} className="inset-x-[18%] bottom-0 h-full" />
         </motion.div>
       )}
 

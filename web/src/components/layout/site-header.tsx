@@ -24,10 +24,13 @@ export function SiteHeader() {
   const authHydrated = useAuthHydrated();
   const user = useCurrentUser();
 
+  // Set state only when it changes: this runs on every scroll frame. Hidden while reading down,
+  // shown again on the way up (a frame without movement changes nothing).
   useMotionValueEvent(scrollY, "change", (y) => {
     const prev = scrollY.getPrevious() ?? 0;
-    setSolid(y > 24);
-    setHidden(y > 480 && y > prev && !menuOpen);
+    const nextHidden = y <= 480 || menuOpen ? false : y > prev ? true : y < prev ? false : hidden;
+    if (y > 24 !== solid) setSolid(y > 24);
+    if (nextHidden !== hidden) setHidden(nextHidden);
   });
 
   return (

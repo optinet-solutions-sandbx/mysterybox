@@ -74,7 +74,7 @@ function Stage({ box, entries, catalog, categoryLabel, stats }: StageProps) {
         </div>
 
         <div className="mx-auto grid max-w-7xl items-center gap-4 px-4 pt-6 sm:px-6 lg:grid-cols-[1fr_1fr] lg:gap-10 lg:px-8 lg:pt-16">
-          <div className="relative h-[400px] sm:h-[480px] lg:h-[560px]" data-cursor data-cursor-label="Tilt">
+          <div className="relative h-[400px] sm:h-[480px] lg:h-[560px]" data-cursor="box">
             <div className="absolute top-[66%] left-1/2 -translate-x-1/2 -translate-y-1/2 scale-[0.7] sm:scale-90 lg:scale-100">
               <Box3D width={BOX_WIDTH.stage} material={box.material} open={lidOpen ? 1 : 0} shake={flow.phase === "shaking"} tilt float={!working && !lidOpen} />
             </div>

@@ -28,7 +28,7 @@ behavior via `ComingSoon`. **Planned** = no route yet.
 | `/admin/boxes` | Configured vs actual return per box, with the displayed/back-office odds table | Built (mock) |
 | `/admin/staff`, `/admin/audit` | Super admin only: role matrix, staff list and role changes, add staff, promote a player; audit log | Built (mock) |
 | `/legal/[slug]` | terms, privacy, odds-disclosure, responsible-play, shipping (placeholder outlines) | Built (placeholder) |
-| Global | Prototype banner, sticky header with live balance (plus site credit) and inventory count, age gate, footer with responsible-play line, smooth scroll, gold cursor | Built |
+| Global | Prototype banner, sticky header with live balance (plus site credit) and inventory count, age gate, footer with responsible-play line, smooth scroll, gold box cursor over boxes | Built |
 
 ## Core flow: open a box (Built, on the backend kit's logic)
 

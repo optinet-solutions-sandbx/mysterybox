@@ -238,6 +238,26 @@
   background-size: 200% 100%;
 }
 
+/*
+ * Box cursor (2026-10-15, replaces the trailing gold ring): a closed gold box over anything that is
+ * a box or opens one (`data-cursor="box"`), the lid up while pressed. CSS only, so pointer moves cost
+ * nothing. A brand pack can swap the files through these two tokens.
+ */
+:root {
+  --cursor-box: url("/cursors/box.svg") 16 16;
+  --cursor-box-open: url("/cursors/box-open.svg") 16 16;
+}
+@media (pointer: fine) {
+  [data-cursor="box"],
+  [data-cursor="box"] * {
+    cursor: var(--cursor-box), pointer;
+  }
+  [data-cursor="box"]:active,
+  [data-cursor="box"]:active * {
+    cursor: var(--cursor-box-open), pointer;
+  }
+}
+
 /* Veined marble: sapphire on obsidian, blue-grey on ivory (pre-rendered in public/textures). */
 @utility bg-marble {
   background-color: var(--marble-base);

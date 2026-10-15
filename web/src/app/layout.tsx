@@ -8,7 +8,6 @@ import { SessionHydrator } from "@/components/layout/session-hydrator";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteOnly } from "@/components/layout/site-only";
-import { Cursor } from "@/components/fx/cursor";
 import { SmoothScroll } from "@/components/fx/smooth-scroll";
 import { themeBootScript } from "@/lib/theme";
 import { CatalogProvider } from "@/components/catalog-provider";
@@ -57,7 +56,6 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             <SiteFooter />
             <AgeGate />
             <SmoothScroll />
-            <Cursor />
           </SiteOnly>
           <SessionHydrator />
           <div aria-hidden className="grain" />

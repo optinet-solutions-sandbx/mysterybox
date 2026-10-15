@@ -114,7 +114,7 @@ export function TierShelf({ boxes }: { boxes: ShelfBox[] }) {
         </p>
         <Link
           href={`/boxes/${current.slug}`}
-          data-cursor
+          data-cursor="box"
           className="mt-7 inline-flex h-12 items-center rounded-pill border border-accent/60 px-7 text-sm text-fg transition-colors hover:bg-accent hover:text-on-accent"
         >
           View this box

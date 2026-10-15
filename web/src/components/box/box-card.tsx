@@ -15,7 +15,7 @@ export function BoxCard({ box, top }: { box: Box; top: Item }) {
   return (
     <Link
       href={`/boxes/${box.slug}`}
-      data-cursor
+      data-cursor="box"
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       onFocus={() => setHover(true)}

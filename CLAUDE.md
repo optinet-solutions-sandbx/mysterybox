@@ -118,7 +118,7 @@ lucide-react. Icybox runs on the same Next, Tailwind and Motion stack.
 | `store/auth.ts`, `domain/auth.ts` | Mock accounts (`grailnoir-auth`): `register` → pending 6-digit code → `verify`; `signIn` (salted SHA-256), `signOut`, `setMarketing`; `useAuthHydrated()` / `useCurrentUser()`. `domain/auth.ts` holds the pure validation (email, US phone, password rules, `safeNextPath`). |
 | `components/auth/` | `AuthShell`, `RegisterForm`, `VerifyStep`, `SignInForm`, field primitives, `AuthPrompt` (signed-out stand-in for inventory, wallet, account), `useNextPath` (reads `?next=` after hydration; `useSearchParams` would need Suspense under Cache Components). |
 | `components/box3d/` | **`Box3D`**, the CSS-3D box (leather faces, gold piping, foil monogram, hinged lid, inner light, beam and gold dust). `open`, `viewX` and `viewY` accept numbers (sprung) or MotionValues (scroll-driven). |
-| `components/fx/` | `SmoothScroll` (Lenis; `lockScroll`, `scrollToElement`), `Cursor` (gold ring, `data-cursor` / `data-cursor-label`), `LineReveal`, `RollingNumber`, `CountUp`, `GoldDust`. |
+| `components/fx/` | `SmoothScroll` (Lenis; `lockScroll`, `scrollToElement`), `LineReveal`, `RollingNumber`, `CountUp`, `GoldDust`. |
 | `components/landing/` | `Hero` (load sequence + looping box), `VaultMarquee` (scroll-velocity strip), `Ritual` (pinned, scroll opens the box), `TierShelf` (spotlit shelf, rolling prices), `OddsProof`, `Modes`, `Faq`, `Keyhole` (pinned zoom finale). |
 | `components/box/` | `BoxStage` (core loop on the box API: seal + Your seed → Open → shake → lid → the outcome rises → `ResultOverlay`; "Sign in to open" when signed out), `useBoxOpen` + `open-flow.ts` (prepare, resume, open) + `guards.ts` (one action at a time), `BoxOdds` ("Box content and odds" + free-spin table), `BoxAnalysis` (maths, how decided, "Check this open"), `SessionCounters`, `OddsAtAGlance`, `HowItWorksStrip`, `BoxCard`, `BoxCatalog`, `InsideGrid`, `Reel` (idle contents strip only), `OddsTable` (back-office odds in weights, used by `/admin/boxes`). |
 | `components/item/` | `ItemArt` (photo if `item.image`, else the gold-line drawing from `item-drawings.tsx`), `RarityTag`, `Authenticity` (the reference, condition and authentication staff entered; nothing when empty). |
@@ -238,6 +238,10 @@ CPU throttling, React's startup still blocks ~1.3 s, the next thing to cut. Keep
   script. Above-the-fold images stay lazy unless they are the largest paint: React preloads every
   eager image in the shell, and those preloads compete with the marble.
 - **Smooth scrolling (Lenis) runs only with a fine pointer**; on touch it smooths nothing.
+- **No JavaScript cursor.** The box cursor is CSS (`data-cursor="box"`, `public/cursors/`, the
+  `--cursor-box` tokens in `globals.css`): a closed gold box on hover, the lid up while pressed.
+- **`Deferred` mounts in a transition**, so a section built on approach renders in slices and never
+  freezes scrolling.
 - **Infinite decoration only while visible:** `Box3D` mounts its gold dust only while open; the shelf
   renders only the 5 visible boxes; the idle reel renders only enough tiles to fill the strip.
 - **First paint must not wait for JS:** the hero entrance uses CSS keyframes (`animate-rise-in`,

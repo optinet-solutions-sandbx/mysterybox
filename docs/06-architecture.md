@@ -98,7 +98,7 @@ the mock's storage (header credit, recent opens). See [10-box-system-handoff.md]
   overflow.
 - `components/fx/`:
   - `SmoothScroll` (a Lenis instance; `lockScroll` for dialogs; `scrollToElement`);
-  - `Cursor`, `LineReveal`, `RollingNumber`, `CountUp`;
+  - `LineReveal`, `RollingNumber`, `CountUp` (the box cursor is CSS: `public/cursors/`);
   - `GoldDust` (deterministic pseudo-random, so there is no hydration drift).
 - Scroll scenes (`Ritual`, `Keyhole`) use `useScroll({ target, offset: ["start start", "end end"] })`
   on a tall section with a `sticky h-[100svh]` stage, and feed `useTransform` values straight into

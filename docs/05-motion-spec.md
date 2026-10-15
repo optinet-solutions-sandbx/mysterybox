@@ -34,7 +34,7 @@ Libraries:
 | **FAQ** | Height-animated accordion; the "+" rotates into "×" | `Faq` |
 | **Keyhole** (pinned, 300vh) | The lid fills the screen (foil M, keyhole escutcheon). Scrolling zooms through the keyhole (cubic ease to 42×) into the lit interior, where "What's in yours?" waits. Light shows through the hole from the first frame | `Keyhole`: masked SVG + `useScroll` |
 | **Header** | Transparent over the hero, smoked glass after 24px, hides while reading down | `SiteHeader` |
-| **Cursor** | A gold ring that swells into a label ("Open", "Tilt", "Preview") over `data-cursor` targets; fine pointers only | `Cursor` |
+| **Cursor** | Over a box (`data-cursor="box"`) the pointer becomes a small closed gold box; pressing lifts its lid with a glow. CSS cursors, fine pointers only (the trailing gold ring was removed 2026-10-15: it cost a render on every pointer move) | `globals.css`, `public/cursors/` |
 | **Catalog** | Filter and sort re-flow with shared layout; each card's lid lifts with light on hover | `BoxCatalog`, `BoxCard` |
 | **Box page** | **The core moment (on the backend kit, 2026-10-13):** Open → the server answers (seed → pay → spin) → only then the box trembles (0.8 s; 0.25 s Quick open) → the lid opens and the outcome rises out of the box (a sibling over `Box3D`, the hero's 120/17 spring) → the result. The reel no longer spins during an open (the kit forbids near-miss visuals); it stays as the idle contents strip | `BoxStage`, `useBoxOpen`, `Box3D` |
 | **Result** | A neutral overlay, the same for every outcome: the piece (or the credit coin) settles in, the name and value rise and the value counts up in foil; free spins reveal one after another, then the credit total; then the actions. (`RevealOverlay`, with rays, burst and a flash by rarity, is no longer used by the box page) | `ResultOverlay` |
@@ -49,7 +49,7 @@ Libraries:
 - **Reveal:** no rays, burst or flip.
 - **Smooth scroll:** off.
 - **Count-ups:** final value only.
-- **Cursor:** off.
+- **Cursor:** the box cursor stays (it is a static image, not motion).
 
 A global CSS rule also clamps CSS animations.
 

@@ -27,8 +27,6 @@ export function Modes() {
               <Link
                 href={m.href}
                 onPointerMove={track}
-                data-cursor
-                data-cursor-label="Preview"
                 className="group relative grid gap-3 overflow-hidden py-9 transition-colors sm:grid-cols-[1fr_1.2fr_auto] sm:items-center sm:gap-10"
               >
                 <span

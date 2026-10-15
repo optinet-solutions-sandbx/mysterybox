@@ -13,6 +13,12 @@ export function lockScroll(locked: boolean) {
   else instance?.start();
 }
 
+/** Scroll the page to a position in pixels (smoothly when Lenis runs). */
+export function scrollToY(top: number, duration = 1.2) {
+  if (instance) instance.scrollTo(top, { duration });
+  else window.scrollTo({ top, behavior: "smooth" });
+}
+
 /** Bring an element into view (smoothly when Lenis runs). */
 export function scrollToElement(el: HTMLElement, offset = -120) {
   if (instance) instance.scrollTo(el, { offset, duration: 1.1 });

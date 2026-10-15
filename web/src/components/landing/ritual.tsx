@@ -8,6 +8,7 @@ import { economy } from "@/config/economy";
 import { tradeInRate } from "@/config/features";
 import { useTradeIn } from "@/components/site-settings-provider";
 import { BOX_WIDTH, Box3D } from "@/components/box3d/box-3d";
+import { scrollToY } from "@/components/fx/smooth-scroll";
 import { ItemArt } from "@/components/item/item-art";
 import { cn } from "@/lib/cn";
 
@@ -31,9 +32,14 @@ const stepsFor = (tradeInEnabled: boolean) => [
   },
 ];
 
+/** Scroll progress at which each step has played out: the box turned (I), open with the piece up (II), the choices shown (III). */
+const STEP_AT = [0.2, 0.64, 0.9];
+
 /**
  * Pinned scroll story. The page scroll drives the box: it turns to face you (I), the lid
- * lifts and a piece rises (II), then the two choices appear (III).
+ * lifts and a piece rises (II), then the two choices appear (III). Clicks drive it too: a step
+ * jumps to that step, the box goes to the next one (then on to the next section). A click scrolls
+ * the page to that point, so the scene plays exactly as it does when scrolling.
  */
 export function Ritual({ item, priceRange }: { item: Item; priceRange: string }) {
   const ref = useRef<HTMLElement>(null);
@@ -42,7 +48,18 @@ export function Ritual({ item, priceRange }: { item: Item; priceRange: string })
   const steps = stepsFor(tradeInEnabled);
   const { scrollYProgress: p } = useScroll({ target: ref, offset: ["start start", "end end"] });
   const [step, setStep] = useState(0);
-  useMotionValueEvent(p, "change", (v) => setStep(v < 0.34 ? 0 : v < 0.67 ? 1 : 2));
+  useMotionValueEvent(p, "change", (v) => {
+    const next = v < 0.34 ? 0 : v < 0.67 ? 1 : 2;
+    if (next !== step) setStep(next);
+  });
+
+  const goTo = (i: number) => {
+    const el = ref.current;
+    if (!el || reduce) return;
+    const top = el.getBoundingClientRect().top + window.scrollY;
+    const travel = el.offsetHeight - window.innerHeight;
+    scrollToY(i < STEP_AT.length ? top + STEP_AT[i] * travel : top + el.offsetHeight);
+  };
 
   const viewY = useTransform(p, [0, 0.3, 1], [-82, -30, -18]);
   const viewX = useTransform(p, [0, 0.3], [-6, -18]);
@@ -68,18 +85,32 @@ export function Ritual({ item, priceRange }: { item: Item; priceRange: string })
               {steps.map((s, i) => (
                 <motion.li
                   key={s.numeral}
+                  onClick={() => goTo(i)}
+                  className={cn(!reduce && "cursor-pointer")}
                   animate={{ opacity: step === i || reduce ? 1 : 0.28, x: step === i ? 0 : -6 }}
                   transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                 >
                   <span className="font-display text-sm text-foil">{s.numeral}</span>
-                  <h2 className="mt-1 font-display text-3xl sm:text-4xl">{s.title}</h2>
+                  <h2 className="mt-1 font-display text-3xl sm:text-4xl">
+                    {reduce ? (
+                      s.title
+                    ) : (
+                      <button type="button" aria-current={step === i ? "step" : undefined} className="text-left outline-offset-4">
+                        {s.title}
+                      </button>
+                    )}
+                  </h2>
                   <p className={cn("mt-3 max-w-md leading-relaxed text-muted", step !== i && !reduce && "max-sm:hidden")}>{s.body}</p>
                 </motion.li>
               ))}
             </ol>
           </div>
 
-          <div className="relative order-1 h-[46svh] min-h-[320px] lg:order-2 lg:h-[640px]">
+          <div
+            className={cn("relative order-1 h-[46svh] min-h-[320px] lg:order-2 lg:h-[640px]", !reduce && "cursor-pointer")}
+            onClick={() => goTo(step + 1)}
+            data-cursor={reduce ? undefined : "box"}
+          >
             <div className="absolute top-[60%] left-1/2 -translate-x-1/2 -translate-y-1/2 scale-[0.62] sm:scale-85 lg:scale-110">
               <Box3D width={BOX_WIDTH.stage} material="navy" open={reduce ? 1 : open} viewX={reduce ? -18 : viewX} viewY={reduce ? -30 : viewY} />
             </div>
