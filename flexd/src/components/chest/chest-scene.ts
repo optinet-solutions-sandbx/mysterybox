@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
-import { LOGO_SRC } from "@/config/mark";
+import { LOGO_ASPECT, LOGO_SRC } from "@/config/mark";
 import type { BoxMaterial } from "@/domain/types";
 import { FINISHES, INTERIOR } from "./chest-finishes";
 
@@ -350,7 +350,7 @@ export class ChestScene {
       this.disposables.push(mask);
       crownDone();
     });
-    const crown = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.9 * (472 / 711)), crownMat);
+    const crown = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.9 / LOGO_ASPECT), crownMat);
     crown.rotation.x = -Math.PI / 2;
     crown.position.set(0, LID + 0.003, 0.05);
     lid.add(crown);

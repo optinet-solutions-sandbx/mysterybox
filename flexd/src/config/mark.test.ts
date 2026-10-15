@@ -27,7 +27,7 @@ describe("FLEXD mark", () => {
   });
 
   it("draws every path with a fill rule", () => {
-    expect(MARK.paths.length).toBeGreaterThanOrEqual(3);
+    expect(MARK.paths.length).toBeGreaterThanOrEqual(1);
     for (const p of MARK.paths) expect(["nonzero", "evenodd"]).toContain(p.rule);
   });
 });

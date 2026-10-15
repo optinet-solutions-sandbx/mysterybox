@@ -12,7 +12,8 @@ Spec: `docs/superpowers/specs/2026-10-15-flexd-design.md`. Plan: `docs/superpowe
 - Dark only. Colours are the client's Velvet & Gold sheet, in `src/app/globals.css`.
 - Less shiny: velvet buttons are a near-flat fill; boxes are matte velvet (`src/components/chest/chest-finishes.ts`).
 - Cinzel gold headlines with one amethyst word (`AccentName`, `.accent-word`); prices in Playfair Display (`font-price`).
-- Placeholder mark (`src/config/mark.json`); `npm run brand:assets` redraws the logo raster and icons.
+- Logo: the client's crown-and-mask in gold (`public/brand/flexd-mark.webp`, traced outline in `src/config/mark.json`);
+  `npm run brand:assets -- <artwork.png>` puts in new artwork and redraws the icons.
 - Loyalty levels follow the box finishes: Lilac, Amethyst, Plum, Royal, Gold.
 - Floating tab bar. The spaced wordmark shows from 380px when signed out and from 640px when signed in
   (the balance pill grows with the balance); otherwise the mark alone.
@@ -26,7 +27,7 @@ Spec: `docs/superpowers/specs/2026-10-15-flexd-design.md`. Plan: `docs/superpowe
     npx tsc --noEmit
     npx eslint
     npx next build
-    npm run brand:assets        # after editing src/config/mark.json
+    npm run brand:assets -- <artwork.png>   # new logo artwork; then re-render the chest stills
 
 From the repo root:
 

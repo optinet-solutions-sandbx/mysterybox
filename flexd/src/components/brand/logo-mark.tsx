@@ -4,7 +4,7 @@ import { cn } from "@/lib/cn";
 
 export { LOGO_ASPECT, LOGO_SIZE, LOGO_SRC } from "@/config/mark";
 
-/** FLEXD mark (placeholder). `foil` is the gold raster; `solid` draws the same paths in currentColor. */
+/** FLEXD crown-and-mask. `foil` is the gold artwork; `solid` draws its traced outline in currentColor. */
 export function LogoMark({
   className,
   tone = "foil",

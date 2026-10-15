@@ -1,9 +1,9 @@
 import mark from "./mark.json";
 
 /**
- * FLEXD mark, a placeholder until the client supplies a logo: a crown above a masquerade mask,
- * drawn after the reference PDF. The same paths give the solid (ink) tone, the gold raster in
- * public/brand (scripts/make-brand-assets.mjs) and, through that raster's alpha, the chest lid's inlay.
+ * FLEXD mark: the client's crown-and-mask artwork (2026-10-15). The gold raster in public/brand
+ * (scripts/make-brand-assets.mjs) is the logo and, through its alpha, the chest lid's inlay; these
+ * paths are its traced outline, for the solid (ink) tone.
  */
 export const MARK = mark as {
   viewBox: { width: number; height: number };
