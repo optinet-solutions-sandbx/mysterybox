@@ -22,7 +22,7 @@ describe("FLEXD mark", () => {
     expect((await sharp(join(root, "src/app/apple-icon.png")).metadata()).width).toBe(180);
   });
 
-  it("ships no Grail Noir logo files", () => {
+  it("ships only FLEXD logo files", () => {
     expect(readdirSync(join(root, "public/brand")).filter((f) => !f.startsWith("flexd-"))).toEqual([]);
   });
 

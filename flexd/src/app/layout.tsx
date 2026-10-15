@@ -5,7 +5,7 @@ import { AgeGate, AppHydrator, Footer, PrototypeBanner, Toast } from "@/componen
 import { LazyOverlays } from "@/components/shell/lazy-overlays";
 import { TabBar } from "@/components/shell/tab-bar";
 import { TopBar } from "@/components/shell/top-bar";
-import { returningBootScript, themeBootScript } from "@/lib/theme";
+import { returningBootScript } from "@/lib/theme";
 import "./globals.css";
 
 // Cinzel: inscriptional capitals for names and prices. Jost: the geometric text face.
@@ -27,17 +27,15 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   viewportFit: "cover",
-  themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#1c0a10" },
-    { media: "(prefers-color-scheme: light)", color: "#fbf5ee" },
-  ],
+  colorScheme: "dark",
+  themeColor: "#0A0510",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" data-theme="dark" suppressHydrationWarning className={`${display.variable} ${body.variable} h-full antialiased`}>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: `${themeBootScript};${returningBootScript};` }} />
+        <script dangerouslySetInnerHTML={{ __html: returningBootScript }} />
       </head>
       <body className="flex min-h-full flex-col">
         <PrototypeBanner />

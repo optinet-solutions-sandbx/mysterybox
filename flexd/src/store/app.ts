@@ -84,7 +84,7 @@ interface AppState {
 
 export const useApp = create<AppState>()(
   persist<AppState>(() => ({ accounts: {}, currentId: null, ageOk: false, pendingRef: null }), {
-    name: "grailnoir-play",
+    name: "flexd",
     version: 1,
     skipHydration: true,
   }),

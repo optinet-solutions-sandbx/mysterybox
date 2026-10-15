@@ -10,8 +10,8 @@ describe("sign-up validation", () => {
   });
 
   it("checks emails", () => {
-    expect(emailError("john@grailnoir.com")).toBeNull();
-    expect(emailError("john@grailnoir")).not.toBeNull();
+    expect(emailError("john@flexd.com")).toBeNull();
+    expect(emailError("john@flexd")).not.toBeNull();
   });
 });
 

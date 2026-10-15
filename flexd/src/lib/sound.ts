@@ -8,8 +8,8 @@ import type { Rarity } from "@/domain/types";
  * Vibration works where the browser supports it (Android Chrome; not iOS Safari).
  */
 
-const KEY = "grailnoir-play-sound";
-const EVENT = "grailnoir-play-sound-change";
+const KEY = "flexd-sound";
+const EVENT = "flexd-sound-change";
 
 export function soundEnabled(): boolean {
   try {

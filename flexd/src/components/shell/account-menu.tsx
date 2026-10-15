@@ -1,12 +1,11 @@
 "use client";
 
-import { CircleHelp, LogOut, Moon, Sun, Wallet } from "lucide-react";
+import { CircleHelp, LogOut, Wallet } from "lucide-react";
 import Link from "next/link";
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 import { Sheet } from "@/components/ui/sheet";
 import { formatBalance } from "@/domain/money";
 import { levelFor, pointsFor } from "@/domain/wallet";
-import { readTheme, setTheme, subscribeTheme } from "@/lib/theme";
 import { signOut, type Account } from "@/store/app";
 
 export function Avatar({ name, className = "size-10 text-base" }: { name: string; className?: string }) {
@@ -17,21 +16,6 @@ export function Avatar({ name, className = "size-10 text-base" }: { name: string
     >
       {name.slice(0, 1).toUpperCase()}
     </span>
-  );
-}
-
-export function ThemeSwitch() {
-  const theme = useSyncExternalStore(subscribeTheme, readTheme, () => "dark" as const);
-  const next = theme === "dark" ? "light" : "dark";
-  return (
-    <button
-      type="button"
-      onClick={() => setTheme(next)}
-      className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition-colors hover:bg-surface-2"
-    >
-      {theme === "dark" ? <Sun className="size-5 text-muted" /> : <Moon className="size-5 text-muted" />}
-      Switch to {next} mode
-    </button>
   );
 }
 
@@ -69,9 +53,6 @@ export function AccountMenu({ account }: { account: Account }) {
               <CircleHelp className="size-5 text-muted" />
               Help
             </Link>
-          </li>
-          <li>
-            <ThemeSwitch />
           </li>
           <li>
             <button

@@ -3,7 +3,7 @@ import type { Item } from "@/domain/types";
 import { imageAspect } from "./image-meta";
 
 /**
- * Mock catalog: the same 52 pieces as the Grail Noir site, without its site-credit outcomes (every
+ * Mock catalog: the same 52 pieces as the web/ and play/ sites, without its site-credit outcomes (every
  * box here holds physical pieces). Values are approximate US retail/resale figures in cents, for
  * demo only.
  */

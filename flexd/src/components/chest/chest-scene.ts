@@ -4,7 +4,7 @@ import { LOGO_SRC } from "@/config/mark";
 import type { BoxMaterial } from "@/domain/types";
 
 /**
- * The Grail Noir jewelry chest in WebGL: a hollow body with rounded corners, a hinged lid, gold
+ * The FLEXD jewelry chest in WebGL: a hollow body with rounded corners, a hinged lid, gold
  * piping, a lock plate with a keyhole, ball feet and the crown on the lid. Finishes are physical
  * materials lit by a studio environment, so lacquer, marble, leather and gold read as real
  * surfaces. Opening lights the velvet inside and sends light and motes up out of the box.
