@@ -39,7 +39,10 @@ if (process.argv[2] === "--new") {
   pack.supportEmail = `support@${id}.example`;
   // The default lockup and traced outline spell out the default brand; a new brand starts without them.
   if (pack.logo.lockup) rmSync(join(target, pack.logo.lockup), { force: true });
-  for (const key of ["lockup", "lockupWidth", "lockupHeight", "silhouette"]) delete pack.logo[key];
+  for (const f of [pack.logo.cursor, pack.logo.cursorOpen].filter(Boolean)) {
+    for (const file of [f, f.replace(/\.png$/, "@2x.png")]) rmSync(join(target, file), { force: true });
+  }
+  for (const key of ["lockup", "lockupWidth", "lockupHeight", "silhouette", "cursor", "cursorOpen"]) delete pack.logo[key];
   writeFileSync(join(target, "brand.json"), JSON.stringify(pack, null, 2) + "\n");
   console.log(`✓ Created public/brands/${id}/ from ${DEFAULT}. Next:
   1. Edit public/brands/${id}/brand.json (name, domain, slogan, copy, colours, categories, font pair).
@@ -66,6 +69,14 @@ for (const id of ids) {
   if (!FONT_PAIRS.includes(pack.fonts)) fail(`${file}: "fonts" must be one of ${FONT_PAIRS.join(", ")}`);
   for (const f of ["mark", "icon", "appleIcon"]) {
     if (!pack.logo[f] || !existsSync(join(packsDir, id, pack.logo[f]))) fail(`${file}: logo.${f} file "${pack.logo[f]}" not found in the folder`);
+  }
+  for (const f of ["cursor", "cursorOpen"]) {
+    const name = pack.logo[f];
+    if (name === undefined) continue;
+    if (!/^[\w.-]+\.png$/.test(name)) fail(`${file}: logo.${f} must be a .png file name`);
+    for (const need of [name, name.replace(/\.png$/, "@2x.png")]) {
+      if (!existsSync(join(packsDir, id, need))) fail(`${file}: logo.${f} needs "${need}" in the folder (32 px, plus a 64 px @2x twin)`);
+    }
   }
   if (!Array.isArray(pack.categories) || pack.categories.length === 0) fail(`${file}: add at least one category`);
   for (const c of pack.categories) {

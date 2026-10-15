@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { boxes } from "@/data/boxes";
 import { items } from "@/data/items";
 import { BRAND_PACKS } from "./brands.generated";
-import { brandAsset, brandPack, categoryLabel, CREDIT_CATEGORY, MIXED_CATEGORY, productCategories, textureUrl, themeCss, type BrandPack } from "./brand-pack";
+import { brandAsset, brandPack, categoryLabel, CREDIT_CATEGORY, cursorCss, MIXED_CATEGORY, productCategories, textureUrl, themeCss, type BrandPack } from "./brand-pack";
 
 const PUBLIC = fileURLToPath(new URL("../../public", import.meta.url));
 
@@ -34,8 +34,19 @@ describe("brand packs", () => {
     expect(categoryLabel("vintage-denim")).toBe("Vintage denim");
   });
 
+  it("give boxes the pack's cursor, sharp on 2x screens, and the open one while pressed", () => {
+    const css = cursorCss();
+    expect(css).toContain(`[data-cursor="box"]`);
+    expect(css).toContain(`url("/brands/grailnoir/cursor@2x.png") 2x`);
+    expect(css).toContain(`[data-cursor="box"]:active`);
+    expect(css).toContain(`cursor-open.png`);
+    expect(themeCss()).toContain(css);
+    expect(cursorCss({ ...brandPack, logo: { ...brandPack.logo, cursor: undefined } })).toBe("");
+    expect(cursorCss({ ...brandPack, logo: { ...brandPack.logo, cursor: 'x.png");}body{color:red' } })).toBe("");
+  });
+
   it("turn colours into CSS that can't break out of the style tag", () => {
-    const css = themeCss({ ...brandPack, theme: { dark: { "--bg": "#000</style><script>", "not-a-token": "x" }, light: { "--bg": "#fff" } } });
+    const css = themeCss({ ...brandPack, logo: { ...brandPack.logo, cursor: undefined }, theme: { dark: { "--bg": "#000</style><script>", "not-a-token": "x" }, light: { "--bg": "#fff" } } });
     expect(css).toBe('html:root{--bg:#000/stylescript}html[data-theme="light"]{--bg:#fff}');
     expect(themeCss()).toContain("--gold:#c2a46e");
     expect(textureUrl("light")).toBe("/textures/marble-light.webp");

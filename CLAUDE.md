@@ -238,8 +238,9 @@ CPU throttling, React's startup still blocks ~1.3 s, the next thing to cut. Keep
   script. Above-the-fold images stay lazy unless they are the largest paint: React preloads every
   eager image in the shell, and those preloads compete with the marble.
 - **Smooth scrolling (Lenis) runs only with a fine pointer**; on touch it smooths nothing.
-- **No JavaScript cursor.** The box cursor is CSS (`data-cursor="box"`, `public/cursors/`, the
-  `--cursor-box` tokens in `globals.css`): a closed gold box on hover, the lid up while pressed.
+- **No JavaScript cursor.** Over boxes (`data-cursor="box"`) the pointer is the brand pack's cursor
+  (`logo.cursor` / `logo.cursorOpen`: the gold crown-and-mask, glowing while pressed), as CSS that
+  `cursorCss()` emits with the theme. 32 px PNGs with @2x twins.
 - **`Deferred` mounts in a transition**, so a section built on approach renders in slices and never
   freezes scrolling.
 - **Infinite decoration only while visible:** `Box3D` mounts its gold dust only while open; the shelf

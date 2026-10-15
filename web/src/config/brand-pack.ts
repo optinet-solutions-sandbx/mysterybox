@@ -42,6 +42,9 @@ export interface BrandPack {
     appleIcon: string;
     /** Optional one-colour outline of the mark (SVG path) for ink on light finishes. */
     silhouette?: { viewBox: string; path: string };
+    /** Optional cursor over boxes, and while pressed: 32 px PNGs, each with an "@2x" 64 px twin. */
+    cursor?: string;
+    cursorOpen?: string;
   };
   categories: readonly BrandCategory[];
   themeColor: { dark: string; light: string };
@@ -81,7 +84,26 @@ export function themeCss(pack: BrandPack = brandPack): string {
       .map(([k, v]) => `${k}:${String(v).replace(/[<>{}]/g, "")}`)
       .join(";");
   // `html` raises specificity above globals.css, whose values are the fallbacks.
-  return `html:root{${decls(pack.theme.dark)}}html[data-theme="light"]{${decls(pack.theme.light)}}`;
+  return `html:root{${decls(pack.theme.dark)}}html[data-theme="light"]{${decls(pack.theme.light)}}${cursorCss(pack)}`;
+}
+
+/**
+ * The pack's cursor over boxes (`data-cursor="box"`), the open one while pressed; fine pointers
+ * only. 1x and 2x images so it stays sharp on high-density and scaled displays; the plain url() is
+ * the fallback for browsers without image-set() in cursors. No cursor files: the native pointer.
+ */
+export function cursorCss(pack: BrandPack = brandPack): string {
+  const safe = (f?: string) => (f && /^[\w.-]+\.png$/.test(f) ? f : null);
+  const cursor = safe(pack.logo.cursor);
+  if (!cursor) return "";
+  const url = (f: string) => `url("/brands/${pack.id}/${f}")`;
+  const decl = (f: string) => {
+    const set = `${url(f)} 1x,${url(f.replace(/\.png$/, "@2x.png"))} 2x`;
+    return `cursor:${url(f)} 16 16,pointer;cursor:-webkit-image-set(${set}) 16 16,pointer;cursor:image-set(${set}) 16 16,pointer`;
+  };
+  const on = (state: string) => `[data-cursor="box"]${state},[data-cursor="box"]${state} *`;
+  const open = safe(pack.logo.cursorOpen);
+  return `@media (pointer:fine){${on("")}{${decl(cursor)}}${open ? `${on(":active")}{${decl(open)}}` : ""}}`;
 }
 
 /** The marble (or other) texture URL for a mode, read from the pack's --marble-img token. */
