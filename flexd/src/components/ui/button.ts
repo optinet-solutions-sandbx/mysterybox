@@ -4,13 +4,13 @@ const base =
   "inline-flex select-none items-center justify-center gap-2 rounded-pill font-semibold whitespace-nowrap transition-[transform,background-color,border-color,color,opacity] duration-200 ease-snap active:scale-[0.97] disabled:pointer-events-none disabled:opacity-45";
 
 const variants = {
-  /** Crimson: opening a box and every primary action. */
-  primary: "btn-primary shadow-[0_12px_30px_-14px_color-mix(in_oklab,var(--primary)_70%,transparent)]",
+  /** Velvet: opening a box and every primary action. */
+  primary: "btn-primary",
   /** Champagne foil: money actions (balance, selling). */
   foil: "btn-foil text-on-accent shadow-[0_10px_28px_-14px_var(--shadow-strong)]",
   /** Ivory pill: the confident secondary action (Keep, Done). */
   solid: "bg-fg text-bg hover:opacity-90",
-  outline: "border border-line bg-surface/40 text-fg hover:border-accent/60 hover:bg-accent-soft",
+  outline: "border border-edge bg-transparent text-fg hover:border-accent hover:bg-accent-soft",
   ghost: "text-muted hover:text-fg",
   danger: "border border-danger/40 text-danger hover:bg-danger/10",
 } as const;

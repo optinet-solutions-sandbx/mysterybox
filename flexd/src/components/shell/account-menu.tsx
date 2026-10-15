@@ -12,7 +12,7 @@ export function Avatar({ name, className = "size-10 text-base" }: { name: string
   return (
     <span
       aria-hidden
-      className={`grid shrink-0 place-items-center rounded-full bg-[radial-gradient(circle_at_30%_25%,var(--champagne-300),var(--champagne-500)_55%,var(--champagne-700))] font-display font-semibold text-[var(--onyx-wine)] ${className}`}
+      className={`grid shrink-0 place-items-center rounded-full bg-[radial-gradient(circle_at_30%_25%,var(--gold-300),var(--gold-500)_55%,var(--gold-700))] font-display font-semibold text-bg ${className}`}
     >
       {name.slice(0, 1).toUpperCase()}
     </span>

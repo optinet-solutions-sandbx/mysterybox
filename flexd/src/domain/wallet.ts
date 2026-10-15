@@ -101,12 +101,12 @@ export function pointsFor(spent: Cents): number {
   return Math.floor(spent / 100) * economy.pointsPerDollar;
 }
 
-/** Levels share the box finishes' names, from Ivory to Gold. */
+/** Levels share the FLEXD box finishes' names, from Lilac to Gold. */
 export const LEVELS = [
-  { name: "Ivory", from: 0, perk: "Odds and value ranges on every box" },
-  { name: "Burgundy", from: 500, perk: "Early access to limited drops" },
-  { name: "Bronze", from: 2_500, perk: "One free shipment a month" },
-  { name: "Onyx", from: 10_000, perk: "Free insured shipping on every piece" },
+  { name: "Lilac", from: 0, perk: "Odds and value ranges on every box" },
+  { name: "Amethyst", from: 500, perk: "Early access to limited drops" },
+  { name: "Plum", from: 2_500, perk: "One free shipment a month" },
+  { name: "Royal", from: 10_000, perk: "Free insured shipping on every piece" },
   { name: "Gold", from: 50_000, perk: "A personal concierge" },
 ] as const;
 

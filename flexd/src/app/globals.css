@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /*
- * Brand tokens: burgundy and gold (below). Components use ONLY the semantic utilities
+ * Brand tokens: FLEXD velvet and gold (below). Components use ONLY the semantic utilities
  * (bg-surface, text-muted, border-line, bg-primary, text-foil, …), never raw hex, so the scheme can
  * still be tuned here in one place.
  */
@@ -14,9 +14,11 @@
   --color-muted: var(--muted);
   --color-subtle: var(--subtle);
   --color-line: var(--line);
+  --color-edge: var(--edge);
   --color-accent: var(--accent);
   --color-on-accent: var(--on-accent);
   --color-accent-soft: var(--accent-soft);
+  --color-accent-word: var(--accent-word);
   --color-sapphire: var(--sapphire);
   --color-glow: var(--glow);
   --color-primary: var(--primary);
@@ -128,161 +130,113 @@
 }
 
 /*
- * Burgundy and gold (2026-10-14): the "Crimson Throne" scheme with its red taken down to burgundy
- * (the user's swatches: #800020, #9F1D35, #650015, #C73A52) and its royal plum replaced by gold.
- * Champagne gold for wins, balance and events; burgundy for every primary action; garnet cards on
- * onyx wine. [data-theme="dark"] also lets one part of a light page stay dark (the opening screen).
+ * FLEXD Velvet & Gold (2026-10-15), from the client's palette sheet: ink-black ground with a purple
+ * soul, royal velvet for primary actions, metallic gold for headlines, prices and the crown,
+ * champagne text. Dark only. Less shiny (the client's ask): velvet is a near-flat fill, never a
+ * glossy gradient or a purple glow; gold keeps its sheen.
  */
 :root,
 [data-theme="dark"] {
   color-scheme: dark;
 
-  /* Ramps */
-  --burgundy-100: #fbe9ec;
-  --burgundy-200: #f0c4cc;
-  --burgundy-300: #e08797;
-  --burgundy-400: #c73a52;
-  --burgundy-500: #9f1d35;
-  --burgundy-600: #800020;
-  --burgundy-700: #650015;
-  --burgundy-800: #4a0010;
-  --burgundy-900: #2e000a;
-  --champagne-100: #fdf7ea;
-  --champagne-200: #f9ecd0;
-  --champagne-300: #f2d9a4;
-  --champagne-400: #e8c27a;
-  --champagne-500: #cfa452;
-  --champagne-600: #a9833a;
-  --champagne-700: #80622a;
-  --champagne-800: #57421c;
-  --champagne-900: #352810;
+  /* Palette sheet */
+  --ground: #0a0510;
+  --surface-base: #160a22;
+  --surface-raised: #22112f;
+  --hairline: #3d2152;
+  --velvet-900: #2a0b45;
+  --velvet-700: #3f1366;
+  --velvet-500: #5b1e92;
+  --velvet-300: #a374e0;
+  --velvet-100: #dcc8f0;
+  --gold-700: #8c6a2e;
+  --gold-500: #c2a05a;
+  --gold-300: #e6cf9a;
+  --gold-100: #f0ddae;
+  --champagne: #f4e9d2;
+  --lilac-grey: #b3a3c4;
+  --lilac-dim: #9484a6;
+  --mint: #7fb89a;
+  --rose: #e07a86;
 
-  /* Named swatches */
-  --burgundy: var(--burgundy-600);
-  --champagne: var(--champagne-400);
-  --garnet: #3d1520;
-  --onyx-wine: #1c0a10;
-  --cream: #f6ecdf;
-  /* Older names some components still use, mapped onto the scheme. */
-  --obsidian: var(--onyx-wine);
-  --navy: var(--garnet);
-  --sapphire: var(--burgundy-700);
-  --gold: var(--champagne);
-  --ivory: var(--cream);
+  /* Older names some components still use, mapped onto the palette. */
+  --obsidian: var(--ground);
+  --navy: var(--surface-base);
+  --sapphire: var(--velvet-700);
+  --gold: var(--gold-500);
+  --ivory: var(--champagne);
 
   /* Semantic roles */
-  --bg: var(--onyx-wine);
-  --surface: var(--garnet);
-  --surface-2: color-mix(in oklab, var(--garnet) 76%, var(--burgundy-700));
-  --fg: var(--cream);
-  --muted: color-mix(in oklab, var(--cream) 80%, var(--onyx-wine));
-  --subtle: color-mix(in oklab, var(--cream) 64%, var(--onyx-wine));
-  --line: color-mix(in oklab, var(--champagne) 20%, transparent);
-  /* Gold: wins, balance, money, events. */
-  --accent: var(--champagne);
-  --on-accent: var(--onyx-wine);
-  --accent-soft: color-mix(in oklab, var(--champagne) 12%, transparent);
-  /* Burgundy: opening a box and every primary action. */
-  --primary: var(--burgundy-600);
-  --primary-hi: var(--burgundy-500);
-  --on-primary: var(--cream);
-  /* Active states (current tab, dots, the swipe cue): the lightest burgundy that reads on onyx. */
-  --hot: var(--burgundy-400);
-  --on-hot: var(--cream);
-  /* Events and VIP (the weekly drop) speak in gold. */
-  --event: var(--champagne-400);
-  --event-bg: var(--champagne-800);
-  /* Emitted light under and inside the boxes. */
-  --glow: var(--burgundy-500);
-  --success: var(--champagne);
-  --danger: var(--burgundy-300);
+  --bg: var(--ground);
+  --surface: var(--surface-base);
+  --surface-2: var(--surface-raised);
+  --fg: var(--champagne);
+  --muted: var(--lilac-grey);
+  --subtle: var(--lilac-dim);
+  --line: var(--hairline);
+  /* Outline pills ("Leave", "Odds"): antique gold. */
+  --edge: var(--gold-700);
+  /* Gold: prices, balance, events. */
+  --accent: var(--gold-500);
+  --on-accent: var(--ground);
+  --accent-soft: color-mix(in oklab, var(--gold-500) 12%, transparent);
+  /* Amethyst: one word in a headline, focus ring, thin active marks. Never a fill. */
+  --accent-word: var(--velvet-300);
+  /* Velvet: opening a box and every primary action. */
+  --primary: var(--velvet-500);
+  --primary-hi: var(--velvet-700);
+  --on-primary: var(--gold-300);
+  --hot: var(--velvet-300);
+  --on-hot: var(--champagne);
+  --event: var(--gold-300);
+  --event-bg: var(--velvet-900);
+  /* Emitted light under and inside the boxes: deep and soft. */
+  --glow: var(--velvet-700);
+  --success: var(--mint);
+  --danger: var(--rose);
 
-  /* Gold is foil, never flat paint: type, edges, the balance. */
-  --foil-1: var(--champagne-700);
-  --foil-2: var(--champagne-200);
-  --foil-3: var(--champagne-400);
-  --foil-4: var(--champagne-100);
-  --foil-5: var(--champagne-600);
-  --foil: linear-gradient(115deg, var(--foil-1) 0%, var(--foil-2) 26%, var(--foil-3) 44%, var(--foil-4) 56%, var(--foil-5) 76%, var(--foil-2) 100%);
-  /* Foil chips keep bright gold in both modes (dark text sits on them). */
-  --foil-btn: linear-gradient(115deg, #a9833a 0%, #f9ecd0 26%, #e8c27a 44%, #fdf7ea 56%, #cfa452 76%, #f2d9a4 100%);
-  --foil-edge: linear-gradient(90deg, transparent, color-mix(in oklab, var(--champagne) 70%, transparent), transparent);
-  --primary-btn: linear-gradient(160deg, var(--burgundy-500) 0%, var(--burgundy-600) 50%, var(--burgundy-700) 100%);
+  /* Gold is foil: the sheet's gold sheen. */
+  --foil-1: var(--gold-700);
+  --foil-2: var(--gold-300);
+  --foil-3: #b08a45;
+  --foil-4: var(--gold-100);
+  --foil-5: #9c7838;
+  --foil: linear-gradient(120deg, var(--foil-1) 0%, var(--foil-2) 30%, var(--foil-3) 50%, var(--foil-4) 70%, var(--foil-5) 100%);
+  --foil-btn: linear-gradient(120deg, #8c6a2e 0%, #e6cf9a 30%, #c2a05a 50%, #f0ddae 70%, #9c7838 100%);
+  --foil-edge: linear-gradient(90deg, transparent, color-mix(in oklab, var(--gold-500) 70%, transparent), transparent);
+  /* Velvet, less shiny: a near-flat fill with a faint lift at the top and no highlight stop. */
+  --primary-btn: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--velvet-500) 94%, white) 0%,
+    var(--velvet-500) 45%,
+    color-mix(in oklab, var(--velvet-500) 90%, black) 100%
+  );
+  --velvet-inset: inset 0 1px 0 rgb(230 207 154 / 0.12);
 
-  /* Surfaces and light that change with the mode. */
-  --plate: linear-gradient(180deg, #4a1a28, #2a0e16);
-  --card: linear-gradient(180deg, #431823 0%, #2a0d15 100%);
-  --reel-bg: radial-gradient(80% 120% at 50% 50%, #4a1a28, #14070b);
-  --reel-edge: #14070b;
+  /* Surfaces and light */
+  --plate: linear-gradient(180deg, var(--surface-raised), var(--surface-base));
+  --card: linear-gradient(180deg, var(--surface-raised) 0%, var(--surface-base) 100%);
+  --reel-bg: radial-gradient(80% 120% at 50% 50%, var(--velvet-900), var(--ground));
+  --reel-edge: var(--ground);
   --floor-shadow: rgb(0 0 0 / 0.7);
   --shadow-strong: rgb(0 0 0 / 0.9);
-  --aurora-a: color-mix(in oklab, var(--glow) 30%, transparent);
-  --aurora-b: color-mix(in oklab, var(--burgundy-700) 55%, transparent);
-  --dust: var(--champagne-200);
-  --marble-base: var(--onyx-wine);
+  --aurora-a: color-mix(in oklab, var(--glow) 22%, transparent);
+  --aurora-b: color-mix(in oklab, var(--velvet-900) 40%, transparent);
+  --dust: var(--gold-100);
+  --marble-base: var(--ground);
   --marble-img: url("/textures/marble-dark.webp");
-  --grain-opacity: 0.035;
+  --grain-opacity: 0.03;
+  /* Page backdrop: the sheet's vertical drape folds at half contrast over a velvet-to-ground fall. */
+  --drape:
+    repeating-linear-gradient(90deg, rgb(0 0 0 / 0.19) 0, rgb(150 90 200 / 0.03) 26px, rgb(0 0 0 / 0.19) 52px),
+    linear-gradient(180deg, #1c0730, var(--ground) 90%);
 
-  /* Rarity ladder without purple: stone, cream, bronze, burgundy, gold. */
-  --rarity-common: #9c8a87;
-  --rarity-uncommon: #e9dccb;
-  --rarity-rare: #c08a3e;
-  --rarity-epic: var(--burgundy-500);
-  --rarity-grail: var(--champagne-400);
-}
-
-/*
- * Light mode: cream paper. Onyx wine carries the text, gold deepens so foil type stays legible,
- * burgundy keeps every primary action. Applied by the boot script in <head> from the saved choice
- * or the system preference (see lib/theme.ts).
- */
-[data-theme="light"] {
-  color-scheme: light;
-  --bg: #fbf5ee;
-  --surface: #fffaf5;
-  --surface-2: #f3e3dc;
-  --fg: var(--onyx-wine);
-  --muted: color-mix(in oklab, var(--onyx-wine) 80%, #fbf5ee);
-  --subtle: color-mix(in oklab, var(--onyx-wine) 64%, #fbf5ee);
-  --line: color-mix(in oklab, var(--garnet) 16%, transparent);
-  --accent: var(--champagne-700);
-  --on-accent: var(--onyx-wine);
-  --accent-soft: color-mix(in oklab, var(--champagne-600) 12%, transparent);
-  --primary: var(--burgundy-600);
-  --primary-hi: var(--burgundy-500);
-  --on-primary: var(--cream);
-  --hot: var(--burgundy-600);
-  --on-hot: var(--cream);
-  --event: var(--champagne-700);
-  --event-bg: var(--champagne-700);
-  --glow: var(--burgundy-300);
-  --success: var(--champagne-700);
-  --danger: var(--burgundy-600);
-
-  --foil-1: var(--champagne-800);
-  --foil-2: var(--champagne-600);
-  --foil-3: var(--champagne-700);
-  --foil-4: var(--champagne-500);
-  --foil-5: var(--champagne-800);
-
-  --plate: linear-gradient(180deg, #ffffff, #f4e8e0);
-  --card: linear-gradient(180deg, #fffaf5 0%, #f4e6dd 100%);
-  --reel-bg: radial-gradient(80% 120% at 50% 50%, #ffffff, #f1e2d9);
-  --reel-edge: #f1e2d9;
-  --floor-shadow: rgb(61 21 32 / 0.25);
-  --shadow-strong: rgb(61 21 32 / 0.28);
-  --aurora-a: color-mix(in oklab, var(--glow) 14%, transparent);
-  --aurora-b: color-mix(in oklab, var(--burgundy-700) 12%, transparent);
-  --dust: var(--champagne-600);
-  --marble-base: #fbf5ee;
-  --marble-img: url("/textures/marble-light.webp");
-  --grain-opacity: 0.025;
-
-  --rarity-common: #7d6d6a;
-  --rarity-uncommon: #a08a6e;
-  --rarity-rare: #9a6424;
-  --rarity-epic: var(--burgundy-600);
-  --rarity-grail: var(--champagne-700);
+  /* Rarity ladder: lilac-stone, champagne, antique gold, amethyst, gold. */
+  --rarity-common: #9a8ca8;
+  --rarity-uncommon: #e9dcc4;
+  --rarity-rare: #b08a45;
+  --rarity-epic: var(--velvet-300);
+  --rarity-grail: var(--gold-300);
 }
 
 /* ---------- Utilities ---------- */
@@ -308,6 +262,11 @@
   background-size: 1400px 1000px;
 }
 
+/* The velvet drape backdrop (page, age gate). */
+@utility bg-drape {
+  background: var(--drape);
+}
+
 /* ---------- Base ---------- */
 
 html {
@@ -321,6 +280,16 @@ body {
   /* Jost is variable: a touch above regular so body copy doesn't thin out on dark surfaces. */
   font-weight: 450;
   letter-spacing: 0.005em;
+}
+
+/* The drape behind every page: a fixed layer of plain gradients (no blend mode, no filter). */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--drape);
 }
 
 /* Layered so a utility (e.g. the hero's font-medium) still wins. */
@@ -361,27 +330,15 @@ body {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
 }
 
-/* Primary button: burgundy, with the same light sweep on hover. */
+/* Primary button: velvet, near flat (the client asked for less shine): no light sweep, no glow. */
 .btn-primary {
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
   background-image: var(--primary-btn);
   color: var(--on-primary);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18);
+  box-shadow: var(--velvet-inset), 0 10px 24px -14px var(--shadow-strong);
 }
-.btn-primary::after {
-  content: "";
-  position: absolute;
-  inset: -20% auto -20% -60%;
-  width: 45%;
-  transform: skewX(-20deg);
-  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.28), transparent);
-  transition: left 0.9s var(--ease-snap);
-  z-index: -1;
-}
-.btn-primary:hover::after {
-  left: 130%;
+.btn-primary:hover {
+  background-image: none;
+  background-color: var(--primary-hi);
 }
 
 /* Foil button: a light sweep crosses the gold on hover. */

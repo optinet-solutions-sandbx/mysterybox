@@ -67,7 +67,7 @@ export function Sheet({
         <div className="fixed inset-0 z-[70] flex items-end justify-center md:items-center md:p-6">
           <motion.div
             aria-hidden
-            className="absolute inset-0 bg-[color-mix(in_oklab,var(--onyx-wine)_78%,transparent)]"
+            className="absolute inset-0 bg-[color-mix(in_oklab,var(--ground)_78%,transparent)]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
