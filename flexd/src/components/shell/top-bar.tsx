@@ -24,7 +24,8 @@ export function TopBar() {
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 md:px-8">
         <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label={`${brand.name}, all boxes`}>
           <LogoMark className="w-11" sizes="44px" />
-          <span className="text-foil font-display text-[17px] tracking-[0.42em]">{brand.name}</span>
+          {/* The spaced wordmark needs ~380px beside the account controls; narrower phones show the mark only. */}
+          <span className="text-foil font-display text-[17px] tracking-[0.42em] max-[379px]:hidden">{brand.name}</span>
         </Link>
 
         <nav aria-label="Main" className="hidden flex-1 justify-center gap-1 lg:flex">

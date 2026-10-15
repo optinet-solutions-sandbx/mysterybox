@@ -14,6 +14,7 @@ never copy their copy, layout compositions, palettes or fonts. On 2026-10-09 the
 first skeleton "a normal AI-generated website". **Motion and craft are the point of this project,
 not decoration.**
 
+- **Three sites in one repo (2026-10-15):** `web/` (Grail Noir, `main`, mysterybox-seven), `play/` (Grail Noir's IcyBox-style app, `play` branch, grailnoir-app) and `flexd/` (FLEXD, a velvet-purple copy of `play/`, `flexd` branch; see `flexd/README.md`).
 - **No real money yet; the UI runs on a browser mock.** A "Prototype" banner is always visible.
   Registration and sign-in are a **front-end mock** of MISTY's flow (details + phone, then a
   one-time email code, plus a password): accounts live in this browser only, and the code is shown
