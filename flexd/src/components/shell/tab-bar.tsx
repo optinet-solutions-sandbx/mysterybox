@@ -24,11 +24,11 @@ export function TabBar() {
                 transitionTypes={navDirection(pathname, href)}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex flex-col items-center gap-1 rounded-[22px] py-2 text-[11px] font-medium transition-colors",
-                  active ? "bg-[image:var(--primary-btn)] text-fg shadow-[var(--velvet-inset)]" : "text-muted hover:text-fg",
+                  "flex flex-col items-center gap-1 rounded-[22px] border py-2 text-[11px] font-medium text-fg transition-colors",
+                  active ? "border-hot bg-[image:var(--tab-active)] shadow-[var(--velvet-inset)]" : "border-transparent",
                 )}
               >
-                <Icon className="size-[22px]" strokeWidth={active ? 2.2 : 1.7} />
+                <Icon className={cn("size-[22px]", active && "text-hot")} strokeWidth={active ? 2 : 1.7} />
                 {label}
               </Link>
             </li>

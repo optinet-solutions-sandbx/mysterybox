@@ -213,6 +213,8 @@
     color-mix(in oklab, var(--velvet-500) 90%, black) 100%
   );
   --velvet-inset: inset 0 1px 0 rgb(230 207 154 / 0.12);
+  /* Active tab: the screens' dark pill with a violet edge, kept matte (no glow). */
+  --tab-active: radial-gradient(130% 110% at 50% 45%, var(--velvet-900) 35%, var(--velvet-700) 75%, var(--velvet-500) 100%);
 
   /* Surfaces and light */
   --plate: linear-gradient(180deg, var(--surface-raised), var(--surface-base));

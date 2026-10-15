@@ -18,10 +18,12 @@ describe("shell follows the reference screens", () => {
     expect(read("src/app/globals.css")).toMatch(/@utility pb-tabbar \{\s*padding-bottom: calc\(6\.5rem/);
   });
 
-  it("floats the tab bar with a velvet active pill", () => {
+  it("floats the tab bar; the active tab is a dark velvet pill with a violet edge and a lilac icon", () => {
     const tabBar = read("src/components/shell/tab-bar.tsx");
     expect(tabBar).toMatch(/rounded-\[28px\]/);
-    expect(tabBar).toMatch(/bg-\[image:var\(--primary-btn\)\]/);
+    expect(tabBar).toMatch(/bg-\[image:var\(--tab-active\)\]/);
+    expect(tabBar).toMatch(/border-hot/);
+    expect(tabBar).toMatch(/text-hot/);
   });
 
   it("gives the age gate the drape, not a purple glow", () => {
