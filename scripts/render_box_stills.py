@@ -1,10 +1,11 @@
-"""Render the play/ site's chest finishes to transparent WebP stills (play/public/boxes/<finish>-<fingerprint>.webp).
+"""Render a site's chest finishes to transparent WebP stills (<app>/public/boxes/<finish>-<fingerprint>.webp).
 
 The stills are the first paint of every <Chest> and the image used in grids; they must come from
-the same WebGL model, so rerun this after changing play/src/components/chest/chest-scene.ts.
+the same WebGL model, so rerun this after changing <app>/src/components/chest/chest-scene.ts (or,
+in flexd/, chest-finishes.ts).
 
-Usage (dev server running: `cd play && npm run dev`):
-    python scripts/render_box_stills.py [base_url]
+Usage (that app's dev server running, e.g. `cd play && npm run dev`):
+    python scripts/render_box_stills.py [base_url] [app]      # app: play (default) or flexd
 """
 import base64
 import hashlib
@@ -16,8 +17,12 @@ from PIL import Image
 from playwright.sync_api import sync_playwright
 
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:3000"
-OUT = Path(__file__).resolve().parent.parent / "play" / "public" / "boxes"
-VERSION_FILE = Path(__file__).resolve().parent.parent / "play" / "src" / "components" / "chest" / "stills-version.ts"
+APP = sys.argv[2] if len(sys.argv) > 2 else "play"
+ROOT = Path(__file__).resolve().parent.parent
+if not (ROOT / APP / "package.json").exists():
+    sys.exit(f"no app folder {ROOT / APP}")
+OUT = ROOT / APP / "public" / "boxes"
+VERSION_FILE = ROOT / APP / "src" / "components" / "chest" / "stills-version.ts"
 OUT.mkdir(parents=True, exist_ok=True)
 
 with sync_playwright() as p:
