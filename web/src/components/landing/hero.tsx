@@ -8,6 +8,7 @@ import { brand } from "@/config/brand";
 import { BOX_WIDTH, Box3D } from "@/components/box3d/box-3d";
 import { ItemArt } from "@/components/item/item-art";
 import { LineReveal } from "@/components/fx/line-reveal";
+import { MarblePreload } from "@/components/layout/marble-preload";
 import { ButtonLink } from "@/components/ui/button";
 import { Container } from "@/components/ui/layout";
 import { cn } from "@/lib/cn";
@@ -54,6 +55,7 @@ export function Hero({ categories }: { categories: ShowcaseCategory[] }) {
 
   return (
     <section className="relative isolate -mt-16 overflow-hidden pt-16">
+      <MarblePreload />
       {/* Light: sapphire aurora behind, a cold spotlight onto the box, marble underfoot. */}
       <div aria-hidden className="absolute inset-0 -z-10">
         <div className="absolute -top-1/3 left-[10%] h-[100vh] w-[90vw] animate-aurora bg-[radial-gradient(closest-side,var(--aurora-a),transparent)]" />

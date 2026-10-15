@@ -22,14 +22,12 @@ export function LogoMark({
   tone = "foil",
   title,
   sizes = "96px",
-  priority = false,
 }: {
   className?: string;
   tone?: "foil" | "solid";
   title?: string;
   /** Rendered width hint for the image optimiser. */
   sizes?: string;
-  priority?: boolean;
 }) {
   if (tone === "solid" && logo.silhouette) {
     return (
@@ -57,7 +55,6 @@ export function LogoMark({
       width={LOGO_SIZE.width}
       height={LOGO_SIZE.height}
       sizes={sizes}
-      priority={priority}
       alt={title ?? ""}
       aria-hidden={title ? undefined : true}
       className={cn("h-auto", className)}

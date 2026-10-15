@@ -36,8 +36,11 @@ export default async function HomePage() {
   return (
     <>
       <Hero categories={showcase} />
-      <VaultMarquee items={listShowcaseItems(24)} />
-      {/* Heavy scenes mount as you approach them; placeholders reserve their height. */}
+      {/* Heavy scenes mount as you approach them; placeholders reserve their height. The strip starts
+          below the fold: mounting it on approach keeps its 48 tiles out of the first load. */}
+      <Deferred placeholderClassName="h-[412px]" margin="10000% 0px 25% 0px">
+        <VaultMarquee items={listShowcaseItems(24)} />
+      </Deferred>
       <Deferred placeholderClassName="h-[340vh]">
         <Ritual
           item={ritualItem}

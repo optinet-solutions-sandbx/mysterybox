@@ -1,5 +1,3 @@
-import { textureUrl } from "@/config/brand-pack";
-
 export type Theme = "dark" | "light";
 
 export const THEME_STORAGE_KEY = "grailnoir-theme";
@@ -7,12 +5,10 @@ export const THEME_EVENT = "grailnoir-theme-change";
 
 /**
  * Runs in <head> before first paint: the saved choice wins, otherwise the system preference.
- * Keeps following the system until the visitor picks a mode with the toggle. Also preloads the
- * brand pack's marble texture for the chosen mode (it is the hero's largest painted element and the
- * footer uses it on every public page). The back office never shows it, so it is not preloaded there.
+ * Keeps following the system until the visitor picks a mode with the toggle. (The marble texture is
+ * preloaded in the HTML by the pages that paint it first: components/layout/marble-preload.tsx.)
  */
-const textures = JSON.stringify({ dark: textureUrl("dark"), light: textureUrl("light") });
-export const themeBootScript = `(function(){try{var k="${THEME_STORAGE_KEY}",d=document.documentElement,m=window.matchMedia("(prefers-color-scheme: light)");function a(){var s=localStorage.getItem(k);d.dataset.theme=s||(m.matches?"light":"dark")}a();var t=${textures}[d.dataset.theme];if(t&&(location.pathname+"/").indexOf("/admin/")!==0){var l=document.createElement("link");l.rel="preload";l.as="image";l.href=t;l.fetchPriority="high";document.head.appendChild(l)}m.addEventListener("change",function(){if(!localStorage.getItem(k)){a();window.dispatchEvent(new Event("${THEME_EVENT}"))}})}catch(e){document.documentElement.dataset.theme="dark"}})()`;
+export const themeBootScript = `(function(){try{var k="${THEME_STORAGE_KEY}",d=document.documentElement,m=window.matchMedia("(prefers-color-scheme: light)");function a(){var s=localStorage.getItem(k);d.dataset.theme=s||(m.matches?"light":"dark")}a();m.addEventListener("change",function(){if(!localStorage.getItem(k)){a();window.dispatchEvent(new Event("${THEME_EVENT}"))}})}catch(e){document.documentElement.dataset.theme="dark"}})()`;
 
 export function readTheme(): Theme {
   return document.documentElement.dataset.theme === "light" ? "light" : "dark";

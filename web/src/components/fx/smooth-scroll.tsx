@@ -21,14 +21,15 @@ export function scrollToElement(el: HTMLElement, offset = -120) {
 
 /**
  * Inertial wheel scrolling. Scroll-linked scenes (the ritual, the keyhole) scrub smoothly
- * instead of jumping 100px per wheel notch. Off for reduced motion.
+ * instead of jumping 100px per wheel notch. Off for reduced motion, and on touch screens, where it
+ * smooths nothing (touch scrolling stays native) but would still run a loop every frame.
  */
 export function SmoothScroll() {
   const reduce = useReducedMotion();
   const pathname = usePathname();
 
   useEffect(() => {
-    if (reduce) return;
+    if (reduce || !window.matchMedia("(pointer: fine)").matches) return;
     const lenis = new Lenis({ lerp: 0.14, smoothWheel: true, autoRaf: true });
     instance = lenis;
     return () => {

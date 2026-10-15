@@ -17,6 +17,7 @@ import { cn } from "@/lib/cn";
 import { BoxAnalysis, SHOW_ANALYSIS } from "./box-analysis";
 import { OddsAtAGlance } from "./odds-at-a-glance";
 import { Reel } from "./reel";
+import { MarblePreload } from "@/components/layout/marble-preload";
 import { ResultOverlay } from "./result-overlay";
 import { SessionCounters } from "./session-counters";
 import { useBoxOpen } from "./use-box-open";
@@ -66,6 +67,7 @@ function Stage({ box, entries, catalog, categoryLabel, stats }: StageProps) {
   return (
     <>
       <section className="relative isolate overflow-hidden">
+        <MarblePreload />
         <div aria-hidden className="absolute inset-0 -z-10">
           <div className="absolute -top-[10%] left-0 h-[100%] w-[70%] bg-[radial-gradient(closest-side,var(--aurora-b),transparent)]" />
           <div className="absolute inset-x-0 bottom-0 h-1/2 bg-marble opacity-30 [mask-image:linear-gradient(to_top,black,transparent)]" />

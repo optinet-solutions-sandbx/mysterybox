@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 import { themeBootScript } from "@/lib/theme";
-it("theme boot script parses and skips the preload only in the back office", () => {
+it("theme boot script parses, follows the system and adds nothing to the page", () => {
   expect(() => new Function(themeBootScript)).not.toThrow();
   const run = (pathname: string) => {
     const appended: string[] = [];
@@ -9,10 +9,7 @@ it("theme boot script parses and skips the preload only in the back office", () 
     new Function("document", "window", "localStorage", "location", themeBootScript)(doc, win, { getItem: () => null }, { pathname });
     return { theme: doc.documentElement.dataset.theme, appended };
   };
-  expect(run("/").appended.length).toBe(1);
-  expect(run("/boxes/first-edition").appended.length).toBe(1);
-  expect(run("/admin").appended.length).toBe(0);
-  expect(run("/admin/players").appended.length).toBe(0);
-  expect(run("/administrator").appended.length).toBe(1);
+  expect(run("/").appended).toEqual([]);
+  expect(run("/admin").appended).toEqual([]);
   expect(run("/").theme).toBe("dark");
 });
