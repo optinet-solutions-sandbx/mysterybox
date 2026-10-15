@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import sharp from "sharp";
 import { brand } from "@/config/brand";
+import { LOGO_SRC } from "@/config/mark";
 import { formatUsd } from "@/domain/money";
 import { bestRarity, getItem } from "@/services/catalog";
 
@@ -53,7 +54,7 @@ export async function renderCard(itemId: string, format: "og" | "story") {
   const tone = C.rarity[bestRarity(itemId) ?? "rare"];
   const [cinzel, jost] = await fonts;
   const photo = item.image ? await pngDataUrl(item.image, 900) : null;
-  const logo = await pngDataUrl("/brand/grail-noir-mark.webp", 200);
+  const logo = await pngDataUrl(LOGO_SRC, 200);
   const story = format === "story";
   const size = story ? { width: 1080, height: 1920 } : { width: 1200, height: 630 };
   const aspect = item.imageAspect ?? 1;

@@ -110,7 +110,7 @@ export function ItemArt({
             {art === "coin" ? (
               <>
                 {drawings.coin}
-                <image href={LOGO_SRC} x="32" y="38" width="36" height="23.9" />
+                <image href={LOGO_SRC} x="32" y="38" width="36" height="24" />
               </>
             ) : (
               drawings[art]

@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import { LOGO_SRC } from "@/config/mark";
 import type { BoxMaterial } from "@/domain/types";
 
 /**
@@ -382,7 +383,7 @@ export class ChestScene {
       depthWrite: false,
     });
     const crownDone = this.loading();
-    alphaMask("/brand/grail-noir-mark.webp", (mask) => {
+    alphaMask(LOGO_SRC, (mask) => {
       crownMat.alphaMap = mask;
       crownMat.opacity = 1;
       crownMat.needsUpdate = true;
