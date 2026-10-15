@@ -68,7 +68,14 @@ function playsOf(snap: SessionSnapshot, catalog: Catalog): PlayerRecord["plays"]
         // Credit (and free spins) count through creditsAwarded; only a piece adds its listed value.
         const isPiece = outcome ? outcome.kind === "item" : !!item && item.category !== "credit";
         const piece = isPiece ? (outcome?.valueCents ?? item?.value ?? 0) : 0;
-        return { at: new Date(r.resolvedAt).toISOString(), boxId: o.boxSlug, priceCents: o.priceCents, itemId: r.outcomeId, valueCents: piece + r.creditsAwarded * 100 };
+        return {
+          at: new Date(r.resolvedAt).toISOString(),
+          boxId: o.boxSlug,
+          priceCents: o.priceCents,
+          itemId: r.outcomeId,
+          valueCents: piece + r.creditsAwarded * 100,
+          paidWith: o.payment?.method,
+        };
       })
       .sort((a, b) => a.at.localeCompare(b.at));
   }
@@ -83,16 +90,22 @@ function playsOf(snap: SessionSnapshot, catalog: Catalog): PlayerRecord["plays"]
 
 export function browserRecord(account: Account, snap: SessionSnapshot, catalog: Catalog): PlayerRecord {
   const plays = playsOf(snap, catalog);
-  const money: MoneyEvent[] = snap.transactions
-    .filter((t) => t.type === "deposit" || t.type === "withdrawal" || t.type === "sell_back")
-    .map((t) => ({
-      id: t.id,
-      at: t.at,
-      type: t.type as MoneyEvent["type"],
-      amountCents: t.amount,
-      status: t.status ?? "completed",
-    }))
-    .reverse();
+  const ledger = snap.boxApi?.ledger ?? [];
+  // Wallet moves, plus the box system's trade-ins (they pay site credit, counted at $1 a credit).
+  const money: MoneyEvent[] = [
+    ...snap.transactions
+      .filter((t) => t.type === "deposit" || t.type === "withdrawal" || t.type === "sell_back")
+      .map((t) => ({
+        id: t.id,
+        at: t.at,
+        type: t.type as MoneyEvent["type"],
+        amountCents: t.amount,
+        status: t.status ?? ("completed" as const),
+      })),
+    ...ledger
+      .filter((e) => e.reason === "trade-in")
+      .map((e) => ({ id: `trade-in-${e.id}`, at: e.createdAt, type: "sell_back" as const, amountCents: Math.round(e.delta * 100), status: "completed" as const })),
+  ].sort((a, b) => a.at.localeCompare(b.at));
   return {
     id: account.id,
     email: account.email,
@@ -108,6 +121,7 @@ export function browserRecord(account: Account, snap: SessionSnapshot, catalog: 
     lastSeenAt: account.lastSeenAt ?? null,
     balanceCents: snap.balance,
     heldCents: snap.held,
+    creditBalance: ledger.reduce((sum, e) => sum + e.delta, 0),
     plays,
     money,
     source: "browser",
@@ -141,7 +155,7 @@ export function useBackofficeData() {
         const snap = ledgers[p.email];
         if (!snap) return p;
         const local = browserRecord({ ...ACCOUNT_STUB, id: p.id, email: p.email, firstName: p.firstName, lastName: p.lastName, createdAt: p.registeredAt, status: p.status }, snap, catalog);
-        return { ...p, plays: local.plays, money: local.money, balanceCents: local.balanceCents, heldCents: local.heldCents };
+        return { ...p, plays: local.plays, money: local.money, balanceCents: local.balanceCents, heldCents: local.heldCents, creditBalance: local.creditBalance };
       });
     const browser = Object.values(accounts)
       .filter((a) => a.role === "player" && a.verified)

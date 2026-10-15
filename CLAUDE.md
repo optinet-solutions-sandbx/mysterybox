@@ -246,15 +246,15 @@ Lighthouse on the live site, mobile home: 25 → 84 (blocking 39,970 ms → 260 
    for now), Analysis "Check this open" (and that a verdict clears on the next open), inventory
    ship/cancel and trade-in, wallet, and the verify page reproducing the first open and agreeing with the
    API, at 1440×900 and 390×844. Expected console output: the two 404s from its deliberate
-   `/does-not-exist` check (a logo preload warning was also seen on 2026-10-13; not investigated).
+   `/does-not-exist` check. (A warning that a stylesheet was preloaded but unused on `/inventory` or
+   `/sign-in` is Next prefetching the Boxes page for the header link; harmless.)
 3. **Look at the motion, not just the log.** Capture frames through the landing scroll (hero, ritual
    at several progress points, shelf, keyhole) and the open sequence (shake, lid and rise, result), and view
    them. Text-only checks missed every visual bug so far (unstyled 3D box, invisible foil numbers,
    tile seams).
-4. **Back office** (`scripts/e2e_admin.py` is **not yet updated for the new open flow**: it still clicks
-   "Open for" and "Keep it"): with the same server,
-   `E2E_SUPERADMIN_EMAIL=… E2E_SUPERADMIN_PASSWORD=… python scripts/e2e_admin.py http://localhost:3210 <out_dir>`
-   (a team super admin; ask the user for a password) registers a player, opens boxes, requests a
+4. **Back office:** with the same server, `python scripts/e2e_admin.py http://localhost:3210 <out_dir>`
+   (it puts a throwaway super admin in the test browser; set `E2E_SUPERADMIN_EMAIL` and
+   `E2E_SUPERADMIN_PASSWORD` to use a team account instead) registers a player, opens boxes, requests a
    withdrawal, then as super admin pays it out, suspends the player, adds an admin and checks the
    audit log; the new admin finds Staff & roles locked; the suspended player can't sign in; the
    super admin clears the test data. Runs at 1440 (both themes) and 390.
@@ -274,7 +274,8 @@ task report. Do it as the last step of the day's work, and before 12 AM even if 
 - **Done:** one task per finished piece of work, filed as done on the day it was finished. The PMS
   dates a task by the moment it moves to Done and cannot backdate it, so a day missed shows on the wrong
   day. Assign the person who did the work (default: John Campilanan, the token's owner). In the
-  description, write "Done YYYY-MM-DD", what changed in plain words, and the commit hash.
+  description, write "Done YYYY-MM-DD", then what changed in plain words (see "Write for a
+  non-technical reader" below), and end with "Ref: <commit hash>".
 - **Pending:** anything started, proposed or waiting (an approval, a team decision, outside setup)
   is a To Do task assigned to its owner, described as "Pending since YYYY-MM-DD" plus what it waits on.
   When it is finished, move that task to Done (`done <taskId>`); don't create a second one.
@@ -285,12 +286,37 @@ task report. Do it as the last step of the day's work, and before 12 AM even if 
 
 ```bash
 node scripts/pms.mjs list                                  # tasks by column
-node scripts/pms.mjs add "<title>" --column done --desc "Done 2026-10-14. … Commit abc1234."
-node scripts/pms.mjs add "<title>" --desc "Pending since 2026-10-14. Waits on …"   # To Do
+node scripts/pms.mjs add "<title>" --column done --desc "Done 2026-10-14. <what changed, in plain words>. Ref: abc1234"
+node scripts/pms.mjs add "<title>" --desc "Pending since 2026-10-14. Waiting for <who> to <what>."   # To Do
 node scripts/pms.mjs add "<title>" --assignee ramiel@optinetsolutions.com …        # someone else
-node scripts/pms.mjs done <taskId> --desc "Done 2026-10-14. … Commit abc1234."   # a pending task is finished
+node scripts/pms.mjs done <taskId> --desc "Done 2026-10-14. <what changed, in plain words>. Ref: abc1234"   # a pending task is finished
 node scripts/pms.mjs report                                # today's daily report
 ```
+
+### Write for a non-technical reader
+
+The PMS board and the daily report are read by managers and the client, not by developers. Write every
+title and description so someone who has never seen the code understands it on first read.
+
+- **Title:** the result in everyday words: what a player or a staff member can now do or see.
+  Good: "Players can sign in from any device". Not: "Supabase Auth behind NEXT_PUBLIC_ACCOUNTS".
+- **Description:** two to four short sentences: what changed, why it matters or who it helps, and
+  anything still left to do.
+- **No jargon:** no file, function or component names, no settings names (`NEXT_PUBLIC_…`), no
+  library or service names, no error codes, no unexplained abbreviations (RTP, RLS, API). If a
+  technical word can't be avoided, explain it in a few words, e.g. "the account service (Supabase)".
+- **Pending tasks** say in plain words what they wait on and who: "Waiting for the team to choose an
+  email provider, so sign-up codes can be sent by email."
+- **The commit hash goes last**, as "Ref: abc1234", so developers can trace the work without it
+  getting in the reader's way.
+- **Read it back as an outsider** before saving: if they would have to ask what a word means, rewrite it.
+
+Example:
+
+> **Staff can switch trade-in on and off**
+> Done 2026-10-14. Super admins now have a switch in the back office that turns the "trade in for
+> credit" option on or off for the whole site. When it is off, players only see the option to ship
+> their item. Ref: c812415
 
 ## Docs
 

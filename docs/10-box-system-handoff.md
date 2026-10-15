@@ -192,23 +192,20 @@ Until they say otherwise, these defaults stand:
 
 ## Not done yet (next pass)
 
-- [ ] **Back office.**
-  - ~~Build plays from `boxApi.opens` instead of inventory~~: **done 2026-10-14** (`playsOf` in
-    `components/admin/data.ts`, with a test). Credit and free-spin outcomes and the price actually paid
-    now count. Still missing: what each open was paid with.
-  - Show the site-credit balance on the player page.
-  - Count trade-ins instead of sell-backs.
-  - Show the odds page in percent, with the free-spin table.
-  - Demo players (`data/demo-players.ts`) should trade in instead of selling back, and count free
-    spins.
-- [ ] **Wallet and inventory.** A site-credit ledger page on `/wallet`, and an inventory that shows
-  awards.
-- [ ] **Wording.** Change "sell back" to "trade in" in `config/brand.ts` (the descriptor, used in the
-  hero, footer and metadata), the landing ritual (`Sell back · $X`), the odds proof ("Sell-back rate",
-  "Possible results per opening 100,000"), the FAQ, the how-it-works page, `/legal/[slug]` and the
-  inventory page intro.
-- [ ] **Admin end-to-end script.** `scripts/e2e_admin.py` still uses "Open for" and "Keep it"; it needs
-  a super-admin password.
+- [x] **Back office (done 2026-10-15).** Plays come from `boxApi.opens` (2026-10-14), with what each
+  open was paid with ("Paid with" on Box openings). The player page has a CREDIT account row (site
+  credit; "Not visible yet" for database players not used in this browser). The box system's trade-ins
+  count as trade-ins (`sell_back` money events at $1 a credit; the dashboard says "Traded in"). The
+  odds view shows the players' percent, the exact stored value and the weight, plus the bonus-open
+  table. Sample players trade in for site credit, spend credit on boxes first and roll their bonus
+  opens.
+- [x] **Wallet (done 2026-10-15).** `/wallet` lists site credit (balance and every movement) through
+  `boxApi.myCredits()`, so it keeps working on their API. The inventory already lists the pieces from
+  opens; moving it onto `listAwards` waits for their endpoint (see "When their API is live").
+- [x] **Wording (done 2026-10-14, `c3950a3`).** "Trade in", "bonus open" and "draw" on every player
+  screen.
+- [x] **Admin end-to-end script (2026-10-15).** `scripts/e2e_admin.py` uses the new open flow and
+  makes its own throwaway super admin in the test browser, so it runs without a team password.
 - [ ] **The deferred minor issues** listed above.
 - [ ] **Lighthouse** on https://mysterybox-seven.vercel.app, mobile and desktop (CLAUDE.md performance
   rules).
@@ -216,8 +213,10 @@ Until they say otherwise, these defaults stand:
   page) hides trade-in on every player screen (the team is weighing it against the legal research). If the team drops it, the API should
   refuse `POST /awards/{id}/trade-in` too; until then only the screens hide it. The player-facing words
   are now "bonus open" (not "free spin") and "draw" (not "spin"); the API and code names are unchanged.
-- [ ] **A logo warning.** The e2e runs logged a console warning that the header logo's preload
-  (`/brands/grailnoir/mark.webp` since the brand packs, 2026-10-14) went unused. That component wasn't touched; compare against `1b0811b`.
+- [x] **A logo warning (2026-10-15).** No longer reproduced: the header logo's preload is used on every
+  public page. Two other preload warnings were checked: the marble texture was preloaded in the back
+  office, which never shows it (fixed in `lib/theme.ts`), and on `/inventory` and `/sign-in` Next
+  prefetches the Boxes page's stylesheet for the header link (harmless, left as is).
 - [ ] **When their API is live:**
   - set `NEXT_PUBLIC_BACKEND=api`;
   - provide the bearer token;

@@ -135,12 +135,23 @@ function PlayerView({ p }: { p: PlayerRecord }) {
                     <td className="px-3 py-3">{amount(s.bonusesSum)}</td>
                     <td className="px-3 py-3">{Math.round(s.bonusRatio * 100)}%</td>
                   </tr>
+                  <tr className="border-t border-line">
+                    <td className="px-3 py-3">{playerNumber(`${p.id}:credit`)}</td>
+                    <td className="px-3 py-3">
+                      <span className="rounded bg-accent-soft px-1.5 py-0.5 text-xs font-bold text-fg">CREDIT</span>
+                    </td>
+                    <td className="px-3 py-3 font-semibold">{p.creditBalance === undefined ? <span className="font-normal text-subtle">Not visible yet</span> : amount(Math.round(p.creditBalance * 100))}</td>
+                    <td colSpan={15} className="px-3 py-3 text-xs text-muted">
+                      Site credit: from credit outcomes, bonus opens and trade-ins; it buys boxes and can&rsquo;t be withdrawn.
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
             <p className="border-t border-line px-5 py-3 text-xs text-muted">
               House profit = spent on boxes − listed value of the pieces received. Chargebacks, refunds, reversals and affiliate
-              payments fill in once the payment provider and affiliates are connected.
+              payments fill in once the payment provider and affiliates are connected. Site credit counts $1 a credit and lives on the
+              box system, so it shows for accounts used in this browser until the box system&rsquo;s API is live.
             </p>
           </Panel>
 

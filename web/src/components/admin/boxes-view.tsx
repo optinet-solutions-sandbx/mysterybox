@@ -12,6 +12,7 @@ import { boxPerformance } from "@/domain/analytics";
 import { catalogBox } from "@/services/catalog";
 import { useCatalog } from "@/components/catalog-provider";
 import { OddsTable } from "@/components/box/odds-table";
+import { BonusOddsTable } from "@/components/box/box-odds";
 import { cn } from "@/lib/cn";
 import { useBackofficeData } from "./data";
 import { PageTitle, RangeControl, formatCount, formatDay, formatPct } from "./ui";
@@ -102,6 +103,15 @@ export function BoxesView() {
                     <tr>
                       <td colSpan={9} className="bg-bg px-4 py-5">
                         <OddsTable entries={resolveEntries(box)} />
+                        {box.bonus.length > 0 && (
+                          <div className="mt-6 max-w-xl">
+                            <h3 className="text-sm font-semibold">What a bonus open pays</h3>
+                            <p className="mt-1 text-sm text-muted">
+                              Outcomes with bonus opens roll this table once per bonus open, with the same secret. It pays site credit only.
+                            </p>
+                            <BonusOddsTable bonus={box.bonus} className="mt-3" />
+                          </div>
+                        )}
                       </td>
                     </tr>
                   )}

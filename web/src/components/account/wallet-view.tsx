@@ -7,6 +7,7 @@ import { formatUsd } from "@/domain/money";
 import { useAuthHydrated, useCurrentUser } from "@/store/auth";
 import { useSession, useSessionHydrated } from "@/store/session";
 import { AuthPrompt } from "@/components/auth/auth-prompt";
+import { CreditHistory } from "./credit-history";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 
@@ -93,6 +94,7 @@ export function WalletView() {
             ))}
           </ul>
         )}
+        <CreditHistory />
       </div>
     </div>
   );

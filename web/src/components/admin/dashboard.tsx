@@ -67,7 +67,7 @@ export function AdminDashboard() {
         <Kpi label="Players who played" value={formatCount(k.playersPlayedInRange)} note={`${formatPct(everConversion)} of all players have played`} />
         <Kpi label="Boxes opened" value={formatCount(k.openings)} note={k.openings ? `${formatUsd(Math.round(k.playedCents / k.openings))} per opening` : "No openings"} />
         <Kpi label="Played" value={formatUsdCompact(k.playedCents)} note={`Deposits ${formatUsdCompact(k.depositsCents)}`} accent />
-        <Kpi label="Earned by players" value={formatUsdCompact(k.earnedCents)} note={`Sold back ${formatUsdCompact(k.soldBackCents)}`} />
+        <Kpi label="Earned by players" value={formatUsdCompact(k.earnedCents)} note={`Traded in ${formatUsdCompact(k.soldBackCents)}`} />
         <Kpi label="House net" value={formatUsdCompact(k.houseNetCents)} note={`Hold ${formatPct(k.playedCents ? k.houseNetCents / k.playedCents : null)}`} />
       </dl>
 

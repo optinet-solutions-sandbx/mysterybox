@@ -164,13 +164,14 @@ export function OpeningsView() {
                 <th className="px-4 py-3 font-semibold">Box</th>
                 <th className="px-4 py-3 font-semibold">Piece</th>
                 <th className="px-4 py-3 text-right font-semibold">Paid</th>
+                <th className="px-4 py-3 font-semibold">Paid with</th>
                 <th className="px-4 py-3 text-right font-semibold">Value</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-muted">
+                  <td colSpan={7} className="px-4 py-10 text-center text-muted">
                     No openings yet.
                   </td>
                 </tr>
@@ -184,6 +185,7 @@ export function OpeningsView() {
                   <td className="px-4 py-2.5">{getBox(o.boxId)?.name ?? o.boxId}</td>
                   <td className="px-4 py-2.5 font-semibold">{findItem(o.itemId)?.name ?? o.itemId}</td>
                   <td className="px-4 py-2.5 text-right">{formatUsd(o.priceCents)}</td>
+                  <td className="px-4 py-2.5 text-muted">{o.paidWith === "credit" ? "Site credit" : o.paidWith === "card" ? "Card" : "—"}</td>
                   <td className={cn("px-4 py-2.5 text-right font-semibold", o.valueCents > o.priceCents && "text-success")}>{formatUsd(o.valueCents)}</td>
                 </tr>
               ))}

@@ -7,13 +7,14 @@ openings -> payments, feed, groups -> boxes & odds -> staff & roles: add an admi
 (5 entries) -> the new admin signs in: staff page is locked -> the suspended
 player can't sign in -> super admin clears the test data -> players list is empty.
 
-Usage (server from `cd web && npx next build && npx next start -p 3210`):
-    E2E_SUPERADMIN_EMAIL=… E2E_SUPERADMIN_PASSWORD=… python scripts/e2e_admin.py [base_url] [out_dir]
-The super admin must be one of the team accounts in web/src/config/staff.ts (passwords are not in
-the repo).
+Usage (server from `cd web && npx next build && npx next start -p 3210`, demo accounts):
+    python scripts/e2e_admin.py [base_url] [out_dir]
+The super admin is a throwaway account the script puts in the test browser's own account store
+(the same salted-hash scheme as web/src/config/staff.ts), so no team password is needed. To sign in
+as a team account instead, set E2E_SUPERADMIN_EMAIL and E2E_SUPERADMIN_PASSWORD.
 Screenshots land in out_dir (default: a temp folder, never the repo).
 """
-import os, sys, re, tempfile
+import hashlib, json, os, secrets, sys, re, tempfile
 from pathlib import Path
 from playwright.sync_api import sync_playwright, expect
 
@@ -21,12 +22,35 @@ BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:3210"
 OUT = Path(sys.argv[2]) if len(sys.argv) > 2 else Path(tempfile.gettempdir()) / "admin-e2e"
 OUT.mkdir(parents=True, exist_ok=True)
 errors = []
-SUPER = (os.environ["E2E_SUPERADMIN_EMAIL"], os.environ["E2E_SUPERADMIN_PASSWORD"])
+if os.environ.get("E2E_SUPERADMIN_EMAIL"):
+    SUPER = (os.environ["E2E_SUPERADMIN_EMAIL"], os.environ["E2E_SUPERADMIN_PASSWORD"])
+    SEED_SUPER = None
+else:
+    SUPER = ("qa.super@grailnoir.com", secrets.token_urlsafe(12))
+    salt = secrets.token_hex(16)
+    SEED_SUPER = {
+        "id": "00000000-0000-4000-8000-0000000a0001", "email": SUPER[0], "firstName": "QA", "lastName": "Super",
+        "dial": "+1", "phone": "", "salt": salt, "passwordHash": hashlib.sha256(f"{salt}:{SUPER[1]}".encode()).hexdigest(),
+        "marketing": False, "verified": True, "createdAt": "2026-10-15T00:00:00.000Z", "role": "super_admin", "status": "active",
+    }
+
+# Adds the throwaway super admin to this browser's demo accounts (store/auth.ts, persist v2) when missing.
+SEED_SCRIPT = "" if SEED_SUPER is None else f"""try {{
+  const raw = localStorage.getItem('grailnoir-auth');
+  const saved = raw ? JSON.parse(raw) : {{ state: {{ accounts: {{}}, currentEmail: null, pending: null }}, version: 2 }};
+  saved.state.accounts = saved.state.accounts || {{}};
+  if (!saved.state.accounts['{SUPER[0]}']) {{
+    saved.state.accounts['{SUPER[0]}'] = {json.dumps(SEED_SUPER)};
+    localStorage.setItem('grailnoir-auth', JSON.stringify(saved));
+  }}
+}} catch (e) {{}}"""
 
 def ctx(b, width, theme):
     c = b.new_context(viewport={"width": width, "height": 900 if width > 500 else 844})
     c.add_init_script(f"""try {{ localStorage.setItem('grailnoir-theme', '{theme}');
-      if (!localStorage.getItem('mock-session')) localStorage.setItem('mock-session', JSON.stringify({{state: {{ageConfirmed: true}}, version: 2}})); }} catch (e) {{}}""")
+      if (!localStorage.getItem('mock-session')) localStorage.setItem('mock-session', JSON.stringify({{state: {{ageConfirmed: true}}, version: 3}})); }} catch (e) {{}}""")
+    if SEED_SCRIPT:
+        c.add_init_script(SEED_SCRIPT)
     pg = c.new_page()
     pg.set_default_timeout(90000)
     pg.on("console", lambda m: m.type == "error" and errors.append(f"{width}/{theme}: {m.text[:220]}"))

@@ -1,13 +1,13 @@
 import { economy } from "@/config/economy";
 import type { ResolvedEntry } from "@/domain/types";
-import { formatDisplayedOdds, formatExactOdds, formatUsd } from "@/domain/money";
+import { formatExactOdds, formatPercent, formatUsd } from "@/domain/money";
 import { rollRanges } from "@/domain/odds";
 import { ItemArt } from "@/components/item/item-art";
 import { RarityTag } from "@/components/item/rarity-tag";
 
 /**
  * Full odds disclosure, both views side by side:
- * - Displayed odds: what players see on cards (rounded, never "0%").
+ * - Displayed odds: the percent players see in "Box content and odds" (formatPercent, never "0%").
  * - Back-office odds: the exact weight configured for the box, which the draw actually uses.
  */
 export function OddsTable({ entries }: { entries: ResolvedEntry[] }) {
@@ -20,8 +20,8 @@ export function OddsTable({ entries }: { entries: ResolvedEntry[] }) {
         <div className="rounded-2xl border border-line bg-surface px-5 py-4">
           <dt className="text-sm font-semibold text-fg">Displayed odds</dt>
           <dd className="mt-1 text-sm leading-relaxed text-muted">
-            What players see on every card, rounded to two decimals. Anything rarer than 0.01% shows as
-            &ldquo;&lt;0.01%&rdquo;, never as zero.
+            The percent players see in &ldquo;Box content and odds&rdquo;: enough digits that a rare piece never
+            reads as zero.
           </dd>
         </div>
         <div className="rounded-2xl border border-accent/40 bg-accent-soft px-5 py-4">
@@ -54,7 +54,7 @@ export function OddsTable({ entries }: { entries: ResolvedEntry[] }) {
             <dl className="mt-4 grid grid-cols-2 overflow-hidden rounded-xl border border-line text-sm">
               <div className="px-3 py-2.5">
                 <dt className="text-xs font-medium text-muted">Displayed</dt>
-                <dd className="mt-0.5 text-base font-semibold tabular">{formatDisplayedOdds(r.probability)}</dd>
+                <dd className="mt-0.5 text-base font-semibold tabular">{formatPercent(r.probability * 100)}</dd>
               </div>
               <div className="border-l border-line bg-accent-soft px-3 py-2.5">
                 <dt className="text-xs font-medium text-muted">Back-office</dt>
@@ -105,7 +105,7 @@ export function OddsTable({ entries }: { entries: ResolvedEntry[] }) {
                   <RarityTag rarity={r.rarity} />
                 </td>
                 <td className="px-4 py-3 text-right font-semibold tabular">{formatUsd(r.item.value)}</td>
-                <td className="px-4 py-3 text-right font-semibold tabular">{formatDisplayedOdds(r.probability)}</td>
+                <td className="px-4 py-3 text-right font-semibold tabular">{formatPercent(r.probability * 100)}</td>
                 <td className="bg-accent-soft px-4 py-3 text-right font-semibold tabular">{formatExactOdds(r.probability)}</td>
                 <td className="bg-accent-soft px-4 py-3 text-right tabular text-muted">{r.weight.toLocaleString("en-US")}</td>
                 <td className="px-4 py-3 text-right text-xs tabular text-muted">

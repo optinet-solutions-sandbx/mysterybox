@@ -1,4 +1,4 @@
-import { pickByRoll, sellBackValue } from "@/domain/odds";
+import { pickByRoll, tradeInCredits } from "@/domain/odds";
 import type { MoneyEvent, PlayEvent, PlayerRecord } from "@/domain/analytics";
 import type { AccountStatus, KycStatus } from "@/backend/contract";
 import type { Box, Cents } from "@/domain/types";
@@ -9,7 +9,8 @@ import { items } from "./items";
 /**
  * Generated sample players so the back office has something to show before real traffic exists.
  * Deterministic for a given anchor day (same numbers for every reviewer that day). Draws use the
- * real box odds and prices, so returns land near the 90% target with realistic variance.
+ * real box odds and prices, so returns land near the 90% target with realistic variance. Like the box
+ * system: credit outcomes (and their bonus opens) and trade-ins pay site credit, which buys boxes first.
  * Emails use example.com and phone numbers the fictional 555-01xx range.
  */
 
@@ -65,6 +66,15 @@ function weighted<T>(r: () => number, pairs: [T, number][]): T {
 
 const iso = (ms: number) => new Date(ms).toISOString();
 
+/** One bonus open: a roll on the box's bonus table (percents summing to 100), in credits. */
+function bonusOpen(r: () => number, box: Box): number {
+  let x = r() * 100;
+  for (const row of box.bonus) {
+    if ((x -= row.percent) < 0) return row.credits;
+  }
+  return box.bonus.at(-1)?.credits ?? 0;
+}
+
 export function buildDemoPlayers({ today, count = 240, seed = 20_261_012 }: { today: string; count?: number; seed?: number }): PlayerRecord[] {
   const r = rng(seed ^ Number(today.replaceAll("-", "")));
   const anchor = Date.parse(`${today}T00:00:00Z`); // generated activity stops before today
@@ -82,6 +92,7 @@ export function buildDemoPlayers({ today, count = 240, seed = 20_261_012 }: { to
     const plays: PlayEvent[] = [];
     const money: MoneyEvent[] = [];
     let balance = 0;
+    let credit = 0; // site credit, in cents ($1 a credit)
     let lastActivity = registered;
     let txn = 0;
     const id = `demo-${String(n + 1).padStart(4, "0")}`;
@@ -99,7 +110,8 @@ export function buildDemoPlayers({ today, count = 240, seed = 20_261_012 }: { to
 
       for (const at of times) {
         const box = weighted(r, byPrice.map((b, i) => [b, tier.boxWeights[i]] as [Box, number]));
-        if (balance < box.price) {
+        const paidWith = credit >= box.price ? "credit" : "card";
+        if (paidWith === "card" && balance < box.price) {
           const need = box.price - balance;
           let step = DEPOSIT_STEPS.findIndex((d) => d >= need);
           if (step < 0) step = DEPOSIT_STEPS.length - 1;
@@ -107,16 +119,23 @@ export function buildDemoPlayers({ today, count = 240, seed = 20_261_012 }: { to
           balance += DEPOSIT_STEPS[step];
           move(at - 120_000, "deposit", DEPOSIT_STEPS[step]);
         }
-        if (balance < box.price) continue;
+        if (paidWith === "card" && balance < box.price) continue;
         const entry = pickByRoll(box.entries, Math.floor(r() * economy.oddsScale));
         const item = valueOf.get(entry.itemId)!;
-        balance -= box.price;
-        plays.push({ at: iso(at), boxId: box.id, priceCents: box.price, itemId: item.id, valueCents: item.value });
-        const sellChance = item.category === "credit" ? 0.85 : item.value < box.price ? 0.6 : 0.25;
-        if (r() < sellChance) {
-          const credit = sellBackValue(item.value);
-          balance += credit;
-          move(at + 60_000 + Math.floor(r() * 1_800_000), "sell_back", credit);
+        if (paidWith === "credit") credit -= box.price;
+        else balance -= box.price;
+        if (item.category === "credit") {
+          let bonus = 0;
+          for (let k = 0; k < (item.freeSpins ?? 0); k++) bonus += bonusOpen(r, box);
+          credit += item.value + bonus * 100;
+          plays.push({ at: iso(at), boxId: box.id, priceCents: box.price, itemId: item.id, valueCents: item.value + bonus * 100, paidWith });
+        } else {
+          plays.push({ at: iso(at), boxId: box.id, priceCents: box.price, itemId: item.id, valueCents: item.value, paidWith });
+          if (r() < (item.value < box.price ? 0.6 : 0.25)) {
+            const traded = tradeInCredits(item.value) * 100;
+            credit += traded;
+            move(at + 30_000, "sell_back", traded); // traded in right after the open
+          }
         }
         lastActivity = at;
       }
@@ -152,6 +171,7 @@ export function buildDemoPlayers({ today, count = 240, seed = 20_261_012 }: { to
       lastSeenAt: iso(Math.min(anchor - 1_000, lastActivity + Math.floor(r() * 3_600_000))),
       balanceCents: balance,
       heldCents: pendingHeld,
+      creditBalance: credit / 100,
       plays,
       money: money.sort((a, b) => a.at.localeCompare(b.at)),
       source: "demo",

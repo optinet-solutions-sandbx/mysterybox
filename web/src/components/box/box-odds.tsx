@@ -1,7 +1,9 @@
 import type { CatalogBox, CatalogOutcome } from "@/services/catalog";
 import { outcomeArt } from "@/services/catalog";
 import { formatCredit, formatExactPercent, formatPercent, formatUsd, formatUsdCompact } from "@/domain/money";
+import type { BonusRow } from "@/domain/types";
 import { ItemArt } from "@/components/item/item-art";
+import { cn } from "@/lib/cn";
 
 const oneIn = (percent: number) => Math.round(100 / percent).toLocaleString("en-US");
 const worth = (o: CatalogOutcome) => (o.kind === "item" ? formatUsd(o.valueCents ?? 0) : formatCredit(o.credits));
@@ -70,32 +72,7 @@ export function BoxOdds({ box }: { box: CatalogBox }) {
         <div className="mt-6">
           <h3 className="text-sm font-semibold">What a bonus open pays</h3>
           <p className="mt-1 text-sm text-muted">A bonus open is one more roll with the same secret and your seed, on this small table. It pays site credit only.</p>
-          <div className="mt-3 overflow-hidden rounded-2xl border border-line">
-            <table className="w-full table-fixed text-left text-xs sm:text-sm">
-              <thead className="bg-surface-2 font-semibold">
-                <tr>
-                  <th scope="col" className="px-3 py-2.5 sm:px-4">
-                    Credit
-                  </th>
-                  <th scope="col" className="px-3 py-2.5 text-right sm:px-4">
-                    Odds
-                  </th>
-                  <th scope="col" className="px-3 py-2.5 text-right sm:px-4">
-                    1 in
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-line">
-                {box.bonus.map((b) => (
-                  <tr key={b.credits} className="bg-surface">
-                    <td className="px-3 py-2 tabular sm:px-4">{formatCredit(b.credits)}</td>
-                    <td className="px-3 py-2 text-right font-semibold tabular sm:px-4">{formatPercent(b.percent)}</td>
-                    <td className="px-3 py-2 text-right text-muted tabular sm:px-4">{oneIn(b.percent)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <BonusOddsTable bonus={box.bonus} className="mt-3" />
         </div>
       )}
 
@@ -103,6 +80,38 @@ export function BoxOdds({ box }: { box: CatalogBox }) {
         Odds are the exact percentages the draw uses; they add up to 100%. Site credit counts as $1 per credit, buys boxes and
         can&rsquo;t be withdrawn. Individual openings vary widely, and most return less than the price.
       </p>
+    </div>
+  );
+}
+
+/** What a bonus open pays: credit, its odds as the draw uses them, and 1 in N. */
+export function BonusOddsTable({ bonus, className }: { bonus: BonusRow[]; className?: string }) {
+  return (
+    <div className={cn("overflow-hidden rounded-2xl border border-line", className)}>
+      <table className="w-full table-fixed text-left text-xs sm:text-sm">
+        <thead className="bg-surface-2 font-semibold">
+          <tr>
+            <th scope="col" className="px-3 py-2.5 sm:px-4">
+              Credit
+            </th>
+            <th scope="col" className="px-3 py-2.5 text-right sm:px-4">
+              Odds
+            </th>
+            <th scope="col" className="px-3 py-2.5 text-right sm:px-4">
+              1 in
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-line">
+          {bonus.map((b) => (
+            <tr key={b.credits} className="bg-surface">
+              <td className="px-3 py-2 tabular sm:px-4">{formatCredit(b.credits)}</td>
+              <td className="px-3 py-2 text-right font-semibold tabular sm:px-4">{formatPercent(b.percent)}</td>
+              <td className="px-3 py-2 text-right text-muted tabular sm:px-4">{oneIn(b.percent)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

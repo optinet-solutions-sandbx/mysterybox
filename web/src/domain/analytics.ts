@@ -23,11 +23,14 @@ export interface PlayEvent {
   priceCents: Cents;
   itemId: string;
   valueCents: Cents;
+  /** How the box price was paid on the box system: the demo balance ("card") or site credit. */
+  paidWith?: "card" | "credit";
 }
 
 export interface MoneyEvent {
   id: string;
   at: string;
+  /** "sell_back" is a trade-in (code name kept from the SQL); on the box system it pays site credit, counted at $1 a credit. */
   type: "deposit" | "withdrawal" | "sell_back" | "adjustment";
   /** Signed like the ledger: + credits the wallet, − debits it. */
   amountCents: Cents;
@@ -49,6 +52,8 @@ export interface PlayerRecord {
   lastSeenAt: string | null;
   balanceCents: Cents;
   heldCents: Cents;
+  /** Site credit on the box system ($1 a credit); undefined when it isn't visible from here. */
+  creditBalance?: number;
   /** Chronological. */
   plays: PlayEvent[];
   money: MoneyEvent[];

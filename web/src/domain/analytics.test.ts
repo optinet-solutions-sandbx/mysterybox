@@ -20,11 +20,28 @@ describe("demo players", () => {
         expect(o.at >= p.registeredAt).toBe(true);
         expect(o.at < `${today}T00:00:00Z`).toBe(true);
       }
-      const money = p.money.filter((m) => m.status !== "cancelled").reduce((s, m) => s + m.amountCents, 0);
-      const played = p.plays.reduce((s, o) => s + o.priceCents, 0);
-      expect(p.balanceCents).toBe(money - played);
+      // Cash: deposits and cashouts against boxes paid by card. Trade-ins pay site credit, not cash.
+      const cash = p.money.filter((m) => m.status !== "cancelled" && m.type !== "sell_back").reduce((s, m) => s + m.amountCents, 0);
+      const byCard = p.plays.filter((o) => o.paidWith === "card").reduce((s, o) => s + o.priceCents, 0);
+      expect(p.balanceCents).toBe(cash - byCard);
       expect(p.balanceCents).toBeGreaterThanOrEqual(0);
+      // Site credit: credit outcomes (bonus opens included) and trade-ins, less boxes paid with credit.
+      const creditIn = p.plays.filter((o) => o.itemId.startsWith("credit-")).reduce((s, o) => s + o.valueCents, 0);
+      const tradedIn = p.money.filter((m) => m.type === "sell_back").reduce((s, m) => s + m.amountCents, 0);
+      const byCredit = p.plays.filter((o) => o.paidWith === "credit").reduce((s, o) => s + o.priceCents, 0);
+      expect(Math.round(p.creditBalance! * 100)).toBe(creditIn + tradedIn - byCredit);
+      expect(p.creditBalance).toBeGreaterThanOrEqual(0);
     }
+  });
+
+  it("trade in for site credit, spend credit on boxes, and get their bonus opens", () => {
+    const plays = players.flatMap((p) => p.plays);
+    expect(plays.some((o) => o.paidWith === "credit")).toBe(true);
+    expect(plays.every((o) => o.paidWith === "card" || o.paidWith === "credit")).toBe(true);
+    const withBonus = plays.filter((o) => /-fs\d$/.test(o.itemId));
+    expect(withBonus.length).toBeGreaterThan(0);
+    // A bonus-open outcome pays its own credit plus at least one bonus-open credit.
+    for (const o of withBonus) expect(o.valueCents).toBeGreaterThan(Number(o.itemId.split("-")[1]) * 100);
   });
 
   it("look like a real funnel: most players play, returns land near the 90% target", () => {
