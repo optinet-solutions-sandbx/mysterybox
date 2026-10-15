@@ -315,6 +315,20 @@ with sync_playwright() as p:
     assert overflow <= 0, f"signed-in header scrolls sideways by {overflow}px at 320"
     shot(page, "320-home-signed-in")
     step("320 wide: no sideways scroll on any page, signed out or in")
+    # A big balance widens the signed-in header's balance pill: check common phone widths.
+    page.evaluate(
+        """() => { const k = 'flexd'; const s = JSON.parse(localStorage.getItem(k));
+        const a = s.state.accounts[s.state.currentId]; a.balances.credit = 99999999; a.balances.withdrawable = 0;
+        localStorage.setItem(k, JSON.stringify(s)); }"""
+    )
+    for w in [320, 360, 375, 384, 390, 412]:
+        page.set_viewport_size({"width": w, "height": 740})
+        page.goto(BASE + "/")
+        expect(page.get_by_role("link", name="Wallet", exact=True)).to_have_text("$999,999.99")
+        overflow = page.evaluate("document.documentElement.scrollWidth - document.documentElement.clientWidth")
+        assert overflow <= 0, f"signed-in header with a $999,999.99 balance scrolls sideways by {overflow}px at {w}"
+    shot(page, "412-home-big-balance")
+    step("signed-in header fits from 320 to 412 with a six-figure balance")
     ctx.close()
 
     # Reduced motion: no swipe needed, the reveal is instant

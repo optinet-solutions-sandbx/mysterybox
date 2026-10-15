@@ -24,8 +24,11 @@ export function TopBar() {
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 md:px-8">
         <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label={`${brand.name}, all boxes`}>
           <LogoMark className="w-11" sizes="44px" />
-          {/* The spaced wordmark needs ~380px beside the account controls; narrower phones show the mark only. */}
-          <span className="text-foil font-display text-[17px] tracking-[0.42em] max-[379px]:hidden">{brand.name}</span>
+          {/* The spaced wordmark fits beside Sign in / Sign up from ~380px; signed in, the balance pill grows with
+              the balance, so phones show the mark only (as play/ does). */}
+          <span className={cn("text-foil font-display text-[17px] tracking-[0.42em]", account ? "max-sm:hidden" : "max-[379px]:hidden")}>
+            {brand.name}
+          </span>
         </Link>
 
         <nav aria-label="Main" className="hidden flex-1 justify-center gap-1 lg:flex">

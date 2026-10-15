@@ -14,7 +14,8 @@ Spec: `docs/superpowers/specs/2026-10-15-flexd-design.md`. Plan: `docs/superpowe
 - Cinzel gold headlines with one amethyst word (`AccentName`, `.accent-word`); prices in Playfair Display (`font-price`).
 - Placeholder mark (`src/config/mark.json`); `npm run brand:assets` redraws the logo raster and icons.
 - Loyalty levels follow the box finishes: Lilac, Amethyst, Plum, Royal, Gold.
-- Floating tab bar; the spaced wordmark shows from 380px wide (narrower phones show the mark only).
+- Floating tab bar. The spaced wordmark shows from 380px when signed out and from 640px when signed in
+  (the balance pill grows with the balance); otherwise the mark alone.
 - Storage keys start with `flexd`.
 
 ## Commands (from flexd/)
