@@ -36,6 +36,10 @@ CLASP = {
     # Where the print is (crown, wordmark, categories, clasp crown), as boxes in the screen's pixels.
     "print": [(262, 228, 380, 264), (118, 344, 192, 382), (455, 362, 512, 440), (208, 333, 244, 367)],
 }
+# The clasp on the first screen's box (strap, its side and the tab over the lid), and how it sits on
+# that box's front face: its centre and the face's top edge (a point and the edge's slope).
+CLASP_OUTLINE = [(206.2, 290), (210, 282.5), (234.4, 271.9), (272.5, 283.1), (255.5, 292), (256, 397.5), (246.3, 398.5), (207.5, 384)]
+CLASP_FACE = {"x": 226, "top": (93.3, 259.3), "slope": 0.2351, "height": 169}
 # The band box has no seam of its own; the lid is its top third, where a lid would sit.
 BAND = {
     "region": (66, 700, 500, 380),  # the home screen's tab bar starts near y 1085
@@ -45,6 +49,8 @@ BAND = {
     "lid": (318, 820),
     "back": (293.3, 773),
     "print": [(262, 790, 368, 838), (352, 888, 446, 950), (255, 935, 312, 1017)],
+    # Where the clasp goes: over the band, on the front face (top edge point and slope, face height there).
+    "clasp_face": {"x": 213, "top": (96.7, 810.7), "slope": 0.4287, "height": 137.5},
 }
 
 
@@ -72,6 +78,41 @@ def cut(path: str, spec: dict) -> Image.Image:
         ImageDraw.Draw(where).rectangle([(x0 - left) * SCALE, (y0 - top) * SCALE, (x1 - left) * SCALE, (y1 - top) * SCALE], fill=255)
     art.info["print"] = where.filter(ImageFilter.GaussianBlur(4))
     return art
+
+
+def clasp_for(first: str, spec: dict) -> Image.Image:
+    """The first screen's clasp, cut out and fitted to another box's front face (same picture size as
+    that box's art). Vertical edges stay vertical; the top edge takes the face's slope; size follows
+    the face's height."""
+    src = Image.open(first).convert("RGB")
+    k = src.width / SOURCE_WIDTH
+    a, b = CLASP_FACE, spec["clasp_face"]
+    scale = b["height"] / a["height"]
+
+    # Screen-pixel map from the first screen to this one: x' = m00 x + m01 y + m02, y' = m10 x + m11 y + m12.
+    m00, m01, m02 = scale, 0.0, b["x"] - a["x"] * scale
+    m10, m11 = scale * (b["slope"] - a["slope"]), scale
+    m12 = b["top"][1] + b["slope"] * (m02 - b["top"][0]) - scale * (a["top"][1] - a["slope"] * a["top"][0])
+
+    # In picture pixels: the source is the whole first screen (k per screen pixel), the target this art.
+    left, top = spec["region"][:2]
+    fwd = np.array([[m00 * SCALE / k, m01 * SCALE / k, SCALE * (m02 - left)], [m10 * SCALE / k, m11 * SCALE / k, SCALE * (m12 - top)], [0, 0, 1]])
+    inv = np.linalg.inv(fwd)
+    w, h = spec["region"][2] * SCALE, spec["region"][3] * SCALE
+
+    mask = Image.new("L", (src.width * SUPER, src.height * SUPER), 0)
+    ImageDraw.Draw(mask).polygon([(x * k * SUPER, y * k * SUPER) for x, y in CLASP_OUTLINE], fill=255)
+    clasp = src.copy()
+    clasp.putalpha(mask.resize(src.size, Image.LANCZOS).filter(ImageFilter.GaussianBlur(0.4)))
+    fitted = clasp.transform((w, h), Image.Transform.AFFINE, tuple(inv[:2].ravel()), resample=Image.Resampling.BICUBIC)
+    return fitted.filter(ImageFilter.UnsharpMask(radius=1.2, percent=40, threshold=2))
+
+
+def with_clasp(art: Image.Image, clasp: Image.Image) -> Image.Image:
+    out = art.copy()
+    out.alpha_composite(clasp)
+    out.info = art.info
+    return out
 
 
 def grade(art: Image.Image, finish: str) -> Image.Image:
@@ -115,12 +156,14 @@ def unit(spec: dict, point) -> list:
 def main(first: str, home: str, preview: str | None = None):
     clasp = cut(first, CLASP)
     band = cut(home, BAND)
+    band_clasp = clasp_for(first, BAND)
     # Catalogue finish key -> (picture, base); the keys are the catalogue's material names.
     arts = {
         "obsidian": (clasp, CLASP),  # silver clasp box (The Atelier, The Time Room)
-        "ivory": (band, BAND),  # holographic band box (Vanity, the first box, as on the home screen)
-        "navy": (grade(band, "black"), BAND),  # black (First Edition, The Flap Room)
-        "sapphire": (grade(band, "pearl"), BAND),  # pearl (Sun Club)
+        # The band boxes get the first screen's clasp over their band, in its own champagne gold.
+        "ivory": (with_clasp(band, band_clasp), BAND),  # holographic band box (Vanity, the first box, as on the home screen)
+        "navy": (with_clasp(grade(band, "black"), band_clasp), BAND),  # black (First Edition, The Flap Room)
+        "sapphire": (with_clasp(grade(band, "pearl"), band_clasp), BAND),  # pearl (Sun Club)
         "gold": (grade(clasp, "gold"), CLASP),  # gold (Grail Reserve)
         "bronze": (grade(clasp, "rose"), CLASP),  # rose (Jewel Vault)
     }

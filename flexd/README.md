@@ -16,7 +16,8 @@ Spec: `docs/superpowers/specs/2026-10-15-flexd-design.md`. Plan: `docs/superpowe
   (`scripts/make_box_art.py`, Pillow and numpy) into `public/boxes/` with their lid seams in
   `src/components/chest/box-art.ts`. The silver clasp box (The Atelier, The Time Room) and the holographic band box
   (Vanity) are cut straight from the screens; black (First Edition, The Flap Room) and pearl (Sun Club) are graded from
-  the band box, as in the home screen, and gold (Grail Reserve) and rose (Jewel Vault) from the clasp box. The opening
+  the band box, as in the home screen, and gold (Grail Reserve) and rose (Jewel Vault) from the clasp box. The band
+  boxes carry the first screen's clasp, fitted over their band. The opening
   is 2D (`chest.tsx`): the lid lifts along the seam with light in the gap, the box shakes, a beam rises from the lit
   velvet inside. No WebGL. Sharper exports of the same screens drop straight in.
 - Big headlines in Playfair Display capitals (`font-hero`), names and section titles in Cinzel (`font-punch`), both

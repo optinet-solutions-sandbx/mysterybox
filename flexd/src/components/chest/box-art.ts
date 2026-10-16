@@ -15,9 +15,9 @@ export interface BoxArt {
 
 export const BOX_ARTS: Record<BoxMaterial, BoxArt> = {
   obsidian: {"src": "/boxes/flexd-box-obsidian-85cd2e58.webp", "width": 1020, "height": 724, "seam": [[0.0653, 0.3315], [0.2876, 0.4191], [0.3725, 0.4649], [0.6275, 0.5754], [0.9269, 0.3425]], "lid": [0.5078, 0.2058], "back": [0.4118, 0.1436]},
-  ivory: {"src": "/boxes/flexd-box-ivory-0cbc0d92.webp", "width": 1000, "height": 760, "seam": [[0.0638, 0.3947], [0.5488, 0.6826], [0.9436, 0.43]], "lid": [0.504, 0.3158], "back": [0.4546, 0.1921]},
-  navy: {"src": "/boxes/flexd-box-navy-665865f1.webp", "width": 1000, "height": 760, "seam": [[0.0638, 0.3947], [0.5488, 0.6826], [0.9436, 0.43]], "lid": [0.504, 0.3158], "back": [0.4546, 0.1921]},
-  sapphire: {"src": "/boxes/flexd-box-sapphire-86d6bc14.webp", "width": 1000, "height": 760, "seam": [[0.0638, 0.3947], [0.5488, 0.6826], [0.9436, 0.43]], "lid": [0.504, 0.3158], "back": [0.4546, 0.1921]},
+  ivory: {"src": "/boxes/flexd-box-ivory-fb681452.webp", "width": 1000, "height": 760, "seam": [[0.0638, 0.3947], [0.5488, 0.6826], [0.9436, 0.43]], "lid": [0.504, 0.3158], "back": [0.4546, 0.1921]},
+  navy: {"src": "/boxes/flexd-box-navy-ab918f1a.webp", "width": 1000, "height": 760, "seam": [[0.0638, 0.3947], [0.5488, 0.6826], [0.9436, 0.43]], "lid": [0.504, 0.3158], "back": [0.4546, 0.1921]},
+  sapphire: {"src": "/boxes/flexd-box-sapphire-d9fbc98a.webp", "width": 1000, "height": 760, "seam": [[0.0638, 0.3947], [0.5488, 0.6826], [0.9436, 0.43]], "lid": [0.504, 0.3158], "back": [0.4546, 0.1921]},
   gold: {"src": "/boxes/flexd-box-gold-0985bb1c.webp", "width": 1020, "height": 724, "seam": [[0.0653, 0.3315], [0.2876, 0.4191], [0.3725, 0.4649], [0.6275, 0.5754], [0.9269, 0.3425]], "lid": [0.5078, 0.2058], "back": [0.4118, 0.1436]},
   bronze: {"src": "/boxes/flexd-box-bronze-344ccb18.webp", "width": 1020, "height": 724, "seam": [[0.0653, 0.3315], [0.2876, 0.4191], [0.3725, 0.4649], [0.6275, 0.5754], [0.9269, 0.3425]], "lid": [0.5078, 0.2058], "back": [0.4118, 0.1436]},
 };
