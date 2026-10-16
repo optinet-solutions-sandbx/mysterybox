@@ -236,6 +236,7 @@ function OpenScene({ slug, pull }: { slug: string; pull: Pull }) {
                 }}
               >
                 <Chest
+                  finish={box.material}
                   open={lid}
                   shake={phase === "opening"}
                   priority

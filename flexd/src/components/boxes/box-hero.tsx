@@ -16,7 +16,7 @@ export function BoxHero({ box }: { box: Box }) {
     >
       <div aria-hidden className="absolute inset-x-[4%] bottom-[2%] h-2/3 bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--velvet-500)_34%,transparent),transparent)]" />
       <ViewTransition name={`chest-${box.slug}`} share="morph" default="none">
-        <Chest still float={inView} tilt priority sizes="(min-width: 1024px) 560px, 92vw" className="size-full" label={`${box.name} box`} />
+        <Chest finish={box.material} still float={inView} tilt priority sizes="(min-width: 1024px) 560px, 92vw" className="size-full" label={`${box.name} box`} />
       </ViewTransition>
     </div>
   );

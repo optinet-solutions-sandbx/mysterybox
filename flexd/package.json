@@ -9,7 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "brand:assets": "node scripts/make-brand-assets.mjs",
-    "box:art": "node scripts/make-box-art.mjs"
+    "box:art": "python scripts/make_box_art.py"
   },
   "dependencies": {
     "clsx": "^2.1.1",

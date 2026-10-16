@@ -12,10 +12,13 @@ Spec: `docs/superpowers/specs/2026-10-15-flexd-design.md`. Plan: `docs/superpowe
 - Dark only, as in the client's screens (`src/app/globals.css`): near-black lit with soft purple, glass cards with lit
   edges (`glass`, `glass-lit`), a glowing violet primary button, gold for money. Glows sit about a third softer than
   the screens (the client asked for a little less shine).
-- Boxes: the client's own box picture, cut from their first screen ("The Time Room") by `npm run box:art -- <screen.png>`
-  into `public/boxes/flexd-box-<fingerprint>.webp` with its lid seam in `src/components/chest/box-art.ts`. Every box
-  uses it. The opening is 2D (`chest.tsx`): the lid half lifts along the seam with light in the gap, the box shakes, a
-  beam rises from the lit velvet inside. No WebGL. A sharper export of the same screen drops straight in.
+- Boxes: the client's own box pictures, one per finish, made by `npm run box:art -- <first-screen.png> <home-screen.png>`
+  (`scripts/make_box_art.py`, Pillow and numpy) into `public/boxes/` with their lid seams in
+  `src/components/chest/box-art.ts`. The silver clasp box (The Atelier, The Time Room) and the holographic band box
+  (Vanity) are cut straight from the screens; black (First Edition, The Flap Room) and pearl (Sun Club) are graded from
+  the band box, as in the home screen, and gold (Grail Reserve) and rose (Jewel Vault) from the clasp box. The opening
+  is 2D (`chest.tsx`): the lid lifts along the seam with light in the gap, the box shakes, a beam rises from the lit
+  velvet inside. No WebGL. Sharper exports of the same screens drop straight in.
 - Big headlines in Playfair Display capitals (`font-hero`), names and section titles in Cinzel (`font-punch`), both
   ivory with one lilac word (`AccentName`, `.accent-word`); prices in Playfair Display (`font-price`).
 - Logo: the client's crown-and-mask in the lilac chrome of their screens (`public/brand/flexd-mark-<fingerprint>.webp`, traced
@@ -35,7 +38,7 @@ Spec: `docs/superpowers/specs/2026-10-15-flexd-design.md`. Plan: `docs/superpowe
     npx eslint
     npx next build
     npm run brand:assets -- <artwork.png> [--tint]   # new logo artwork
-    npm run box:art -- <screen.png>                  # the box picture, from the client's first screen
+    npm run box:art -- <first-screen.png> <home-screen.png>   # the box pictures, from the client's screens
 
 From the repo root:
 
